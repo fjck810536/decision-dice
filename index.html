@@ -8,8 +8,16 @@
   <link rel="stylesheet" href="./src/styles.css">
 </head>
 <body>
-  <main id="app" class="app-shell home-view"></main>
+  <main id="app" class="app-shell home-view">
+    <p id="boot-status" class="boot-status">LOADING SYSTEM…</p>
+  </main>
   <div class="orientation-block">目前僅直向使用</div>
+  <script>
+    window.addEventListener('error', () => {
+      const status = document.getElementById('boot-status');
+      if (status) status.textContent = 'BOOT ERROR / MODULE INITIALIZATION FAILED';
+    });
+  </script>
   <script type="module" src="./src/app.js"></script>
 </body>
 </html>
