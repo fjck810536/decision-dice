@@ -5,15 +5,13 @@ Repository：`decision-dice`
 
 本文件記錄目前已確認的互動與系統行為，作為後續 Renderer、Physics、Dice Engine、Decision Engine 與 UI 實作的共同規格。
 
-> 原則：先固定互動與資料語義，再做 Retro Renderer Lab 與 Physics Benchmark。字體、配色、邊框、Logo 比例等視覺細節暫不在本規格凍結。
+> 原則：先固定互動與資料語義，再用 Retro Renderer Lab 與 Physics Benchmark 決定技術參數。字體、配色、邊框、Logo 比例等視覺細節目前不凍結。
 
 ---
 
 ## 1. App 整體結構
 
 整體為單一 App，但使用者感覺像在同一台機器內切換工作模式，而不是一般網站換頁。
-
-主要狀態：
 
 ```text
 HOME
@@ -23,36 +21,35 @@ HOME
    └─ CONFIRM → CHOICE ROLL
 ```
 
-### 1.1 HOME
+### HOME
 
 - 首頁有完整 Logo。
 - 首頁有骰子跑馬燈。
 - 跑馬燈只屬於 HOME；進入 Dice / Choice 後消失。
 - 完整 Logo 進入功能頁後消失。
 - HOME 有兩個主要入口：`骰子`、`選擇`。
-- 模式之間可直接切換，不必強制先回 HOME。
+- Dice / Choice 模式之間可直接切換，不必強制先回 HOME。
 
-### 1.2 返回 HOME
+### 返回 HOME
 
 - 功能頁有明顯 HOME 按鈕。
 - 返回 HOME 時顯示離開提示。
-- 未來會有「保留」與「清除」兩種語義。
-- v0.1 中「保留」位置存在，但不執行保留功能；目前建議以 disabled / 尚未開放狀態呈現，避免看起來像壞掉。
+- 未來保留「保留」與「清除」兩種語義。
+- v0.1 中「保留」位置存在但 disabled，文案標示尚未開放；不能做成看似可按卻沒反應。
 - `清除並離開` 可用。
-- Session 重新整理仍會清空。
 
 ---
 
 ## 2. Session 與 State
 
 - 狀態只存在本次 App session。
-- Dice / Choice 模式之間切換時，狀態可保留。
+- Dice / Choice 模式之間切換時可保留各自狀態。
 - Safari 重新整理後全部清空。
-- 不使用永久保存作為 v0.1 的必要功能。
-- History 有上限，不能無限增長。
-- v0.1 暫定最近 20 筆；此數值可調整，不應寫死在資料模型中。
+- v0.1 不做永久保存。
+- History 上限正式定為最近 **20 筆**。
+- History 上限屬於設定常數，不應深綁資料模型。
 
-### 2.1 App 切到背景
+### App 切到背景
 
 若 Roll 後使用者切去 LINE / 其他 App：
 
@@ -65,13 +62,11 @@ HOME
 
 ## 3. Dice Mode
 
-Dice Mode 分成兩階段：`DICE SETUP` 與 `DICE ROLL`。
+Dice Mode 分成 `DICE SETUP` 與 `DICE ROLL`。
 
-### 3.1 DICE SETUP
+### DICE SETUP
 
-使用者進入 Dice Mode 後，不直接進 Roll 畫面。
-
-第一階段只負責設定骰子數量：
+進入 Dice Mode 後只設定骰子數量，不直接進 Roll 畫面。
 
 ```text
 D3    [- 0 +]
@@ -89,26 +84,24 @@ D100  [- 0 +]
 
 - `+ / -` 是主要增減方式。
 - 同骰型合併顯示數量，不在 Setup 階段展開每顆骰子。
-- D3 直接有獨立按鈕，不使用 D6 長按切換。
+- D3 有獨立入口，不使用 D6 長按切換。
 - 按 `確認` 後才進入 DICE ROLL。
 
-### 3.2 DICE ROLL
-
-進入 Roll Stage 後：
+### DICE ROLL
 
 - 顯示目前骰池摘要，例如 `D6 ×2 + D8 ×1`。
 - Roll 時展開成實際 3D 骰子。
 - 使用者按 ROLL 後，在本輪動畫完成前 ROLL 鎖定。
-- v0.1 不允許連續排隊 Roll，也不以第二次點擊中止上一輪。
+- v0.1 不允許排隊 Roll，也不以第二次點擊中止上一輪。
 
-### 3.3 Reroll / Lock
+### Reroll / Lock
 
 v0.1 不一定實作，但資料架構必須預留：
 
 - 個別骰子 reroll。
 - 鎖住某些骰子後只 Roll 未鎖骰子。
 
-### 3.4 Modifier
+### Modifier
 
 TRPG modifier（例如 `1d20 + 5`）不是 v0.1 強制功能，但資料模型必須預留支援。
 
@@ -116,20 +109,7 @@ TRPG modifier（例如 `1d20 + 5`）不是 v0.1 強制功能，但資料模型�
 
 ## 4. Dice Result 資料模型
 
-底層必須保存每顆骰子的 individual result，不只保存 total。
-
-例如：
-
-```text
-2d6 + d8
-
-D6 = 3
-D6 = 5
-D8 = 7
-TOTAL = 15
-```
-
-建議概念：
+底層保存每顆骰子的 individual result，不只保存 total。
 
 ```text
 RollResult
@@ -138,52 +118,44 @@ RollResult
 │  ├─ value
 │  └─ detail
 ├─ modifier
+├─ subtotal
 ├─ total
 └─ timing / metadata
 ```
 
-### 4.1 Total
+### Total
 
-- 多骰需支援加總，這是 TRPG 基本需求。
+- 多骰支援加總，作為 TRPG 基本需求。
 - D100 與其他骰子混用時，D100 的最終 percentile value 參與 total。
 - 例：`D100 = 74`, `D6 = 5` → `TOTAL = 79`。
 
-### 4.2 Total 的顯示格式
+### Total 顯示格式
 
-目前使用者先前回答為 `10.10`，無法確定原第 10 題的 A / B / C。
+預設採：
 
-**待確認：**
-
-A.
-```text
-3 + 5 + 7 + 3
-TOTAL 18
-```
-
-B.
 ```text
 骰子 15
 修正 +3
 TOTAL 18
 ```
 
-C.
-```text
-TOTAL 18
-點開才看詳細
-```
+individual results 仍保留在詳細結果節奏中，例如：
 
-目前其他答案顯示使用者偏好「預設詳細」，但此項不替使用者猜測。
+```text
+D6 = 3
+D6 = 5
+D8 = 7
+────────
+骰子 15
+修正 +3
+TOTAL 18
+```
 
 ---
 
 ## 5. D100
 
-D100 採經典 percentile dice：**兩顆 d10**。
-
-不是單顆 100 面骰。
-
-資料語義上，D100 是一個 composite die：
+D100 採經典 percentile dice：**兩顆 d10**，不是單顆 100 面骰。
 
 ```text
 D100
@@ -199,50 +171,48 @@ D100
 00 + 0 → 100
 ```
 
-D100 的兩顆 d10 可保留細節，但對 total 與其他上層功能輸出單一 percentile value。
+視覺上是兩顆 d10；資料語義上對上層輸出單一 percentile value。
 
 ---
 
 ## 6. Dice Physics 原則
 
-目標：
-
 - 標準 TRPG 骰子使用接近實體骰型的 convex collision geometry。
 - d4 / d8 / d10 / d20 使用 ConvexPolyhedron 類型概念。
-- d6 可使用 Box。
+- d6 使用 Box 即可。
 - D100 使用兩個 d10 body。
 - 標準骰面排列盡量遵循實體骰慣例。
 
-### 6.1 碰撞品質降級
+### 碰撞品質降級
 
-正式上限尚未確定，需以 iPhone Physics Benchmark 決定。
+正式門檻由 iPhone Physics Benchmark 決定。
 
 預期可有多級模式：
 
 1. 完整模式：骰子碰環境，也彼此互撞。
-2. 降級模式：骰子碰桌面 / 盒壁，但彼此不碰撞，可穿模。
+2. Ghost 模式：骰子碰桌面 / 盒壁，但彼此不碰撞，可穿模。
 3. 更大量骰子時，可進一步提高 sleep / settling assist。
 
-不同骰型仍保留自身 collision geometry；優先拿掉「骰子彼此碰撞」，而不是先把所有骰子簡化成球或立方體。
+優先拿掉「骰子彼此碰撞」，而不是先把不同骰型的 collision geometry 簡化成球或立方體。
 
-### 6.2 Roll 時間目標
+### Roll 時間目標
 
 - 目標約 1.5–2 秒內完成。
 - 前 1 秒以自然物理為主。
 - 超過 1 秒後啟動 settling assist。
-- 使用者指定：以 **3 frames @ 24fps** 為半衰期，逐步增加協助讓骰子倒向穩定面。
-- 這個 assist 不能先決定結果；它只應幫助當前物理狀態快速收斂。
-- 若仍不穩定，可依當前最朝上的 face 判定 / 協助落面，而不是任意改成預抽結果。
+- settling assist 的介入量以 **3 frames @ 24fps** 為半衰期快速增加。
+- assist 不能先決定結果；只幫助當前物理狀態快速收斂。
+- 若仍不穩定，可依當前最朝上的 face 協助落面，而不是任意改成預抽結果。
 
 ---
 
 ## 7. Choice Mode
 
-Choice Mode 分成兩階段：`CHOICE SETUP` 與 `CHOICE ROLL`。
+Choice Mode 分成 `CHOICE SETUP` 與 `CHOICE ROLL`。
 
-### 7.1 CHOICE SETUP
+### CHOICE SETUP
 
-使用者第一次進入時只輸入「有幾個選項」。
+第一階段只輸入選項數量。
 
 ```text
 你有幾個選項？
@@ -255,37 +225,33 @@ Choice Mode 分成兩階段：`CHOICE SETUP` 與 `CHOICE ROLL`。
 - 不在第一頁強迫輸入選項名稱。
 - 按確認後才進入下一階段。
 
-### 7.2 Choice Count 範圍
+### Choice Count 範圍
 
-產品領域上限目標：`99999`。
+- 產品領域上限目標：`99999`。
+- v0.1 實作上限：**20**。
+- 底層資料模型不得假設 choiceCount 永遠 <= 20。
+- v0.1 UI 對 >20 顯示「目前版本支援最多 20 個選項」。
 
-v0.1 實作上限：**20**。
-
-規則：
-
-- 底層資料模型不要假設 choiceCount 永遠 <= 20。
-- v0.1 UI 對 >20 的數量顯示「目前版本支援最多 20 個選項」。
-- 之後可逐步提高到 100 / 999 / 99999，而不重寫 Decision Engine。
-
-### 7.3 確認後的 Choice Roll 畫面
+### CHOICE ROLL
 
 確認數量後：
 
 - 可以直接按下方 ROLL。
 - 或點上方箭頭，打開選項名稱抽屜。
 - 抽屜不是 Roll 的必要條件。
+- v0.1 抽屜正式採 **push-down** layout。
 - Roll 時抽屜自動收起。
 
-### 7.4 修改選項數量
+### 修改選項數量
 
 - 確認後仍可修改數量。
-- 修改時需警告現有選項文字可能被重排 / 截斷。
+- 修改時警告現有選項文字可能被重排 / 截斷。
 
-### 7.5 選項名稱
+### 選項名稱
 
-- 未填名稱的選項仍可被 Roll。
+- 未填名稱仍可 Roll。
 - 未命名結果顯示 `選項 N`。
-- 重複名稱允許，但需警告，因為重複項等同產生加權效果。
+- 重複名稱允許，但需警告，因為重複項會形成實質加權。
 - 選項數字 mapping 預設固定，不每次洗牌。
 
 ---
@@ -299,8 +265,6 @@ v0.1 實作上限：**20**。
 - 使用者可以覆寫推薦。
 - 若骰子效率太差，可推薦可見式拉霸機。
 
-概念輸出：
-
 ```text
 DecisionPlan
 ├─ method: dice | slot
@@ -311,9 +275,7 @@ DecisionPlan
 └─ efficiency
 ```
 
-### 8.1 無效骰 / Rejection
-
-若選項數量與骰子面數不整除，允許 rejection sampling。
+### 無效骰 / Rejection
 
 例如 7 個選項用 d8：
 
@@ -330,27 +292,19 @@ REROLL
 → 選項 3
 ```
 
-規則：
-
 - 無效結果要讓使用者看到。
 - 不偷偷在背景吞掉。
-- ResultSequencer 需保留 INVALID → REROLL 的顯示節奏。
+- ResultSequencer 保留 `INVALID → REROLL` 的顯示節奏。
 
 ---
 
 ## 9. Slot / 拉霸機
 
-非骰子決策模式採**可見的拉霸 reel**，優先於轉盤。
-
-原因：
+非骰子決策模式採**可見拉霸 reel**，優先於轉盤。
 
 - 高選項數量時比圓形轉盤可讀。
 - 可支援未來大量選項。
-- 動畫與公平 RNG 可分離。
-
-### 9.1 公平性
-
-拉霸動畫本身不決定結果。
+- 動畫與公平 RNG 分離。
 
 流程：
 
@@ -358,12 +312,7 @@ REROLL
 2. reel 播放捲動 / 減速 / 停止動畫。
 3. 最終停在既定結果。
 
-### 9.2 顯示內容
-
-- reel 永遠以數字為主體。
-- 選項名稱在最終結果階段再翻譯。
-
-預設詳細揭露節奏：
+reel 永遠以數字為主體；選項名稱在結果階段再翻譯。
 
 ```text
 METHOD: SLOT
@@ -379,15 +328,13 @@ OPTION 17
 
 ## 10. Result Sequencer
 
-結果不是一次性 pop 出全部內容，而是具有節奏的逐步揭露。
+結果不是一次 pop 出全部內容，而是具有節奏的逐步揭露。
 
-預設：**詳細模式**。
+- 預設為**詳細模式**。
+- 未來可提供簡潔 / 詳細切換。
+- Dice 與 Choice 共用 ResultSequencer 概念，但各自有不同步驟。
 
-未來可提供簡潔 / 詳細切換。
-
-Dice 與 Choice 共用 ResultSequencer 概念，但各自擁有不同步驟。
-
-例：
+例如：
 
 ```text
 D8
@@ -409,11 +356,9 @@ OPTION 3
 
 ## 11. History
 
-History 只存在本 session。
+History 只存在本 session，最多最近 **20 筆**。
 
-每筆保存完整資料，而不是只保存最後文字。
-
-### 11.1 Dice History
+### Dice History
 
 保存：
 
@@ -421,10 +366,10 @@ History 只存在本 session。
 - individual results
 - D100 細節
 - modifier（未來）
-- total
+- subtotal / total
 - 必要的 roll metadata
 
-### 11.2 Choice History
+### Choice History
 
 保存：
 
@@ -434,7 +379,7 @@ History 只存在本 session。
 - 最終 index
 - 最終名稱（若有）
 
-### 11.3 History UI
+### History UI
 
 - History 可展開查看詳細內容。
 - `Roll Again with Same Setup` 不一定在 v0.1 實作，但 state model 預留。
@@ -450,7 +395,7 @@ History 只存在本 session。
 - 不勉強做完整橫向 layout。
 - 顯示遮蔽畫面的 orientation overlay。
 - 文案類似：`目前僅支援直向使用` / `請旋轉裝置`。
-- overlay 出現時暫停接受主要互動。
+- overlay 出現時暫停主要互動。
 - 轉回直向後恢復原狀態，不清除資料。
 
 ---
@@ -466,19 +411,19 @@ History 只存在本 session。
 
 ## 14. Settings
 
-v0.1 需要一個小型設定頁 / 設定面板，不做大型偏好系統。
+v0.1 需要小型設定頁 / 設定面板，不做大型偏好系統。
 
 至少預留：
 
 - Sound / Mute
-- Motion / reduced motion 類設定
-- Physics info / debug 類資訊入口（可視產品呈現方式決定是否公開）
+- Motion / reduced motion
+- Physics info / debug 類資訊入口
 
 ---
 
 ## 15. Reset / Clear
 
-需要區分兩種語義：
+需要區分：
 
 - `Clear Mode`：只清目前模式。
 - `Reset Session`：清 Dice、Choice、History，整個 session 歸零。
@@ -487,17 +432,18 @@ v0.1 需要一個小型設定頁 / 設定面板，不做大型偏好系統。
 
 ---
 
-## 16. 已確認但暫不凍結的視覺方向
+## 16. 視覺方向：已知但尚未凍結
 
-這些方向存在，但不在本互動規格內鎖死：
+目前方向：
 
-- PS1 / 點陣 / late-90s Web3D 視覺語言。
-- 3D 可低內部解析度、nearest-neighbor、flat shading。
+- PS1 / 點陣 / late-90s Web3D。
+- 3D 可採低內部解析度、nearest-neighbor、flat shading。
 - 3D 顯示可故意低幀率，但物理保持較高更新率。
-- HOME 的跑馬燈本身保持絲滑無縫；Logo 可使用頓挫式漂浮。
+- HOME 跑馬燈保持絲滑無縫。
+- Logo 可使用頓挫式漂浮。
 - 跑馬燈骰子可使用預渲染 / sprite，而非大量即時 WebGL 物件。
 
-需透過 `Retro Renderer Lab` 實機比較後再固定：
+以下由 `Retro Renderer Lab` 實機比較後凍結：
 
 - internal resolution
 - 3D presentation FPS
@@ -509,7 +455,16 @@ v0.1 需要一個小型設定頁 / 設定面板，不做大型偏好系統。
 
 ---
 
-## 17. 下一步工程順序
+## 17. 尚待實驗決定的技術參數
+
+這些不是互動規格缺口，不要求先由使用者憑空決策：
+
+1. `Retro Renderer Lab` 後固定 RetroRenderer 技術參數。
+2. `Physics Benchmark` 後固定完整碰撞 / ghost collision 數量門檻。
+
+---
+
+## 18. 下一步工程順序
 
 ```text
 Interaction Spec v0.1
@@ -527,16 +482,4 @@ Decision Engine / Slot
 正式 App Shell / UI 美術
 ```
 
----
-
-## 18. 待確認清單
-
-目前真正未定的主要項目：
-
-1. Total 詳細顯示格式（原第 10 題 `10.10`，需確認 A / B / C）。
-2. v0.1 History 的精確上限是否採 20。
-3. Renderer Lab 後固定的 RetroRenderer 技術參數。
-4. Physics Benchmark 後固定的完整碰撞 / ghost collision 數量門檻。
-5. Choice 抽屜最終採 push / overlay / 其他形式；目前只要求穩定、Roll 時自動收起。
-
-以上項目未確定前，不應由實作者自行猜測成永久規格。
+互動規格 v0.1 至此收口；後續實作者不應擅自改變上述流程與資料語義，除非另行更新本文件。
