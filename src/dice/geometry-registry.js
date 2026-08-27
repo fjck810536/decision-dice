@@ -9,38 +9,38 @@ function vecLength(v) {
 
 function normalizeVertices(vertices, targetRadius = TARGET_RADIUS) {
   const maxRadius = Math.max(...vertices.map(vecLength));
-  const s = targetRadius / maxRadius;
-  return vertices.map(([x, y, z]) => [x * s, y * s, z * s]);
+  const scale = targetRadius / maxRadius;
+  return vertices.map(([x, y, z]) => [x * scale, y * scale, z * scale]);
 }
 
 function faceCenter(vertices, face) {
-  const c = [0, 0, 0];
+  const center = [0, 0, 0];
   face.forEach((idx) => {
-    c[0] += vertices[idx][0];
-    c[1] += vertices[idx][1];
-    c[2] += vertices[idx][2];
+    center[0] += vertices[idx][0];
+    center[1] += vertices[idx][1];
+    center[2] += vertices[idx][2];
   });
-  return c.map((v) => v / face.length);
+  return center.map((v) => v / face.length);
 }
 
 function rawFaceNormal(vertices, face) {
   const a = vertices[face[0]], b = vertices[face[1]], c = vertices[face[2]];
   const ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
   const ac = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
-  const n = [
+  const normal = [
     ab[1] * ac[2] - ab[2] * ac[1],
     ab[2] * ac[0] - ab[0] * ac[2],
     ab[0] * ac[1] - ab[1] * ac[0],
   ];
-  const len = Math.hypot(...n) || 1;
-  return n.map((v) => v / len);
+  const length = Math.hypot(...normal) || 1;
+  return normal.map((v) => v / length);
 }
 
 function orientFaces(vertices, faces) {
   return faces.map((face) => {
-    const n = rawFaceNormal(vertices, face);
-    const c = faceCenter(vertices, face);
-    const outward = n[0] * c[0] + n[1] * c[1] + n[2] * c[2];
+    const normal = rawFaceNormal(vertices, face);
+    const center = faceCenter(vertices, face);
+    const outward = normal[0] * center[0] + normal[1] * center[1] + normal[2] * center[2];
     return outward >= 0 ? face.slice() : face.slice().reverse();
   });
 }
@@ -67,8 +67,8 @@ function makeConvexShape(vertices, faces) {
 }
 
 function extractTrianglePoly(geometry) {
-  const g = geometry.toNonIndexed();
-  const p = g.attributes.position.array;
+  const source = geometry.index ? geometry.toNonIndexed() : geometry;
+  const p = source.attributes.position.array;
   const vertices = [];
   const map = new Map();
   const faces = [];
@@ -96,8 +96,8 @@ function extractTrianglePoly(geometry) {
 
 function assignSequentialFaces(vertices, faces, values) {
   const order = faces
-    .map((face, idx) => ({ idx, n: rawFaceNormal(vertices, face) }))
-    .sort((a, b) => (b.n[1] - a.n[1]) || (b.n[0] - a.n[0]) || (b.n[2] - a.n[2]));
+    .map((face, idx) => ({ idx, normal: rawFaceNormal(vertices, face) }))
+    .sort((a, b) => (b.normal[1] - a.normal[1]) || (b.normal[0] - a.normal[0]) || (b.normal[2] - a.normal[2]));
   const out = Array(faces.length);
   order.forEach((item, i) => { out[item.idx] = values[i]; });
   return out;
@@ -117,10 +117,12 @@ function assignOppositePairs(vertices, faces, lowValue, highValue) {
     });
     const a = ordered[0];
     remaining.delete(a);
+
     if (!remaining.size) {
       values[a] = low;
       break;
     }
+
     let opposite = null;
     let minDot = Infinity;
     for (const candidate of remaining) {
@@ -131,19 +133,22 @@ function assignOppositePairs(vertices, faces, lowValue, highValue) {
         opposite = candidate;
       }
     }
+
     values[a] = low;
     values[opposite] = high;
     remaining.delete(opposite);
     low += 1;
     high -= 1;
   }
+
   return values;
 }
 
 function makePolyEntry(key, poly, values, options = {}) {
   const { vertices, faces } = poly;
+  const semanticFaces = poly.semanticFaces ?? faces;
   const visualGeometry = makeThreeGeometry(vertices, faces);
-  const faceMeta = faces.map((face, i) => ({
+  const faceMeta = semanticFaces.map((face, i) => ({
     id: `${key}-f${i}`,
     value: values[i],
     label: String(values[i]),
@@ -164,46 +169,50 @@ function makePolyEntry(key, poly, values, options = {}) {
 function makeBoxEntry(key, faceDefs, options = {}) {
   const half = 0.475;
   const side = half * 2;
-  const visualGeometry = new THREE.BoxGeometry(side, side, side);
   return {
     key,
     publicType: options.publicType ?? key,
     radius: Math.sqrt(3) * half,
-    visualGeometry,
+    visualGeometry: new THREE.BoxGeometry(side, side, side),
     color: options.color ?? 0xc0bba0,
-    faces: faceDefs.map((f, i) => ({
+    faces: faceDefs.map((face, i) => ({
       id: `${key}-f${i}`,
-      value: f.value,
-      label: String(f.label ?? f.value),
-      normal: f.normal,
+      value: face.value,
+      label: String(face.label ?? face.value),
+      normal: face.normal,
     })),
     createShape: () => new CANNON.Box(new CANNON.Vec3(half, half, half)),
   };
 }
 
 function makeD10Poly() {
-  const r = 1;
-  const y = 0.38;
-  const vertices = [[0, 1.45, 0], [0, -1.45, 0]];
-  for (let i = 0; i < 5; i += 1) {
-    const a = (i / 5) * Math.PI * 2;
-    vertices.push([Math.cos(a) * r, y, Math.sin(a) * r]);
+  const vertices = [[0, 0, 1], [0, 0, -1]];
+  for (let i = 0; i < 10; i += 1) {
+    const angle = (i * Math.PI * 2) / 10;
+    vertices.push([
+      -Math.cos(angle),
+      -Math.sin(angle),
+      0.105 * (i % 2 ? 1 : -1),
+    ]);
   }
-  for (let i = 0; i < 5; i += 1) {
-    const a = ((i + 0.5) / 5) * Math.PI * 2;
-    vertices.push([Math.cos(a) * r, -y, Math.sin(a) * r]);
+
+  const topFaces = [];
+  const bottomFaces = [];
+  for (let i = 0; i < 10; i += 1) {
+    const a = 2 + i;
+    const b = 2 + ((i + 1) % 10);
+    topFaces.push([0, a, b]);
+    bottomFaces.push([1, b, a]);
   }
-  const faces = [];
-  for (let i = 0; i < 5; i += 1) {
-    const a0 = 2 + i;
-    const a1 = 2 + ((i + 1) % 5);
-    const b0 = 7 + i;
-    const b1 = 7 + ((i + 1) % 5);
-    faces.push([0, a0, b0, a1]);
-    faces.push([1, b1, a1, b0]);
-  }
+
   const scaled = normalizeVertices(vertices);
-  return { vertices: scaled, faces: orientFaces(scaled, faces) };
+  const oriented = orientFaces(scaled, [...topFaces, ...bottomFaces]);
+
+  return {
+    vertices: scaled,
+    faces: oriented,
+    semanticFaces: oriented.slice(0, 10),
+  };
 }
 
 const d3Faces = [
@@ -222,14 +231,15 @@ const tetra = extractTrianglePoly(new THREE.TetrahedronGeometry(1, 0));
 const octa = extractTrianglePoly(new THREE.OctahedronGeometry(1, 0));
 const icosa = extractTrianglePoly(new THREE.IcosahedronGeometry(1, 0));
 const d10Poly = makeD10Poly();
+const d10Semantic = d10Poly.semanticFaces;
 
 const entries = new Map();
 entries.set('d3', makeBoxEntry('d3', d3Faces, { color: 0xb8b69d }));
 entries.set('d4', makePolyEntry('d4', tetra, assignSequentialFaces(tetra.vertices, tetra.faces, [1, 2, 3, 4]), { color: 0xc0b69b }));
 entries.set('d6', makeBoxEntry('d6', d6Faces, { color: 0xbab79c }));
 entries.set('d8', makePolyEntry('d8', octa, assignOppositePairs(octa.vertices, octa.faces, 1, 8), { color: 0xb2b69c }));
-entries.set('d10', makePolyEntry('d10', d10Poly, assignOppositePairs(d10Poly.vertices, d10Poly.faces, 1, 10), { color: 0xbeb196 }));
-entries.set('d10-digit', makePolyEntry('d10-digit', d10Poly, assignOppositePairs(d10Poly.vertices, d10Poly.faces, 0, 9), { publicType: 'd100', color: 0xb3ad93 }));
+entries.set('d10', makePolyEntry('d10', d10Poly, assignOppositePairs(d10Poly.vertices, d10Semantic, 1, 10), { color: 0xbeb196 }));
+entries.set('d10-digit', makePolyEntry('d10-digit', d10Poly, assignOppositePairs(d10Poly.vertices, d10Semantic, 0, 9), { publicType: 'd100', color: 0xb3ad93 }));
 entries.set('d20', makePolyEntry('d20', icosa, assignOppositePairs(icosa.vertices, icosa.faces, 1, 20), { color: 0xb5b296 }));
 
 export const PUBLIC_DIE_TYPES = ['d3', 'd4', 'd6', 'd8', 'd10', 'd20', 'd100'];
@@ -245,7 +255,7 @@ export class GeometryRegistry {
     return type === 'd100' || entries.has(type);
   }
 
-  getPhysicalEntry(logicalType, componentRole = null) {
+  getPhysicalEntry(logicalType) {
     if (logicalType === 'd100') return this.get('d10-digit');
     return this.get(logicalType);
   }
