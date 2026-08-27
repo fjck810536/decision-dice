@@ -20,8 +20,8 @@
 <body>
   <div class="orientation">PHYSICS BENCHMARK<br><br>請轉回直向</div>
   <main>
-    <h1>DICE PHYSICS BENCHMARK</h1>
-    <p class="lead">診斷頁，不是正式介面。Renderer 固定使用 C′：240px internal buffer、12fps、flat、無 AA、像素放大；已移除整顆骰子的 transform snap。物理固定 60Hz。</p>
+    <h1>DICE PHYSICS BENCHMARK / SETTLE V2</h1>
+    <p class="lead">診斷頁，不是正式介面。Renderer 固定使用 C′：240px internal buffer、12fps、flat、無 AA、像素放大。物理固定 60Hz。V2 在 1 秒後以目前最朝上的面為依據施加收斂 torque，不預抽結果。</p>
 
     <section class="controls">
       <div class="group">
@@ -46,7 +46,7 @@
     <button class="run" id="runBtn">ROLL / RUN TEST</button>
 
     <section class="stage" id="stage">
-      <canvas id="canvas"></canvas><div class="dither"></div><div class="badge" id="badge">READY</div>
+      <canvas id="canvas"></canvas><div class="dither"></div><div class="badge" id="badge">READY / SETTLE V2</div>
     </section>
 
     <section class="stats">
@@ -64,7 +64,7 @@
       <div class="loghead"><b>RUN LOG</b><button class="copy" id="copyBtn">COPY LAST</button></div>
       <div class="rows" id="rows">尚未執行。</div>
     </section>
-    <p class="foot">建議至少測：10×D20 FULL、20×D20 FULL、20×D20 GHOST、50×D20 GHOST。判定只是工程提示，不是正式門檻；真正門檻由你的實機資料決定。</p>
+    <p class="foot">第二輪仍測：10×D20 FULL、20×D20 FULL、20×D20 GHOST、50×D20 GHOST。目標是確認 face-aware settling 能否把收斂壓進約 1.5–2 秒。</p>
   </main>
 
   <script type="module">
@@ -74,7 +74,7 @@
     const $=s=>document.querySelector(s); const canvas=$('#canvas'),stage=$('#stage'),runBtn=$('#runBtn'),badge=$('#badge');
     const outs={avg:$('#avg'),max:$('#max'),settle:$('#settle'),active:$('#active'),steps:$('#steps'),status:$('#status')};
     let cfg={type:'d20',count:10,collision:'full'}, renderer,scene,camera,world,visuals=[],bodies=[],running=false,lastRender=0,lastFrame=performance.now(),runStart=0,stepTimes=[],physicsSteps=0,lastLine='';
-    const history=[]; const DICE=1,ENV=2;
+    const history=[]; const DICE=1,ENV=2,UP=new CANNON.Vec3(0,1,0);
 
     function choose(container,key,value){document.querySelectorAll(`${container} button`).forEach(b=>b.setAttribute('aria-pressed','false')); const b=document.querySelector(`${container} [data-${key}="${value}"]`); if(b)b.setAttribute('aria-pressed','true')}
     $('#typeChoices').addEventListener('click',e=>{const v=e.target.dataset.type;if(!v||running)return;cfg.type=v;choose('#typeChoices','type',v);buildPreview()});
@@ -83,7 +83,7 @@
 
     function dedupConvex(geometry,scale=1){const g=geometry.toNonIndexed(),p=g.attributes.position.array,verts=[],map=new Map(),faces=[]; const key=(x,y,z)=>`${x.toFixed(5)},${y.toFixed(5)},${z.toFixed(5)}`; for(let i=0;i<p.length;i+=9){const face=[];for(let j=0;j<9;j+=3){const x=p[i+j]*scale,y=p[i+j+1]*scale,z=p[i+j+2]*scale,k=key(x,y,z);let idx=map.get(k);if(idx===undefined){idx=verts.length;map.set(k,idx);verts.push(new CANNON.Vec3(x,y,z))}face.push(idx)}if(new Set(face).size===3)faces.push(face)} return new CANNON.ConvexPolyhedron({vertices:verts,faces});}
 
-    function d10Geometry(r=.68){const verts=[]; const n=5; verts.push(0,.92*r,0); verts.push(0,-.92*r,0); for(let i=0;i<n;i++){let a=i*Math.PI*2/n;verts.push(Math.cos(a)*r,.18*r,Math.sin(a)*r)} for(let i=0;i<n;i++){let a=(i+.5)*Math.PI*2/n;verts.push(Math.cos(a)*r,-.18*r,Math.sin(a)*r)} const pos=[]; for(let i=0;i<n;i++){let u=2+i,un=2+(i+1)%n,l=7+i,lp=7+(i+n-1)%n; for(const tri of [[0,u,un],[u,l,un],[un,l,7+(i+1)%n],[1,7+(i+1)%n,l]]) for(const q of tri)pos.push(...verts[q])} const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g;}
+    function d10Geometry(r=.68){const verts=[]; const n=5; verts.push(0,.92*r,0); verts.push(0,-.92*r,0); for(let i=0;i<n;i++){let a=i*Math.PI*2/n;verts.push(Math.cos(a)*r,.18*r,Math.sin(a)*r)} for(let i=0;i<n;i++){let a=(i+.5)*Math.PI*2/n;verts.push(Math.cos(a)*r,-.18*r,Math.sin(a)*r)} const pos=[]; for(let i=0;i<n;i++){let u=2+i,un=2+(i+1)%n,l=7+i; for(const tri of [[0,u,un],[u,l,un],[un,l,7+(i+1)%n],[1,7+(i+1)%n,l]]) for(const q of tri)pos.push(...verts[q])} const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g;}
     function shapeAndGeometry(type){if(type==='d6'){return{geo:new THREE.BoxGeometry(1,1,1),shape:new CANNON.Box(new CANNON.Vec3(.5,.5,.5))}} let geo; if(type==='d4')geo=new THREE.TetrahedronGeometry(.72,0); if(type==='d8')geo=new THREE.OctahedronGeometry(.72,0); if(type==='d10')geo=d10Geometry(1); if(type==='d20')geo=new THREE.IcosahedronGeometry(.72,0); return{geo,shape:dedupConvex(geo,1)}}
 
     function initScene(){scene=new THREE.Scene();scene.background=new THREE.Color(0x11130f);camera=new THREE.PerspectiveCamera(43,1,.1,80);camera.position.set(0,7.8,8.4);camera.lookAt(0,.5,0);scene.add(new THREE.AmbientLight(0xd8d1b9,1.15));const sun=new THREE.DirectionalLight(0xffffff,1.45);sun.position.set(4,9,5);scene.add(sun);renderer=new THREE.WebGLRenderer({canvas,antialias:false,powerPreference:'default'});renderer.outputColorSpace=THREE.SRGBColorSpace;resize();addEventListener('resize',resize,{passive:true});}
@@ -98,11 +98,13 @@
     function buildPreview(){buildDice({throwing:false});syncMeshes();renderer.render(scene,camera);badge.textContent=`${cfg.count} × ${cfg.type.toUpperCase()} / ${cfg.collision.toUpperCase()}`}
     function syncMeshes(){for(let i=0;i<bodies.length;i++){const b=bodies[i],m=visuals[i];m.position.copy(b.position);m.quaternion.copy(b.quaternion)}}
 
-    function startRun(){if(running)return;running=true;runBtn.disabled=true;runBtn.textContent='RUNNING…';stepTimes=[];physicsSteps=0;runStart=performance.now();lastFrame=runStart;lastRender=0;buildDice({throwing:true});badge.textContent=`RUN ${cfg.count} × ${cfg.type.toUpperCase()} / ${cfg.collision.toUpperCase()}`;outs.avg.textContent=outs.max.textContent=outs.settle.textContent='…';outs.status.textContent='RUNNING';outs.status.dataset.tone=''; requestAnimationFrame(loop)}
-    function assist(elapsed){if(elapsed<=1)return;const half=.125,a=1-Math.pow(.5,(elapsed-1)/half);for(const b of bodies){b.linearDamping=.08+a*.48;b.angularDamping=.09+a*.67;if(elapsed>1.35&&b.velocity.length()<.8&&b.angularVelocity.length()<1.6){b.angularVelocity.scale(.82,b.angularVelocity);b.velocity.x*=.9;b.velocity.z*=.9}}}
+    function faceNormals(body){const shape=body.shapes[0];if(shape.faceNormals?.length)return shape.faceNormals;if(shape.convexPolyhedronRepresentation?.faceNormals?.length)return shape.convexPolyhedronRepresentation.faceNormals;return [new CANNON.Vec3(1,0,0),new CANNON.Vec3(-1,0,0),new CANNON.Vec3(0,1,0),new CANNON.Vec3(0,-1,0),new CANNON.Vec3(0,0,1),new CANNON.Vec3(0,0,-1)]}
+    function topFace(body){let best=null,bestDot=-Infinity;const worldN=new CANNON.Vec3();for(const local of faceNormals(body)){body.quaternion.vmult(local,worldN);const d=worldN.y;if(d>bestDot){bestDot=d;best=worldN.clone()}}return{normal:best,dot:bestDot}}
+    function startRun(){if(running)return;running=true;runBtn.disabled=true;runBtn.textContent='RUNNING…';stepTimes=[];physicsSteps=0;runStart=performance.now();lastFrame=runStart;lastRender=0;buildDice({throwing:true});badge.textContent=`RUN ${cfg.count} × ${cfg.type.toUpperCase()} / ${cfg.collision.toUpperCase()} / V2`;outs.avg.textContent=outs.max.textContent=outs.settle.textContent='…';outs.status.textContent='RUNNING';outs.status.dataset.tone=''; requestAnimationFrame(loop)}
+    function assist(elapsed){if(elapsed<=1)return;const half=.125,a=1-Math.pow(.5,(elapsed-1)/half);for(const b of bodies){b.linearDamping=.08+a*.22;b.angularDamping=.09+a*.32;const speed=b.velocity.length(),spin=b.angularVelocity.length();if(speed<2.2&&spin<5.5){const top=topFace(b),axis=top.normal.cross(UP);b.torque.x+=axis.x*(2.8*a);b.torque.y+=axis.y*(2.8*a);b.torque.z+=axis.z*(2.8*a);if(elapsed>1.32){b.velocity.x*=.94;b.velocity.z*=.94;b.angularVelocity.scale(.94,b.angularVelocity)}if(elapsed>1.55&&top.dot>.985&&speed<.24&&spin<.34){b.velocity.setZero();b.angularVelocity.setZero();b.sleep()}}}}
     function loop(now){if(!running)return;const dt=Math.min(.05,(now-lastFrame)/1000);lastFrame=now;const elapsed=(now-runStart)/1000;assist(elapsed);const p0=performance.now();world.step(1/60,dt,3);const pms=performance.now()-p0;stepTimes.push(pms);physicsSteps++; const active=bodies.filter(b=>b.sleepState!==CANNON.Body.SLEEPING&&(b.velocity.length()>0.08||b.angularVelocity.length()>0.12)).length;outs.active.textContent=String(active);outs.steps.textContent=String(physicsSteps); if(now-lastRender>=1000/12){syncMeshes();renderer.render(scene,camera);lastRender=now}
       const allSettled=active===0&&elapsed>.7; if(allSettled||elapsed>3.2){finish(elapsed,allSettled);return}requestAnimationFrame(loop)}
-    function finish(elapsed,settled){running=false;runBtn.disabled=false;runBtn.textContent='ROLL / RUN TEST';syncMeshes();renderer.render(scene,camera);const avg=stepTimes.reduce((a,b)=>a+b,0)/Math.max(1,stepTimes.length),max=Math.max(0,...stepTimes);outs.avg.textContent=`${avg.toFixed(2)} ms`;outs.max.textContent=`${max.toFixed(2)} ms`;outs.settle.textContent=settled?`${elapsed.toFixed(2)} s`:`>${elapsed.toFixed(2)} s`; const good=avg<8&&max<30&&settled&&elapsed<=2.5;outs.status.textContent=good?'OK':'SLOW / CHECK';outs.status.dataset.tone=good?'good':'bad';lastLine=`${cfg.count}x${cfg.type.toUpperCase()} ${cfg.collision.toUpperCase()} | avg ${avg.toFixed(2)}ms | max ${max.toFixed(2)}ms | settle ${settled?elapsed.toFixed(2)+'s':'timeout'} | steps ${physicsSteps}`;history.unshift(lastLine);history.splice(8);$('#rows').textContent=history.join('\n');badge.textContent=good?'DONE / OK':'DONE / CHECK'}
+    function finish(elapsed,settled){running=false;runBtn.disabled=false;runBtn.textContent='ROLL / RUN TEST';syncMeshes();renderer.render(scene,camera);const avg=stepTimes.reduce((a,b)=>a+b,0)/Math.max(1,stepTimes.length),max=Math.max(0,...stepTimes);outs.avg.textContent=`${avg.toFixed(2)} ms`;outs.max.textContent=`${max.toFixed(2)} ms`;outs.settle.textContent=settled?`${elapsed.toFixed(2)} s`:`>${elapsed.toFixed(2)} s`; const good=avg<8&&max<30&&settled&&elapsed<=2.2;outs.status.textContent=good?'OK':'SLOW / CHECK';outs.status.dataset.tone=good?'good':'bad';lastLine=`${cfg.count}x${cfg.type.toUpperCase()} ${cfg.collision.toUpperCase()} V2 | avg ${avg.toFixed(2)}ms | max ${max.toFixed(2)}ms | settle ${settled?elapsed.toFixed(2)+'s':'timeout'} | steps ${physicsSteps}`;history.unshift(lastLine);history.splice(8);$('#rows').textContent=history.join('\n');badge.textContent=good?'DONE / OK':'DONE / CHECK'}
     runBtn.addEventListener('click',startRun);$('#copyBtn').addEventListener('click',async()=>{if(!lastLine)return;try{await navigator.clipboard.writeText(lastLine);$('#copyBtn').textContent='COPIED';setTimeout(()=>$('#copyBtn').textContent='COPY LAST',900)}catch{alert(lastLine)}});
 
     initScene();buildPreview();
