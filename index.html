@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#10110f">
+  <title>擲骰與選擇障礙輔助裝置</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #10110f;
+      --panel: #171914;
+      --ink: #e7e4d7;
+      --muted: #8f9385;
+      --line: #4b5045;
+      --acid: #cbd483;
+      --danger: #a45f4f;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+    }
+
+    body {
+      min-height: 100svh;
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    button { font: inherit; }
+
+    .app {
+      position: relative;
+      width: min(100%, 680px);
+      min-height: 100svh;
+      margin: 0 auto;
+      overflow: hidden;
+      padding: max(18px, env(safe-area-inset-top)) 0 max(22px, env(safe-area-inset-bottom));
+      background:
+        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px) 0 0 / 100% 4px,
+        var(--bg);
+    }
+
+    .app::after {
+      content: "";
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 42%, transparent 0 48%, rgba(0,0,0,.30) 100%);
+      z-index: 8;
+    }
+
+    .top-code {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 18px 8px;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: .13em;
+    }
+
+    .marquee-stack {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      gap: 7px;
+      margin: 8px 0 12px;
+      transform: rotate(-1.5deg) scale(1.035);
+    }
+
+    .marquee {
+      overflow: hidden;
+      border-top: 1px solid rgba(203,212,131,.16);
+      border-bottom: 1px solid rgba(203,212,131,.10);
+      background: rgba(23,25,20,.56);
+      white-space: nowrap;
+    }
+
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      will-change: transform;
+      animation: scroll-left 22s linear infinite;
+    }
+
+    .marquee.reverse .marquee-track {
+      animation-name: scroll-right;
+      animation-duration: 27s;
+    }
+
+    .marquee.fast .marquee-track { animation-duration: 17s; }
+
+    .marquee-row {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      gap: 10px;
+      padding: 6px 5px;
+    }
+
+    .die-chip {
+      display: inline-grid;
+      grid-template-columns: auto auto;
+      align-items: center;
+      gap: 6px;
+      min-width: 74px;
+      padding: 5px 8px 5px 7px;
+      border: 1px solid #565b4e;
+      background: #1c1e19;
+      color: #d9d8c9;
+      box-shadow: inset 2px 2px 0 rgba(255,255,255,.035), inset -2px -2px 0 rgba(0,0,0,.34);
+    }
+
+    .die-shape {
+      display: grid;
+      place-items: center;
+      width: 29px;
+      height: 29px;
+      border: 1px solid #858978;
+      background: #c7c4af;
+      color: #181914;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1;
+      clip-path: polygon(18% 2%, 82% 2%, 98% 18%, 98% 82%, 82% 98%, 18% 98%, 2% 82%, 2% 18%);
+    }
+
+    .die-chip:nth-child(3n) .die-shape {
+      transform: rotate(6deg);
+    }
+
+    .die-chip:nth-child(4n) .die-shape {
+      transform: rotate(-8deg);
+    }
+
+    .die-label {
+      font-size: 12px;
+      letter-spacing: .08em;
+    }
+
+    .hero {
+      position: relative;
+      z-index: 4;
+      display: grid;
+      place-items: center;
+      min-height: 330px;
+      padding: 18px 18px 12px;
+    }
+
+    .logo-wrap {
+      width: min(92%, 430px);
+      animation: stepped-float 2.4s steps(11, end) infinite;
+      will-change: transform;
+    }
+
+    .logo-kicker {
+      margin: 0 0 4px;
+      text-align: center;
+      color: var(--acid);
+      font-size: 10px;
+      letter-spacing: .35em;
+    }
+
+    .logo {
+      margin: 0;
+      color: #eeeade;
+      font-family: "Songti TC", "Noto Serif TC", PMingLiU, MingLiU, serif;
+      font-weight: 900;
+      font-size: clamp(38px, 11.8vw, 72px);
+      line-height: .92;
+      letter-spacing: -.08em;
+      text-align: center;
+      transform: scaleX(.82);
+      text-shadow: 2px 0 0 rgba(164,95,79,.34), -1px 0 0 rgba(203,212,131,.17);
+    }
+
+    .logo span {
+      display: block;
+      white-space: nowrap;
+    }
+
+    .logo span:nth-child(2) {
+      margin-left: .30em;
+    }
+
+    .logo span:nth-child(3) {
+      margin-left: -.14em;
+    }
+
+    .serial {
+      display: flex;
+      justify-content: center;
+      gap: 13px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 9px;
+      letter-spacing: .13em;
+    }
+
+    .controls {
+      position: relative;
+      z-index: 10;
+      display: grid;
+      gap: 12px;
+      padding: 0 18px;
+    }
+
+    .mode-button {
+      position: relative;
+      width: 100%;
+      min-height: 72px;
+      border: 1px solid #737866;
+      border-radius: 0;
+      background: #1c1f19;
+      color: var(--ink);
+      appearance: none;
+      -webkit-appearance: none;
+      touch-action: manipulation;
+      text-align: left;
+      padding: 11px 17px 11px 68px;
+      box-shadow: inset 3px 3px 0 rgba(255,255,255,.035), inset -3px -3px 0 rgba(0,0,0,.35);
+    }
+
+    .mode-button::before {
+      content: attr(data-index);
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: grid;
+      place-items: center;
+      width: 39px;
+      height: 39px;
+      border: 1px solid #686d5e;
+      color: var(--acid);
+      font-size: 13px;
+    }
+
+    .mode-button::after {
+      content: "▶";
+      position: absolute;
+      right: 17px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #8f9385;
+      font-size: 13px;
+    }
+
+    .mode-button:active {
+      transform: translate(2px, 2px);
+      background: #272a21;
+      border-color: var(--acid);
+    }
+
+    .mode-title {
+      display: block;
+      font-family: "Songti TC", "Noto Serif TC", PMingLiU, serif;
+      font-size: 27px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: .24em;
+    }
+
+    .mode-subtitle {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 9px;
+      letter-spacing: .16em;
+    }
+
+    .status {
+      min-height: 29px;
+      padding: 9px 18px 0;
+      color: #999d8f;
+      font-size: 10px;
+      line-height: 1.35;
+      text-align: center;
+      letter-spacing: .08em;
+    }
+
+    .footer-code {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 18px 0;
+      color: #62665c;
+      font-size: 8px;
+      letter-spacing: .10em;
+    }
+
+    @keyframes scroll-left {
+      from { transform: translate3d(0,0,0); }
+      to { transform: translate3d(-50%,0,0); }
+    }
+
+    @keyframes scroll-right {
+      from { transform: translate3d(-50%,0,0); }
+      to { transform: translate3d(0,0,0); }
+    }
+
+    @keyframes stepped-float {
+      0%   { transform: translateY(1px) rotate(-.15deg); }
+      18%  { transform: translateY(-2px) rotate(0deg); }
+      36%  { transform: translateY(-5px) rotate(.10deg); }
+      52%  { transform: translateY(-7px) rotate(.16deg); }
+      68%  { transform: translateY(-4px) rotate(.04deg); }
+      84%  { transform: translateY(0px) rotate(-.08deg); }
+      100% { transform: translateY(1px) rotate(-.15deg); }
+    }
+
+    @media (min-width: 520px) {
+      .app { border-left: 1px solid #24271f; border-right: 1px solid #24271f; }
+      .hero { min-height: 370px; }
+      .controls { grid-template-columns: 1fr 1fr; }
+      .mode-button { min-height: 86px; }
+    }
+
+    @media (max-height: 740px) and (orientation: portrait) {
+      .hero { min-height: 274px; padding-top: 7px; padding-bottom: 6px; }
+      .marquee-stack { margin-top: 2px; margin-bottom: 2px; gap: 5px; }
+      .mode-button { min-height: 66px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .marquee-track, .logo-wrap { animation-play-state: paused; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="top-code" aria-hidden="true">
+      <span>DECISION AUXILIARY DEVICE</span>
+      <span>SYS:00</span>
+    </div>
+
+    <section class="marquee-stack" aria-label="骰子類型跑馬燈">
+      <div class="marquee">
+        <div class="marquee-track">
+          <div class="marquee-row">
+            <span class="die-chip"><b class="die-shape">4</b><span class="die-label">D4</span></span>
+            <span class="die-chip"><b class="die-shape">6</b><span class="die-label">D6</span></span>
+            <span class="die-chip"><b class="die-shape">8</b><span class="die-label">D8</span></span>
+            <span class="die-chip"><b class="die-shape">10</b><span class="die-label">D10</span></span>
+            <span class="die-chip"><b class="die-shape">20</b><span class="die-label">D20</span></span>
+            <span class="die-chip"><b class="die-shape">00</b><span class="die-label">D100</span></span>
+          </div>
+          <div class="marquee-row" aria-hidden="true">
+            <span class="die-chip"><b class="die-shape">4</b><span class="die-label">D4</span></span>
+            <span class="die-chip"><b class="die-shape">6</b><span class="die-label">D6</span></span>
+            <span class="die-chip"><b class="die-shape">8</b><span class="die-label">D8</span></span>
+            <span class="die-chip"><b class="die-shape">10</b><span class="die-label">D10</span></span>
+            <span class="die-chip"><b class="die-shape">20</b><span class="die-label">D20</span></span>
+            <span class="die-chip"><b class="die-shape">00</b><span class="die-label">D100</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="marquee reverse">
+        <div class="marquee-track">
+          <div class="marquee-row">
+            <span class="die-chip"><b class="die-shape">20</b><span class="die-label">D20</span></span>
+            <span class="die-chip"><b class="die-shape">8</b><span class="die-label">D8</span></span>
+            <span class="die-chip"><b class="die-shape">6</b><span class="die-label">D6÷2</span></span>
+            <span class="die-chip"><b class="die-shape">00</b><span class="die-label">D100</span></span>
+            <span class="die-chip"><b class="die-shape">4</b><span class="die-label">D4</span></span>
+          </div>
+          <div class="marquee-row" aria-hidden="true">
+            <span class="die-chip"><b class="die-shape">20</b><span class="die-label">D20</span></span>
+            <span class="die-chip"><b class="die-shape">8</b><span class="die-label">D8</span></span>
+            <span class="die-chip"><b class="die-shape">6</b><span class="die-label">D6÷2</span></span>
+            <span class="die-chip"><b class="die-shape">00</b><span class="die-label">D100</span></span>
+            <span class="die-chip"><b class="die-shape">4</b><span class="die-label">D4</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="marquee fast">
+        <div class="marquee-track">
+          <div class="marquee-row">
+            <span class="die-chip"><b class="die-shape">10</b><span class="die-label">D10</span></span>
+            <span class="die-chip"><b class="die-shape">4</b><span class="die-label">D4</span></span>
+            <span class="die-chip"><b class="die-shape">00</b><span class="die-label">D100</span></span>
+            <span class="die-chip"><b class="die-shape">6</b><span class="die-label">D6</span></span>
+            <span class="die-chip"><b class="die-shape">8</b><span class="die-label">D8</span></span>
+          </div>
+          <div class="marquee-row" aria-hidden="true">
+            <span class="die-chip"><b class="die-shape">10</b><span class="die-label">D10</span></span>
+            <span class="die-chip"><b class="die-shape">4</b><span class="die-label">D4</span></span>
+            <span class="die-chip"><b class="die-shape">00</b><span class="die-label">D100</span></span>
+            <span class="die-chip"><b class="die-shape">6</b><span class="die-label">D6</span></span>
+            <span class="die-chip"><b class="die-shape">8</b><span class="die-label">D8</span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="hero" aria-labelledby="main-title">
+      <div class="logo-wrap">
+        <p class="logo-kicker">DICE / CHOICE ASSIST SYSTEM</p>
+        <h1 id="main-title" class="logo">
+          <span>擲骰與</span>
+          <span>選擇障礙</span>
+          <span>輔助裝置</span>
+        </h1>
+        <div class="serial" aria-hidden="true">
+          <span>TYPE: D.C.A.D.</span>
+          <span>VER 00.1</span>
+        </div>
+      </div>
+    </section>
+
+    <nav class="controls" aria-label="主要模式">
+      <button class="mode-button" type="button" data-index="01" data-mode="骰子">
+        <span class="mode-title">骰子</span>
+        <span class="mode-subtitle">DICE POOL / MULTI-DIE MODE</span>
+      </button>
+      <button class="mode-button" type="button" data-index="02" data-mode="選擇">
+        <span class="mode-title">選擇</span>
+        <span class="mode-subtitle">CHOICE / DECISION MODE</span>
+      </button>
+    </nav>
+
+    <p id="status" class="status" aria-live="polite">首頁外殼測試版｜功能頁將於下一階段接入</p>
+
+    <div class="footer-code" aria-hidden="true">
+      <span>NO SERVER / LOCAL DECISION UNIT</span>
+      <span>READY</span>
+    </div>
+  </main>
+
+  <script>
+    const status = document.getElementById('status');
+    document.querySelectorAll('.mode-button').forEach((button) => {
+      button.addEventListener('click', () => {
+        const mode = button.dataset.mode;
+        status.textContent = `「${mode}」模式已收到輸入｜此頁將在下一個功能分支接入`;
+      });
+    });
+  </script>
+</body>
+</html>
