@@ -1,0 +1,60 @@
+const rowA = ['D4', 'D6', 'D8', 'D10', 'D20', 'D100'];
+const rowB = ['D20', 'D8', 'D3', 'D100', 'D4', 'D6'];
+const rowC = ['D10', 'D4', 'D100', 'D6', 'D8', 'D20'];
+
+function dieChips(items) {
+  const oneRow = items.map((label) => {
+    const face = label === 'D100' ? '00' : label.replace('D', '');
+    return `<span class="die-chip"><b class="die-shape">${face}</b><span class="die-label">${label}</span></span>`;
+  }).join('');
+  return `<div class="marquee-row">${oneRow}</div><div class="marquee-row" aria-hidden="true">${oneRow}</div>`;
+}
+
+export function renderHome(container, { onDice }) {
+  container.innerHTML = `
+    <div class="top-code" aria-hidden="true">
+      <span>DECISION AUXILIARY DEVICE</span>
+      <span>SYS:01</span>
+    </div>
+
+    <section class="marquee-stack" aria-label="骰子類型跑馬燈">
+      <div class="marquee"><div class="marquee-track">${dieChips(rowA)}</div></div>
+      <div class="marquee reverse"><div class="marquee-track">${dieChips(rowB)}</div></div>
+      <div class="marquee fast"><div class="marquee-track">${dieChips(rowC)}</div></div>
+    </section>
+
+    <section class="hero" aria-labelledby="main-title">
+      <div class="logo-wrap">
+        <p class="logo-kicker">DICE / CHOICE ASSIST SYSTEM</p>
+        <h1 id="main-title" class="logo">
+          <span>擲骰與</span>
+          <span>選擇障礙</span>
+          <span>輔助裝置</span>
+        </h1>
+        <div class="serial" aria-hidden="true">
+          <span>TYPE: D.C.A.D.</span>
+          <span>VER 00.1</span>
+        </div>
+      </div>
+    </section>
+
+    <nav class="home-controls" aria-label="主要模式">
+      <button class="mode-button" id="home-dice" type="button" data-index="01">
+        <span class="mode-title">骰子</span>
+        <span class="mode-subtitle">DICE POOL / MULTI-DIE MODE</span>
+      </button>
+      <button class="mode-button is-disabled" type="button" data-index="02" disabled aria-disabled="true">
+        <span class="mode-title">選擇</span>
+        <span class="mode-subtitle">CHOICE / NEXT MILESTONE</span>
+      </button>
+    </nav>
+
+    <p class="home-status">DICE ENGINE MILESTONE 01｜CHOICE 尚未接入</p>
+    <div class="footer-code" aria-hidden="true">
+      <span>NO SERVER / SESSION ONLY</span>
+      <span>READY</span>
+    </div>
+  `;
+
+  container.querySelector('#home-dice').addEventListener('click', onDice);
+}
