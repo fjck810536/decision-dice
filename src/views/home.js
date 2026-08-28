@@ -37,6 +37,10 @@ export function renderHome(container, { onDice, onChoice }) {
         <span>SYS:01</span>
       </div>
 
+      <div class="home-marquee-strip" aria-label="骰子類型頂端跑馬燈">
+        ${marqueeRow(rows.b, 'top-strip-row')}
+      </div>
+
       <div class="home-marquee-field home-marquee-field-back" aria-label="骰子類型背景跑馬燈">
         ${marqueeRow(rows.a, 'back-row back-row-a')}
         ${marqueeRow(rows.b, 'reverse back-row back-row-b')}
@@ -45,13 +49,19 @@ export function renderHome(container, { onDice, onChoice }) {
         ${marqueeRow(rows.e, 'back-row back-row-e')}
       </div>
 
+      <div class="home-marquee-field home-marquee-field-front" aria-label="骰子類型前景跑馬燈">
+        ${marqueeRow(rows.c, 'front-row front-row-a')}
+        ${marqueeRow(rows.a, 'reverse front-row front-row-b')}
+        ${marqueeRow(rows.d, 'front-row front-row-c')}
+      </div>
+
       <section class="hero home-p2-hero" aria-labelledby="main-title">
         <div class="logo-wrap home-p2-logo-wrap">
           <p class="logo-kicker">DICE / CHOICE ASSIST SYSTEM</p>
           <h1 id="main-title" class="logo home-p2-logo">
-            <span>擲骰與</span>
-            <span>選擇障礙</span>
-            <span>輔助裝置</span>
+            <span class="title-line title-line-a">擲骰與</span>
+            <span class="title-line title-line-b">選擇障礙</span>
+            <span class="title-line title-line-c">輔助裝置</span>
           </h1>
           <div class="serial" aria-hidden="true">
             <span>TYPE: D.C.A.D.</span>
@@ -59,12 +69,6 @@ export function renderHome(container, { onDice, onChoice }) {
           </div>
         </div>
       </section>
-
-      <div class="home-marquee-field home-marquee-field-front" aria-label="骰子類型前景跑馬燈">
-        ${marqueeRow(rows.c, 'front-row front-row-a')}
-        ${marqueeRow(rows.a, 'reverse front-row front-row-b')}
-        ${marqueeRow(rows.d, 'front-row front-row-c')}
-      </div>
 
       <nav class="home-controls home-controls-paired home-p2-controls" aria-label="主要模式">
         <button class="mode-button" id="home-dice" type="button">
