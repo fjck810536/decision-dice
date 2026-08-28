@@ -59,6 +59,14 @@ export class DiceEngine {
     this.running = false;
   }
 
+  setProjectionMode(mode) {
+    return this.renderer.setProjectionMode(mode);
+  }
+
+  getProjectionMode() {
+    return this.renderer.getProjectionMode();
+  }
+
   validatePool(pool) {
     const cleaned = pool
       .filter((item) => item && this.registry.has(item.type))
