@@ -4,6 +4,7 @@ import { D10D100ArtMarkingFactory as LockedD10D100Factory } from './d10-d100-art
 const ATLAS_CELL = 96;
 const FACE_OFFSET = 0.012;
 const INK = '#241d16';
+const INK_EDGE = 'rgba(70,55,40,.82)';
 const OLD_DICE_RED = '#96372f';
 const CUT_HIGHLIGHT = 'rgba(239,228,199,.28)';
 
@@ -50,7 +51,33 @@ function drawD6Cell(ctx, cell, value) {
   ctx.restore();
 }
 
-function makeD6Atlas(entry) {
+function drawD4Cell(ctx, cell, value) {
+  ctx.save();
+  ctx.clearRect(0, 0, cell, cell);
+  ctx.translate(cell * 0.50, cell * 0.50);
+  ctx.scale(0.96, 1.10);
+  ctx.font = `700 ${Math.round(cell * 0.74)}px Georgia, 'Times New Roman', serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  // Same shallow engraved illusion as the approved D10/D100 language:
+  // pale lower lip, dark cut edge, then warm-black fill.
+  ctx.strokeStyle = CUT_HIGHLIGHT;
+  ctx.lineWidth = Math.max(3, cell * 0.050);
+  ctx.strokeText(String(value), 0, cell * 0.035);
+
+  ctx.strokeStyle = INK_EDGE;
+  ctx.lineWidth = Math.max(2, cell * 0.030);
+  ctx.strokeText(String(value), 0, 0);
+
+  ctx.fillStyle = INK;
+  ctx.fillText(String(value), 0, 0);
+  ctx.restore();
+}
+
+function makeAtlas(entry, drawCell) {
   const count = entry.faces.length;
   const cols = Math.ceil(Math.sqrt(count));
   const rows = Math.ceil(count / cols);
@@ -65,7 +92,7 @@ function makeD6Atlas(entry) {
     const row = Math.floor(i / cols);
     ctx.save();
     ctx.translate(col * ATLAS_CELL, row * ATLAS_CELL);
-    drawD6Cell(ctx, ATLAS_CELL, face.value);
+    drawCell(ctx, ATLAS_CELL, face.value);
     ctx.restore();
   });
 
@@ -118,10 +145,10 @@ function pushQuad(positions, uvs, center, tangent, bitangent, half, uv) {
   }
 }
 
-function buildD6Geometry(entry, cols, rows) {
+function buildGeometry(entry, cols, rows, halfScale) {
   const positions = [];
   const uvs = [];
-  const half = entry.radius * 0.39;
+  const half = entry.radius * halfScale;
   const yAxis = new THREE.Vector3(0, 1, 0);
   const xAxis = new THREE.Vector3(1, 0, 0);
 
@@ -145,9 +172,9 @@ function buildD6Geometry(entry, cols, rows) {
   return geometry;
 }
 
-function makeD6Marking(entry) {
-  const { texture, cols, rows } = makeD6Atlas(entry);
-  const geometry = buildD6Geometry(entry, cols, rows);
+function makeMarking(entry, drawCell, halfScale) {
+  const { texture, cols, rows } = makeAtlas(entry, drawCell);
+  const geometry = buildGeometry(entry, cols, rows, halfScale);
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     transparent: true,
@@ -163,28 +190,40 @@ function makeD6Marking(entry) {
 
 export class OtherDiceArtMarkingFactory {
   constructor() {
-    // This delegate keeps the approved D10/D100 experiment frozen and also
-    // provides production markings for D4/D8/D20 until their own art passes.
+    // D10/D100 remain frozen in their approved experiment. D6 is approved;
+    // D4 is the current art pass. D8/D20 still delegate to production.
     this.locked = new LockedD10D100Factory();
     this.d6Cache = null;
+    this.d4Cache = null;
   }
 
   getMesh(record) {
-    if (record.entry.key !== 'd6') return this.locked.getMesh(record);
+    if (record.entry.key === 'd6') {
+      if (!this.d6Cache) this.d6Cache = makeMarking(record.entry, drawD6Cell, 0.39);
+      const mesh = new THREE.Mesh(this.d6Cache.geometry, this.d6Cache.material);
+      mesh.renderOrder = 2;
+      return mesh;
+    }
 
-    if (!this.d6Cache) this.d6Cache = makeD6Marking(record.entry);
-    const mesh = new THREE.Mesh(this.d6Cache.geometry, this.d6Cache.material);
-    mesh.renderOrder = 2;
-    return mesh;
+    if (record.entry.key === 'd4') {
+      if (!this.d4Cache) this.d4Cache = makeMarking(record.entry, drawD4Cell, 0.34);
+      const mesh = new THREE.Mesh(this.d4Cache.geometry, this.d4Cache.material);
+      mesh.renderOrder = 2;
+      return mesh;
+    }
+
+    return this.locked.getMesh(record);
   }
 
   dispose() {
     this.locked.dispose();
-    if (this.d6Cache) {
-      this.d6Cache.texture.dispose();
-      this.d6Cache.geometry.dispose();
-      this.d6Cache.material.dispose();
-      this.d6Cache = null;
+    for (const cached of [this.d6Cache, this.d4Cache]) {
+      if (!cached) continue;
+      cached.texture.dispose();
+      cached.geometry.dispose();
+      cached.material.dispose();
     }
+    this.d6Cache = null;
+    this.d4Cache = null;
   }
 }
