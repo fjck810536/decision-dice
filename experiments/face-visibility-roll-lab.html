@@ -230,12 +230,14 @@
       status.textContent = 'START';
 
       try {
-        const rollResult = await engine.roll({
+        const rollPromise = engine.roll({
           pool: [{ type: dieType, count }],
           onProgress(progress) {
             status.textContent = `${progress.phase} / ${progress.spawned}/${progress.physicalCount} / FIX ${progress.frozen}`;
           },
         });
+        applyCamera(cameraMode);
+        const rollResult = await rollPromise;
         result.textContent = formatResult(rollResult);
         status.textContent = 'DONE / FACE RESOLVED';
         applyCamera(cameraMode);
