@@ -4,6 +4,8 @@ import { D10D100ArtMarkingFactory as LockedTensV7Factory } from './d10-d100-art-
 const ONES_ATLAS_CELL = 96;
 const FACE_OFFSET = 0.012;
 const MARK_COLOR = '#20231c';
+const INK_EDGE = 'rgba(70,55,40,.82)';
+const CUT_HIGHLIGHT = 'rgba(239,228,199,.24)';
 
 function displaySingleValue(entry, face) {
   // Single D10 is physically labelled 0–9 while the logical face value 10
@@ -15,24 +17,42 @@ function displaySingleValue(entry, face) {
 function drawSingleCell(ctx, cell, label) {
   ctx.save();
   ctx.clearRect(0, 0, cell, cell);
-  ctx.fillStyle = MARK_COLOR;
 
-  // v9: intentionally huge single-digit markings. Keep the existing mono,
-  // high-weight production character rather than introducing a new style.
+  // Locked v9 layout: keep the exact font, size, position and 6/9 rule.
+  // v10 only adds the same shallow engraved light lip + dark cut edge used by
+  // the approved percentile tens and the other finished dice.
   const fontSize = Math.round(cell * 0.74);
+  const x = cell / 2;
+  const y = cell / 2 + cell * 0.025;
   ctx.font = `900 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(label, cell / 2, cell / 2 + cell * 0.025);
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  ctx.strokeStyle = CUT_HIGHLIGHT;
+  ctx.lineWidth = Math.max(2, fontSize * 0.045);
+  ctx.strokeText(label, x, y + 2);
+
+  ctx.strokeStyle = INK_EDGE;
+  ctx.lineWidth = Math.max(2, fontSize * 0.032);
+  ctx.strokeText(label, x, y);
+
+  ctx.fillStyle = MARK_COLOR;
+  ctx.fillText(label, x, y);
 
   if (label === '6' || label === '9') {
     const width = cell * 0.34;
-    ctx.fillRect(
-      cell / 2 - width / 2,
-      cell * 0.82,
-      width,
-      Math.max(4, cell * 0.052),
-    );
+    const underlineY = cell * 0.82;
+    const thickness = Math.max(4, cell * 0.052);
+    const underlineX = cell / 2 - width / 2;
+
+    // Preserve the approved underline dimensions and position; only give the
+    // mark the same tiny engraved lower lip as the numeral above it.
+    ctx.fillStyle = CUT_HIGHLIGHT;
+    ctx.fillRect(underlineX, underlineY + 2, width, thickness * 1.12);
+    ctx.fillStyle = MARK_COLOR;
+    ctx.fillRect(underlineX, underlineY, width, thickness);
   }
 
   ctx.restore();
