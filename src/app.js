@@ -2,6 +2,9 @@ import { SessionState } from './state/session-state.js';
 import { renderHome } from './views/home.js';
 import { audioEngine } from './audio/audio-engine.js';
 import { mountSystemControls } from './ui/system-controls.js';
+import { installDoubleTapZoomGuard } from './ui/mobile-gesture-guard.js';
+
+installDoubleTapZoomGuard();
 
 const root = document.getElementById('app');
 const state = new SessionState();
