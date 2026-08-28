@@ -2,7 +2,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.m
 import { FaceMarkingFactory } from './face-markings.js';
 
 export class RetroRenderer {
-  constructor({ canvas, stage, internalWidth = 240, inspectionMode = false }) {
+  constructor({ canvas, stage, internalWidth = 360, inspectionMode = false }) {
     this.canvas = canvas;
     this.stage = stage;
     this.internalWidth = internalWidth;
@@ -18,8 +18,8 @@ export class RetroRenderer {
     this.scene.background = new THREE.Color(0x11130f);
 
     this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-    this.camera.position.set(0, 7.3, 10.8);
-    this.camera.lookAt(0, 0.9, 0);
+    this.camera.position.set(0, 6.2, 9.6);
+    this.camera.lookAt(0, 0.55, 0);
 
     this.scene.add(new THREE.AmbientLight(0xd8d1b9, 1.16));
     const sun = new THREE.DirectionalLight(0xffffff, 1.35);
@@ -80,14 +80,22 @@ export class RetroRenderer {
       return;
     }
 
-    if (count <= 10) {
-      this.camera.position.set(0, 7.3, 10.8);
+    if (count <= 2) {
+      this.camera.position.set(0, 5.0, 8.0);
+      this.camera.lookAt(0, 0.28, 0);
+    } else if (count <= 5) {
+      this.camera.position.set(0, 5.8, 9.0);
+      this.camera.lookAt(0, 0.42, 0);
+    } else if (count <= 10) {
+      this.camera.position.set(0, 6.8, 10.4);
+      this.camera.lookAt(0, 0.62, 0);
     } else if (count <= 20) {
       this.camera.position.set(0, 8.2, 12.5);
+      this.camera.lookAt(0, 0.75, 0);
     } else {
       this.camera.position.set(0, 9.6, 15.4);
+      this.camera.lookAt(0, 0.75, 0);
     }
-    this.camera.lookAt(0, 0.75, 0);
     this.camera.updateProjectionMatrix();
   }
 
