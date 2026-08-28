@@ -1,6 +1,10 @@
 import { DiceEngine } from '../dice/engine.js';
 import { GeometryRegistry, PUBLIC_DIE_TYPES } from '../dice/geometry-registry.js';
-import { compactDiceValues, playResultSequence } from '../result/result-sequencer.js';
+import {
+  clearSettlement,
+  openDetailsSheet,
+  playDiceSettlement,
+} from '../result/settlement-presenter.js';
 
 const registry = new GeometryRegistry();
 const PHYSICAL_LIMIT = 50;
@@ -56,9 +60,26 @@ function resultRows(result) {
   }).join('');
 }
 
+function diceDetailMarkup(result) {
+  const modifier = Number(result.modifier ?? 0) || 0;
+  const subtotal = Number(result.subtotal ?? result.total) || 0;
+  return `
+    <section class="result-panel">
+      <p class="section-code">FINAL FACE / PROVENANCE</p>
+      <div class="result-dice-list">${resultRows(result)}</div>
+      <div class="choice-provenance">
+        <span>骰子</span><strong>${subtotal}</strong>
+        <span>修正</span><strong>${modifier >= 0 ? '+' : ''}${modifier}</strong>
+      </div>
+      <div class="total-line"><span>TOTAL</span><strong>${result.total}</strong></div>
+      <p class="microcopy">最終值只由落定後的實體骰面讀取。詳細資料不會改變已完成的結算。</p>
+    </section>`;
+}
+
 export function renderDiceMode(container, { state, onHome, onChoice }) {
   let engine = null;
   let rolling = false;
+  let projectionMode = 'perspective';
 
   const disposeEngine = () => {
     if (engine) {
@@ -71,13 +92,6 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
     if (rolling) return;
     disposeEngine();
     onChoice();
-  };
-
-  const leaveMode = () => {
-    if (rolling) return;
-    disposeEngine();
-    state.clearDiceMode();
-    onHome();
   };
 
   const renderSetup = () => {
@@ -105,7 +119,6 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
         <div><span class="eyebrow">MODE 01 / DICE</span><h1>骰子</h1></div>
         <div class="mode-actions">
           <button type="button" class="text-button" id="switch-choice">切換至選擇</button>
-          <button type="button" class="text-button danger" id="leave-mode">清除並離開</button>
         </div>
       </header>
 
@@ -128,7 +141,6 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
     `;
 
     container.querySelector('#switch-choice').addEventListener('click', switchChoice);
-    container.querySelector('#leave-mode').addEventListener('click', leaveMode);
     const confirm = container.querySelector('#confirm-pool');
 
     container.querySelector('#die-counter-list').addEventListener('click', (event) => {
@@ -160,7 +172,6 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
         <div><span class="eyebrow">MODE 01 / ARMED</span><h1>骰子</h1></div>
         <div class="mode-actions">
           <button type="button" class="text-button" id="switch-choice">切換至選擇</button>
-          <button type="button" class="text-button" id="back-setup">修改骰池</button>
         </div>
       </header>
 
@@ -173,21 +184,44 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
         <div class="dither-layer" aria-hidden="true"></div>
         <div class="stage-hopper" aria-hidden="true">PHYSICAL DICE</div>
         <div class="stage-badge" id="stage-badge">READY / ${physicalCount} BODY</div>
+        <div class="projection-ab" aria-label="鏡頭投影比較">
+          <button type="button" data-projection="perspective" class="${projectionMode === 'perspective' ? 'active' : ''}">PERSPECTIVE</button>
+          <button type="button" data-projection="orthographic" class="${projectionMode === 'orthographic' ? 'active' : ''}">ORTHO</button>
+        </div>
+        <div id="dice-settlement" class="settlement-overlay" hidden aria-live="polite"></div>
       </section>
 
-      <button type="button" class="primary-action roll-action" id="roll-button">ROLL</button>
-      <div id="result-region" aria-live="polite"></div>
+      <div class="roll-control-row">
+        <button type="button" class="primary-action roll-action" id="roll-button">ROLL</button>
+        <button type="button" class="secondary-action" id="back-setup">修改骰池</button>
+      </div>
+      <div id="roll-error" aria-live="polite"></div>
     `;
 
     const back = container.querySelector('#back-setup');
     const switchButton = container.querySelector('#switch-choice');
     const rollButton = container.querySelector('#roll-button');
     const badge = container.querySelector('#stage-badge');
-    const resultRegion = container.querySelector('#result-region');
+    const settlement = container.querySelector('#dice-settlement');
+    const errorRegion = container.querySelector('#roll-error');
     const canvas = container.querySelector('#dice-canvas');
     const stage = container.querySelector('#dice-stage');
+    const projectionControls = container.querySelector('.projection-ab');
 
-    engine = new DiceEngine({ canvas, stage });
+    engine = new DiceEngine({ canvas, stage, rendererOptions: { projectionMode } });
+
+    const syncProjectionButtons = () => {
+      projectionControls.querySelectorAll('button[data-projection]').forEach((button) => {
+        button.classList.toggle('active', button.dataset.projection === projectionMode);
+      });
+    };
+
+    projectionControls.addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-projection]');
+      if (!button) return;
+      projectionMode = engine.setProjectionMode(button.dataset.projection);
+      syncProjectionButtons();
+    });
 
     switchButton.addEventListener('click', switchChoice);
     back.addEventListener('click', () => {
@@ -198,11 +232,12 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
     rollButton.addEventListener('click', async () => {
       if (rolling) return;
       rolling = true;
+      clearSettlement(settlement);
+      errorRegion.innerHTML = '';
       back.disabled = true;
       switchButton.disabled = true;
       rollButton.disabled = true;
-      rollButton.textContent = 'ROLLING…';
-      resultRegion.innerHTML = '';
+      badge.textContent = `ROLL / 0 OF ${physicalCount}`;
 
       try {
         const result = await engine.roll({
@@ -212,7 +247,7 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
           },
         });
 
-        badge.textContent = 'LOCKED / FACE RESOLVED';
+        badge.textContent = 'LOCKED';
         state.pushHistory({
           kind: 'dice',
           pool: pool.map((item) => ({ ...item })),
@@ -221,39 +256,26 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
           timestamp: Date.now(),
         });
 
-        rollButton.hidden = true;
-        await playResultSequence({
-          target: resultRegion,
-          title: 'ROLL RESULT',
-          holdMs: result.dice.length > 6 ? 220 : 340,
-          steps: [
-            { label: 'STATUS', value: 'LOCKED' },
-            { label: 'DICE', value: compactDiceValues(result) },
-            { label: 'TOTAL', value: result.total, tone: 'final' },
-          ],
+        await playDiceSettlement({
+          host: settlement,
+          result,
+          onDetails() {
+            openDetailsSheet({ title: '骰子詳細資料', html: diceDetailMarkup(result) });
+          },
         });
 
-        resultRegion.innerHTML = `
-          <section class="result-panel">
-            <p class="section-code">DETAIL / FINAL FACE</p>
-            <div class="result-dice-list">${resultRows(result)}</div>
-            <div class="total-line"><span>TOTAL</span><strong>${result.total}</strong></div>
-            <p class="microcopy">最終值只由落定後的實體骰面讀取。</p>
-            <button type="button" class="secondary-action" id="result-back">返回骰池</button>
-          </section>`;
-        resultRegion.querySelector('#result-back').addEventListener('click', () => {
-          rolling = false;
-          renderSetup();
-        });
+        rolling = false;
+        back.disabled = false;
+        switchButton.disabled = false;
+        rollButton.disabled = false;
+        badge.textContent = 'READY / RESULT LOCKED';
       } catch (error) {
         rolling = false;
         back.disabled = false;
         switchButton.disabled = false;
         rollButton.disabled = false;
-        rollButton.hidden = false;
-        rollButton.textContent = 'ROLL';
         badge.textContent = 'ERROR';
-        resultRegion.innerHTML = `<p class="error-box">${error.message}</p>`;
+        errorRegion.innerHTML = `<p class="error-box">${error.message}</p>`;
       }
     });
   };
