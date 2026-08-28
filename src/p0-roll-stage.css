@@ -23,6 +23,15 @@
   display: none;
 }
 
+/*
+  M6.2A product renderer now performs ordered dithering inside the 3D shader.
+  Keep the legacy CSS screen off or the product would double-dither compared
+  with the approved renderer lab.
+*/
+.dither-layer {
+  display: none !important;
+}
+
 .stage-badge {
   max-width: 52%;
 }
