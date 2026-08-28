@@ -55,11 +55,12 @@ function diceGroupMarkup(result) {
 }
 
 function subtotalValues(result) {
-  const subtotal = Number.isFinite(Number(result?.subtotal))
-    ? Number(result.subtotal)
-    : Number(result?.total ?? 0);
+  const hasExplicitSubtotal = Number.isFinite(Number(result?.subtotal));
+  const subtotal = hasExplicitSubtotal ? Number(result.subtotal) : Number(result?.total ?? 0);
   const modifier = Number.isFinite(Number(result?.modifier)) ? Number(result.modifier) : 0;
-  const total = Number.isFinite(Number(result?.total)) ? Number(result.total) : subtotal + modifier;
+  const total = hasExplicitSubtotal
+    ? (Number.isFinite(Number(result?.total)) ? Number(result.total) : subtotal + modifier)
+    : subtotal + modifier;
   return { subtotal, modifier, total };
 }
 
