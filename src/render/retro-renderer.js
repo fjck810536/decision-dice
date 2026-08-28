@@ -1,4 +1,5 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js';
+import { FaceMarkingFactory } from './face-markings.js';
 
 export class RetroRenderer {
   constructor({ canvas, stage }) {
@@ -7,6 +8,7 @@ export class RetroRenderer {
     this.records = [];
     this.meshById = new Map();
     this.edgeGeometryCache = new Map();
+    this.faceMarkings = new FaceMarkingFactory();
     this.lastRenderAt = 0;
     this.renderInterval = 1000 / 12;
 
@@ -81,21 +83,25 @@ export class RetroRenderer {
   }
 
   addRecord(record) {
+    const group = new THREE.Group();
     const material = new THREE.MeshLambertMaterial({ color: record.entry.color, flatShading: true });
-    const mesh = new THREE.Mesh(record.entry.visualGeometry, material);
+    const bodyMesh = new THREE.Mesh(record.entry.visualGeometry, material);
     const cacheKey = record.entry.key;
     let edgeGeometry = this.edgeGeometryCache.get(cacheKey);
     if (!edgeGeometry) {
       edgeGeometry = new THREE.EdgesGeometry(record.entry.visualGeometry);
       this.edgeGeometryCache.set(cacheKey, edgeGeometry);
     }
-    mesh.add(new THREE.LineSegments(
+    bodyMesh.add(new THREE.LineSegments(
       edgeGeometry,
       new THREE.LineBasicMaterial({ color: 0x26291f, transparent: true, opacity: 0.74 }),
     ));
-    this.scene.add(mesh);
-    this.meshById.set(record.id, mesh);
-    record.renderMesh = mesh;
+    group.add(bodyMesh);
+    group.add(this.faceMarkings.getMesh(record));
+
+    this.scene.add(group);
+    this.meshById.set(record.id, group);
+    record.renderMesh = group;
     this.records.push(record);
   }
 
@@ -118,6 +124,9 @@ export class RetroRenderer {
   dispose() {
     this.resizeObserver.disconnect();
     this.reset();
+    for (const geometry of this.edgeGeometryCache.values()) geometry.dispose();
+    this.edgeGeometryCache.clear();
+    this.faceMarkings.dispose();
     this.renderer.dispose();
   }
 }
