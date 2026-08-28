@@ -1,0 +1,43 @@
+.dice-stage {
+  aspect-ratio: 1 / 1;
+  min-height: 0;
+  max-height: none;
+}
+
+.slot-stage {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  min-height: 0;
+}
+
+.projection-ab {
+  top: 38px;
+}
+
+.stage-hopper {
+  display: none;
+}
+
+.stage-badge {
+  max-width: 52%;
+}
+
+.roll-control-row .primary-action:disabled,
+.choice-roll-control-row .primary-action:disabled {
+  opacity: .28;
+  filter: saturate(.35);
+  box-shadow: none;
+}
+
+.roll-control-row .primary-action:not(:disabled),
+.choice-roll-control-row .primary-action:not(:disabled) {
+  opacity: 1;
+}
+
+@media (max-width: 390px) {
+  .roll-control-row,
+  .choice-roll-control-row {
+    grid-template-columns: minmax(0, 1.55fr) minmax(102px, .8fr);
+    gap: 6px;
+  }
+}
