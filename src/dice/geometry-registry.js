@@ -144,6 +144,11 @@ function assignOppositePairs(vertices, faces, lowValue, highValue) {
   return values;
 }
 
+function normalizeVector(v) {
+  const length = Math.hypot(v[0], v[1], v[2]) || 1;
+  return v.map((n) => n / length);
+}
+
 function makePolyEntry(key, poly, values, options = {}) {
   const { vertices, faces } = poly;
   const semanticFaces = poly.semanticFaces ?? faces;
@@ -153,6 +158,7 @@ function makePolyEntry(key, poly, values, options = {}) {
     value: values[i],
     label: String(values[i]),
     normal: rawFaceNormal(vertices, face),
+    markingUp: poly.markingUps?.[i] ?? null,
   }));
 
   return {
@@ -180,38 +186,71 @@ function makeBoxEntry(key, faceDefs, options = {}) {
       value: face.value,
       label: String(face.label ?? face.value),
       normal: face.normal,
+      markingUp: face.markingUp ?? null,
     })),
     createShape: () => new CANNON.Box(new CANNON.Vec3(half, half, half)),
   };
 }
 
+// True pentagonal trapezohedron: 10 planar kite faces, two axial tips,
+// and a staggered decagonal belt. The axial height is chosen so each
+// four-vertex kite is coplanar.
 function makeD10Poly() {
-  const vertices = [[0, 0, 1], [0, 0, -1]];
+  const ringRadius = 1;
+  const beltOffset = 0.10;
+  const poleHeight = beltOffset * 9.47213595499958;
+  const vertices = [
+    [0, 0, poleHeight],
+    [0, 0, -poleHeight],
+  ];
+
   for (let i = 0; i < 10; i += 1) {
     const angle = (i * Math.PI * 2) / 10;
     vertices.push([
-      -Math.cos(angle),
-      -Math.sin(angle),
-      0.105 * (i % 2 ? 1 : -1),
+      ringRadius * Math.cos(angle),
+      ringRadius * Math.sin(angle),
+      i % 2 === 0 ? beltOffset : -beltOffset,
     ]);
   }
 
-  const topFaces = [];
-  const bottomFaces = [];
-  for (let i = 0; i < 10; i += 1) {
-    const a = 2 + i;
-    const b = 2 + ((i + 1) % 10);
-    topFaces.push([0, a, b]);
-    bottomFaces.push([1, b, a]);
+  const rawFaces = [];
+  // Five kites meeting the top tip, centered on the lower belt vertices.
+  for (let i = 1; i < 10; i += 2) {
+    rawFaces.push([
+      0,
+      2 + ((i + 9) % 10),
+      2 + i,
+      2 + ((i + 1) % 10),
+    ]);
+  }
+  // Five kites meeting the bottom tip, centered on the upper belt vertices.
+  for (let i = 0; i < 10; i += 2) {
+    rawFaces.push([
+      1,
+      2 + ((i + 9) % 10),
+      2 + i,
+      2 + ((i + 1) % 10),
+    ]);
   }
 
   const scaled = normalizeVertices(vertices);
-  const oriented = orientFaces(scaled, [...topFaces, ...bottomFaces]);
+  const faces = orientFaces(scaled, rawFaces);
+  const markingUps = faces.map((face) => {
+    const apexIndex = face.includes(0) ? 0 : 1;
+    const center = faceCenter(scaled, face);
+    const apex = scaled[apexIndex];
+    return normalizeVector([
+      apex[0] - center[0],
+      apex[1] - center[1],
+      apex[2] - center[2],
+    ]);
+  });
 
   return {
     vertices: scaled,
-    faces: oriented,
-    semanticFaces: oriented.slice(0, 10),
+    faces,
+    semanticFaces: faces,
+    markingUps,
   };
 }
 
