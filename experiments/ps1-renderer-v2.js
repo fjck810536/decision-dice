@@ -39,15 +39,14 @@ let rolling = false;
 
 function applyTone(mode) {
   if (mode === 'plus') {
-    // ORDERED+ v1: preserve the exact ordered-dither screen, but widen the
-    // visible face-to-face colour separation with a warm key and grey-green
-    // ambient fill. This is intentionally renderer-language work, not final
-    // ivory material art direction.
-    engine.renderer.ambient.color.set(0xb1b79e);
-    engine.renderer.ambient.intensity = 0.70;
-    engine.renderer.sun.color.set(0xffe1ad);
-    engine.renderer.sun.intensity = 1.78;
-    configReadout.textContent = 'ORDERED+ / REAL 128 / MAT A / POP OFF';
+    // ORDERED+ v2.1: keep ORDERED's 4x4 screen and only introduce a restrained
+    // warm-key / cool-neutral-fill split. The previous v1 was intentionally
+    // stronger for diagnosis and read too yellow/heavy on iPhone.
+    engine.renderer.ambient.color.set(0xc8cbbb);
+    engine.renderer.ambient.intensity = 0.78;
+    engine.renderer.sun.color.set(0xfff1d8);
+    engine.renderer.sun.intensity = 1.62;
+    configReadout.textContent = 'ORDERED+ v2.1 / REAL 128 / MAT A / POP OFF';
   } else {
     engine.renderer.ambient.color.set(0xd8d1b9);
     engine.renderer.ambient.intensity = 0.82;
@@ -96,7 +95,7 @@ controls.addEventListener('click', (event) => {
 
   if (key === 'tone') {
     applyTone(value);
-    status.textContent = value === 'plus' ? 'ORDERED+ / SAME POSE' : 'ORDERED BASE / SAME POSE';
+    status.textContent = value === 'plus' ? 'ORDERED+ v2.1 / SAME POSE' : 'ORDERED BASE / SAME POSE';
   } else if (!rolling) {
     status.textContent = `NEXT / ${value.toUpperCase()}`;
   }
