@@ -55,6 +55,10 @@ export function renderHome(container, { onDice, onChoice }) {
         ${marqueeRow(rows.d, 'front-row front-row-c')}
       </div>
 
+      <div class="home-marquee-base" aria-label="骰子類型底部跑馬燈">
+        ${marqueeRow(rows.e, 'reverse bottom-strip-row')}
+      </div>
+
       <section class="hero home-p2-hero" aria-labelledby="main-title">
         <div class="logo-wrap home-p2-logo-wrap">
           <p class="logo-kicker">DICE / CHOICE ASSIST SYSTEM</p>
