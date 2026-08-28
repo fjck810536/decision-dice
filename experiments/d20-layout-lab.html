@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d0f0c">
+<title>D20 Layout A/B Lab</title>
+<style>
+:root{color-scheme:dark;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#0d0f0c;color:#e7e8df;--line:#505747;--acid:#cdd58b}*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0d0f0c}body{min-height:100svh;-webkit-text-size-adjust:100%;touch-action:manipulation}main{width:min(100%,620px);margin:auto;padding:max(12px,env(safe-area-inset-top)) 12px max(20px,env(safe-area-inset-bottom));display:grid;gap:9px}.controls{border:1px solid var(--line);background:#151812;padding:9px;display:grid;gap:7px}.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.row>span{width:72px;color:#8f9583;font-size:10px;letter-spacing:.13em}button{appearance:none;border:1px solid #4b5144;border-radius:0;background:#0f110d;color:#d7d9ce;font:inherit;min-height:42px;padding:0 12px;touch-action:manipulation}button.active{border-color:var(--acid);color:var(--acid)}button:disabled{opacity:.35}.stage{position:relative;aspect-ratio:1/1;width:100%;overflow:hidden;border:1px solid #626957;background:#0c0e0b}.stage canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}.badge,.status{position:absolute;top:8px;padding:6px 7px;border:1px solid rgba(205,213,139,.35);background:rgba(8,9,7,.78);font-size:9px;letter-spacing:.08em;pointer-events:none}.status{left:8px}.badge{right:8px}.bottom{display:grid;grid-template-columns:1.4fr 1fr;gap:7px}.roll{min-height:62px;background:var(--acid);border-color:#dbe29a;color:#10120c;font-size:18px;font-weight:900;letter-spacing:.18em}.result{border:1px solid var(--line);background:#11130f;display:grid;place-items:center;text-align:center;padding:6px}.result small{display:block;color:#8f9583;font-size:9px;letter-spacing:.12em;margin-bottom:4px}.result strong{font-size:24px}.note{color:#8f9583;font-size:10px;line-height:1.5;margin:0 2px}.warning{color:#c9bca2}@media(max-width:420px){.bottom{grid-template-columns:1fr}.result{min-height:64px}.stage{min-height:340px}}
+</style>
+</head>
+<body>
+<main>
+<section class="controls">
+<div class="row"><span>LAYOUT</span><button class="active" data-layout="A">A 靠尖角</button><button data-layout="B">B 靠底邊</button></div>
+<div class="row"><span>VIEW</span><button class="active" data-view="high">HIGH</button><button data-view="low">LOW</button><button data-view="side">SIDE</button></div>
+</section>
+<section class="stage" id="stage"><canvas id="c"></canvas><div class="status" id="status">ROLL ONCE, THEN SWITCH A/B</div><div class="badge" id="badge">D20 / A 靠尖角</div></section>
+<section class="bottom"><button class="roll" id="roll">ROLL D20</button><div class="result"><div><small>RESULT</small><strong id="result">—</strong></div></div></section>
+<p class="note"><span class="warning">比較規則：</span>A / B 使用完全相同的字體、大小、刻痕、底邊方向；唯一差異是數字沿「底邊→尖角」這條中線的站位。先骰一次，再直接按 A / B，會在同一顆、同一個最終姿勢上切換。</p>
+</main>
+<script type="module">
+import { DiceEngine } from '../src/dice/engine.js';
+import { D20LayoutCompareFactory } from './d20-layout-compare-markings.js';
+import { installDoubleTapZoomGuard } from '../src/ui/mobile-gesture-guard.js';
+
+installDoubleTapZoomGuard();
+
+const stage=document.querySelector('#stage');
+const canvas=document.querySelector('#c');
+const rollButton=document.querySelector('#roll');
+const resultEl=document.querySelector('#result');
+const statusEl=document.querySelector('#status');
+const badgeEl=document.querySelector('#badge');
+const layoutButtons=[...document.querySelectorAll('[data-layout]')];
+const viewButtons=[...document.querySelectorAll('[data-view]')];
+let layout='A';
+let view='high';
+let rolling=false;
+
+const engine=new DiceEngine({canvas,stage,rendererOptions:{internalWidth:360,projectionMode:'perspective'}});
+engine.renderer.faceMarkings.dispose();
+const markings=new D20LayoutCompareFactory();
+engine.renderer.faceMarkings=markings;
+
+function setButtonState(buttons,key,value){buttons.forEach(button=>button.classList.toggle('active',button.dataset[key]===value));}
+function applyView(){
+  const r=engine.renderer;
+  const camera=r.perspectiveCamera;
+  if(view==='high'){
+    r.setProjectionMode('perspective');
+    r.setPhysicalCount(1);
+  }else{
+    r.setProjectionMode('perspective');
+    camera.up.set(0,1,0);
+    if(view==='low') camera.position.set(0,r.floorY+6.5,7.8);
+    else camera.position.set(8.1,r.floorY+4.2,4.7);
+    camera.lookAt(0,r.floorY+.15,0);
+    camera.updateProjectionMatrix();
+  }
+  r.lastRenderAt=0;
+  r.render(r.records,performance.now(),true);
+}
+
+layoutButtons.forEach(button=>button.addEventListener('click',()=>{
+  if(rolling)return;
+  layout=button.dataset.layout;
+  setButtonState(layoutButtons,'layout',layout);
+  markings.setVariant(engine.renderer,layout);
+  badgeEl.textContent=`D20 / ${layout==='A'?'A 靠尖角':'B 靠底邊'}`;
+  statusEl.textContent=engine.renderer.records.length?'SAME POSE / SWITCHED':'ROLL ONCE, THEN SWITCH A/B';
+}));
+
+viewButtons.forEach(button=>button.addEventListener('click',()=>{
+  if(rolling)return;
+  view=button.dataset.view;
+  setButtonState(viewButtons,'view',view);
+  applyView();
+  statusEl.textContent=view==='high'?'PRODUCT CAMERA':'INSPECTION VIEW';
+}));
+
+rollButton.addEventListener('click',async()=>{
+  if(rolling)return;
+  rolling=true;
+  rollButton.disabled=true;
+  resultEl.textContent='…';
+  statusEl.textContent='ROLLING';
+  try{
+    markings.variant=layout;
+    const result=await engine.roll({pool:[{type:'d20',count:1}]});
+    resultEl.textContent=String(result.dice?.[0]?.value??'—');
+    statusEl.textContent='LOCKED / SWITCH A/B';
+    applyView();
+  }catch(error){
+    statusEl.textContent='ERROR';
+    resultEl.textContent=error?.message??String(error);
+  }finally{
+    rolling=false;
+    rollButton.disabled=false;
+  }
+});
+
+applyView();
+</script>
+</body>
+</html>
