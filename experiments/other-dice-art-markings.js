@@ -55,8 +55,8 @@ function drawD4Glyph(ctx, cell, value) {
   ctx.save();
   ctx.clearRect(0, 0, cell, cell);
   ctx.translate(cell * 0.50, cell * 0.50);
-  ctx.scale(0.94, 1.08);
-  ctx.font = `700 ${Math.round(cell * 0.80)}px Georgia, 'Times New Roman', serif`;
+  ctx.scale(0.98, 1.15);
+  ctx.font = `700 ${Math.round(cell * 0.94)}px Georgia, 'Times New Roman', serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round';
@@ -203,8 +203,8 @@ function buildGeometry(entry, cols, rows, halfScale) {
 function buildD4VertexGeometry(entry, cols, rows, valueIndex) {
   const positions = [];
   const uvs = [];
-  const half = entry.radius * 0.125;
-  const cornerPull = 0.71;
+  const half = entry.radius * 0.165;
+  const cornerPull = 0.80;
 
   // Each face value represents the opposite top vertex when that face rests on
   // the floor. On every other (incident) face, place that value close to the
