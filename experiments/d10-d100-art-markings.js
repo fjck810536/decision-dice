@@ -1,4 +1,5 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js';
+import { FaceMarkingFactory } from '../src/render/face-markings.js';
 
 const ATLAS_CELL = 128;
 const FACE_OFFSET = 0.0125;
@@ -6,14 +7,10 @@ const INK = '#241d16';
 const INK_EDGE = 'rgba(70,55,40,.82)';
 const CUT_HIGHLIGHT = 'rgba(239,228,199,.24)';
 
-function displayLabel(entry, face, componentRole) {
-  if (entry.key === 'd10') return face.value === 10 ? '0' : String(face.value);
-  if (entry.key === 'd10-digit') {
-    if (componentRole === 'tens') return String(face.value * 10).padStart(2, '0');
-    return String(face.value);
-  }
-  return String(face.label ?? face.value);
-}
+// v4 scope rule:
+// - single D10: production markings, untouched
+// - D100 ones die: production markings, untouched
+// - D100 tens die only: experimental art direction below
 
 function drawEngravedGlyph(ctx, text, x, y, fontSize, {
   narrowZero = false,
@@ -23,9 +20,6 @@ function drawEngravedGlyph(ctx, text, x, y, fontSize, {
 } = {}) {
   ctx.save();
   ctx.translate(x, y);
-  // Important: rotate only the glyph around its own anchor. Do not rotate the
-  // percentile layout itself; the big-digit/blunt + small-zero/apex relation
-  // was already approved in v2.
   ctx.rotate(rotation);
   const zeroScale = narrowZero && text === '0' ? 0.84 : 1;
   ctx.scale(stretchX * zeroScale, stretchY);
@@ -35,8 +29,6 @@ function drawEngravedGlyph(ctx, text, x, y, fontSize, {
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
 
-  // Tiny warm highlight + dark cut edge: a cheap shallow-carving illusion,
-  // while the actual implementation remains a decal for readability/perf.
   ctx.strokeStyle = CUT_HIGHLIGHT;
   ctx.lineWidth = Math.max(2, fontSize * .045);
   ctx.strokeText(text, 0, 2);
@@ -62,34 +54,31 @@ function underline(ctx, cx, cy, width, thickness, rotation = 0) {
   ctx.restore();
 }
 
-function drawSingle(ctx, cell, label, rotation) {
-  // v3: larger, slightly elongated and visibly biased toward the blunt half.
-  // This is based on the supplied commercial d10 / percentile references.
-  const fontSize = Math.round(cell * .79);
-  const cx = cell * .50;
-  const cy = cell * .64;
-  drawEngravedGlyph(ctx, label, cx, cy, fontSize, {
-    narrowZero: true,
-    rotation,
-    stretchX: .94,
-    stretchY: 1.14,
-  });
-  if (label === '6' || label === '9') {
-    // Underline rotates with the glyph, rather than staying screen-horizontal.
-    const offset = cell * .28;
-    const ux = cx + Math.sin(rotation) * offset;
-    const uy = cy + Math.cos(rotation) * offset;
-    underline(ctx, ux, uy, cell * .39, Math.max(4, cell * .038), rotation);
-  }
+function tensGlyphRotation(value) {
+  // GeometryRegistry assigns the physical d10-digit faces in two families:
+  //   family A (indices 0–4): 20, 00, 40, 80, 60
+  //   family B (indices 5–9): 50, 10, 30, 70, 90
+  //
+  // v3 incorrectly treated those families as an orientation rule. iPhone
+  // inspection showed that face family and readable glyph orientation are not
+  // the same thing. Encode the observed percentile faces explicitly by VALUE.
+  //
+  // Confirmed correct in v3: 00 / 20 / 40 / 80 = CCW 90°.
+  // Corrective pass: 10 / 30 / 50 / 70 join that same orientation.
+  // 60 / 90 were observed as reversed relative to each other, so 60 takes the
+  // opposite quarter-turn while 90 takes the common orientation.
+  if (value === 6) return Math.PI / 2;
+  return -Math.PI / 2;
 }
 
-function drawTens(ctx, cell, label, rotation) {
-  // Percentile contract confirmed in v2:
-  // large primary digit toward the blunt end, trailing 0 smaller toward apex.
-  // v3 moves the whole pair farther toward the blunt half, enlarges it, and
-  // rotates each glyph in place without rotating this spatial relationship.
+function drawTens(ctx, cell, value) {
+  const label = String(value * 10).padStart(2, '0');
   const main = label[0];
   const zero = label[1];
+  const rotation = tensGlyphRotation(value);
+
+  // Approved percentile layout: large primary digit toward the blunt end,
+  // smaller trailing zero toward the apex. Keep the v3 larger/elongated scale.
   const mainX = cell * .48;
   const mainY = cell * .70;
   const zeroX = cell * .51;
@@ -116,17 +105,7 @@ function drawTens(ctx, cell, label, rotation) {
   }
 }
 
-function faceGlyphRotation(index) {
-  // Production D10 geometry is built as two five-face families:
-  // indices 0–4 meet one axial tip, indices 5–9 meet the opposite tip.
-  // iPhone reference check on the d100 ones die:
-  //   face carrying 4 (first family) needed CCW 90°
-  //   face carrying 7 (second family) needed CW 90°
-  // Canvas positive rotation is clockwise, so encode that observation directly.
-  return index < 5 ? -Math.PI / 2 : Math.PI / 2;
-}
-
-function makeAtlas(entry, componentRole) {
+function makeTensAtlas(entry) {
   const count = entry.faces.length;
   const cols = Math.ceil(Math.sqrt(count));
   const rows = Math.ceil(count / cols);
@@ -139,15 +118,10 @@ function makeAtlas(entry, componentRole) {
   entry.faces.forEach((face, i) => {
     const col = i % cols;
     const row = Math.floor(i / cols);
-    const ox = col * ATLAS_CELL;
-    const oy = row * ATLAS_CELL;
     ctx.save();
-    ctx.translate(ox, oy);
+    ctx.translate(col * ATLAS_CELL, row * ATLAS_CELL);
     ctx.clearRect(0, 0, ATLAS_CELL, ATLAS_CELL);
-    const label = displayLabel(entry, face, componentRole);
-    const rotation = faceGlyphRotation(i);
-    if (entry.key === 'd10-digit' && componentRole === 'tens') drawTens(ctx, ATLAS_CELL, label, rotation);
-    else drawSingle(ctx, ATLAS_CELL, label, rotation);
+    drawTens(ctx, ATLAS_CELL, face.value);
     ctx.restore();
   });
 
@@ -200,20 +174,16 @@ function pushQuad(positions, uvs, center, tangent, bitangent, half, uv) {
   }
 }
 
-function faceHalfScale(entry, componentRole) {
-  if (entry.key === 'd10-digit' && componentRole === 'tens') return entry.radius * .322;
-  if (entry.key === 'd10' || entry.key === 'd10-digit') return entry.radius * .302;
-  return entry.radius * .26;
-}
-
-function buildGeometry(entry, componentRole, cols, rows) {
+function buildTensGeometry(entry, cols, rows) {
   const positions = [];
   const uvs = [];
-  const half = faceHalfScale(entry, componentRole);
+  const half = entry.radius * .322;
 
   entry.faces.forEach((face, index) => {
     const normal = new THREE.Vector3(...face.normal).normalize();
-    const center = normal.clone().multiplyScalar(supportDistance(entry.visualGeometry, normal) + FACE_OFFSET);
+    const center = normal.clone().multiplyScalar(
+      supportDistance(entry.visualGeometry, normal) + FACE_OFFSET,
+    );
     const bitangent = new THREE.Vector3(...face.markingUp).normalize();
     const tangent = new THREE.Vector3().crossVectors(bitangent, normal).normalize();
     bitangent.copy(new THREE.Vector3().crossVectors(normal, tangent).normalize());
@@ -229,20 +199,21 @@ function buildGeometry(entry, componentRole, cols, rows) {
 
 export class D10D100ArtMarkingFactory {
   constructor() {
-    this.cache = new Map();
-  }
-
-  #key(record) {
-    const role = record.entry.key === 'd10-digit' ? (record.componentRole ?? 'ones') : 'single';
-    return `${record.entry.key}:${role}:art-v3`;
+    this.production = new FaceMarkingFactory();
+    this.tensCache = null;
   }
 
   getMesh(record) {
-    const key = this.#key(record);
-    let cached = this.cache.get(key);
-    if (!cached) {
-      const { texture, cols, rows } = makeAtlas(record.entry, record.componentRole);
-      const geometry = buildGeometry(record.entry, record.componentRole, cols, rows);
+    const isTens = record.entry.key === 'd10-digit' && record.componentRole === 'tens';
+    if (!isTens) {
+      // Explicit rollback: single D10 and D100 ones are exactly the production
+      // markings again. No v3 size/stretch/orientation experiments apply.
+      return this.production.getMesh(record);
+    }
+
+    if (!this.tensCache) {
+      const { texture, cols, rows } = makeTensAtlas(record.entry);
+      const geometry = buildTensGeometry(record.entry, cols, rows);
       const material = new THREE.MeshBasicMaterial({
         map: texture,
         transparent: true,
@@ -253,20 +224,21 @@ export class D10D100ArtMarkingFactory {
         polygonOffsetFactor: -2,
         polygonOffsetUnits: -2,
       });
-      cached = { texture, geometry, material };
-      this.cache.set(key, cached);
+      this.tensCache = { texture, geometry, material };
     }
-    const mesh = new THREE.Mesh(cached.geometry, cached.material);
+
+    const mesh = new THREE.Mesh(this.tensCache.geometry, this.tensCache.material);
     mesh.renderOrder = 2;
     return mesh;
   }
 
   dispose() {
-    for (const item of this.cache.values()) {
-      item.texture.dispose();
-      item.geometry.dispose();
-      item.material.dispose();
+    this.production.dispose();
+    if (this.tensCache) {
+      this.tensCache.texture.dispose();
+      this.tensCache.geometry.dispose();
+      this.tensCache.material.dispose();
+      this.tensCache = null;
     }
-    this.cache.clear();
   }
 }
