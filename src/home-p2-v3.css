@@ -5,17 +5,18 @@
 .home-marquee-strip {
   position: absolute;
   z-index: 14;
-  top: max(30px, calc(env(safe-area-inset-top) + 20px));
-  left: -3%;
-  width: 106%;
-  height: 52px;
+  top: max(27px, calc(env(safe-area-inset-top) + 17px));
+  left: -4%;
+  width: 108%;
+  height: 56px;
   overflow: hidden;
   pointer-events: none;
-  border-top: 1px solid rgba(211,220,130,.17);
-  border-bottom: 1px solid rgba(211,220,130,.13);
-  background: rgba(13,15,11,.88);
+  border-top: 1px solid rgba(211,220,130,.18);
+  border-bottom: 1px solid rgba(211,220,130,.14);
+  background: rgba(13,15,11,.90);
   box-shadow: 0 3px 0 rgba(0,0,0,.25);
-  transform: rotate(-.55deg) scale(1.01);
+  transform: rotate(-1.5deg) scale(1.015);
+  transform-origin: 50% 50%;
 }
 
 .home-marquee-strip .marquee,
@@ -25,18 +26,18 @@
 }
 
 .home-marquee-strip .marquee-row {
-  gap: 13px;
-  padding: 5px 8px;
+  gap: 8px;
+  padding: 5px 6px;
 }
 
 .home-marquee-strip .die-sprite {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-color: rgba(231,227,202,.46);
   box-shadow: 2px 2px 0 rgba(0,0,0,.42);
 }
 
-.home-marquee-strip .die-d100 .die-sprite { width: 38px; }
+.home-marquee-strip .die-d100 .die-sprite { width: 36px; }
 .home-marquee-strip .facet-a { background: #d5d0b4; }
 .home-marquee-strip .facet-b { background: #969b7e; }
 .home-marquee-strip .facet-c { background: #565b49; }
@@ -51,63 +52,69 @@
   transform: rotate(-1.25deg) scale(1.035);
 }
 
-/* --- 3. Bright lower marquee becomes a large diagonal Z stroke ----------- */
+/* --- 3. Bright lower marquee: still a Z stroke, but less dominant -------- */
 .home-marquee-field-front {
   z-index: 22;
-  top: 49svh;
-  left: -24%;
-  width: 148%;
-  height: 34svh;
+  top: 54svh;
+  left: -14%;
+  width: 128%;
+  height: 27svh;
   display: grid;
   grid-template-rows: repeat(3, minmax(0, 1fr));
-  opacity: .92;
+  opacity: .84;
   overflow: hidden;
-  transform: rotate(7.2deg) scale(1.04);
+  transform: rotate(4.2deg) scale(1.025);
   transform-origin: 50% 50%;
-  clip-path: polygon(2% 3%, 100% 0, 96% 97%, 0 100%);
-  background: rgba(12,14,10,.24);
+  clip-path: polygon(1% 4%, 100% 0, 98% 96%, 0 100%);
+  background: rgba(12,14,10,.20);
 }
 
 .home-marquee-field-front .marquee:nth-child(2) {
-  background: rgba(211,220,130,.035);
+  background: rgba(211,220,130,.028);
 }
 
 .home-marquee-field-front .marquee-row {
-  gap: 27px;
-  padding-inline: 16px;
+  gap: 23px;
+  padding-inline: 14px;
 }
 
 .home-marquee-field-front .die-sprite {
-  width: 62px;
-  height: 62px;
-  border-color: rgba(238,233,208,.55);
-  box-shadow: 4px 4px 0 rgba(0,0,0,.46);
+  width: 56px;
+  height: 56px;
+  border-color: rgba(238,233,208,.52);
+  box-shadow: 4px 4px 0 rgba(0,0,0,.44);
 }
 
-.home-marquee-field-front .die-d100 .die-sprite { width: 68px; }
+.home-marquee-field-front .die-d100 .die-sprite { width: 62px; }
 .home-marquee-field-front .front-row-a .marquee-track { animation-duration: 17s; }
 .home-marquee-field-front .front-row-b .marquee-track { animation-duration: 21s; }
 .home-marquee-field-front .front-row-c .marquee-track { animation-duration: 15s; }
 
-/* --- 4. Logo sits ABOVE every marquee and regains the original line voice - */
+/* --- 4. Logo sits above every marquee, larger, stronger and top-weighted -- */
 .home-p2-hero {
-  z-index: 40;
-  top: 13svh;
+  z-index: 50;
+  top: 7svh;
 }
 
 .home-p2-logo-wrap {
   left: 0;
-  width: min(100%, 560px);
+  width: min(100%, 580px);
   margin-inline: auto;
 }
 
 .home-p2-logo {
-  width: 116%;
-  margin-left: -8%;
-  margin-right: -8%;
+  width: 124%;
+  margin-left: -12%;
+  margin-right: -12%;
+  color: #fff7e5;
+  font-size: clamp(78px, 27vw, 136px);
   text-align: center;
   transform: scaleX(.82);
   transform-origin: 50% 50%;
+  text-shadow:
+    4px 0 0 rgba(152,83,67,.52),
+    -2px 0 0 rgba(211,220,130,.22),
+    0 5px 0 rgba(0,0,0,.42);
 }
 
 .home-p2-logo > span {
@@ -120,7 +127,7 @@
   transform-origin: center center;
 }
 
-/* Restore the original asymmetrical three-line rhythm, but around one optical centre. */
+/* Keep the accepted asymmetrical three-line rhythm around one optical centre. */
 .home-p2-logo .title-line-a {
   transform: translateX(0) !important;
 }
@@ -135,15 +142,18 @@
 
 .home-p2-logo-wrap .logo-kicker {
   width: 100%;
+  color: #dce58f;
   text-align: center;
+  text-shadow: 1px 0 0 rgba(0,0,0,.48);
 }
 
 .home-p2-logo-wrap .serial {
   width: 100%;
+  color: #a5aa94;
   justify-content: center;
 }
 
-/* --- 5. Two large independent blocks: keep size, restore machine/arcade bite */
+/* --- 5. Two large independent blocks: machine frame + directional gradient */
 .home-p2-controls {
   z-index: 70;
   left: 10px;
@@ -156,19 +166,21 @@
   overflow: hidden;
   border: 2px solid #81876f;
   background:
-    repeating-linear-gradient(0deg, transparent 0 5px, rgba(0,0,0,.09) 5px 6px),
-    repeating-linear-gradient(90deg, rgba(211,220,130,.025) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(0deg, transparent 0 5px, rgba(0,0,0,.075) 5px 6px),
+    linear-gradient(128deg, rgba(211,220,130,.18) 0%, rgba(126,132,101,.065) 32%, rgba(23,25,20,0) 58%),
+    linear-gradient(310deg, rgba(0,0,0,.32) 0%, rgba(0,0,0,0) 48%),
     #171914;
   box-shadow:
-    inset 5px 5px 0 rgba(238,234,214,.035),
+    inset 5px 5px 0 rgba(238,234,214,.045),
     inset -6px -6px 0 rgba(0,0,0,.30),
     5px 5px 0 #040504;
 }
 
 .home-p2-controls .mode-button + .mode-button {
   background:
-    repeating-linear-gradient(0deg, transparent 0 5px, rgba(0,0,0,.09) 5px 6px),
-    repeating-linear-gradient(90deg, rgba(152,83,67,.027) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(0deg, transparent 0 5px, rgba(0,0,0,.075) 5px 6px),
+    linear-gradient(232deg, rgba(152,83,67,.19) 0%, rgba(93,69,59,.075) 32%, rgba(23,25,20,0) 58%),
+    linear-gradient(50deg, rgba(0,0,0,.32) 0%, rgba(0,0,0,0) 48%),
     #171914;
 }
 
@@ -217,13 +229,17 @@
 
 @media (max-width: 360px) {
   .home-marquee-field-front {
-    top: 51svh;
-    height: 31svh;
+    top: 55svh;
+    height: 25svh;
   }
 
   .home-marquee-field-front .die-sprite {
-    width: 55px;
-    height: 55px;
+    width: 51px;
+    height: 51px;
+  }
+
+  .home-p2-logo {
+    font-size: clamp(72px, 26vw, 112px);
   }
 
   .home-p2-controls .mode-title {
