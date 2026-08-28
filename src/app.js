@@ -15,6 +15,7 @@ function showHome() {
   navigationToken += 1;
   state.setMode('home');
   systemControls?.closeSettings();
+  systemControls?.sync();
   root.className = 'app-shell home-view';
   renderHome(root, {
     onDice: showDice,
@@ -57,6 +58,7 @@ async function showDice() {
   const token = ++navigationToken;
   state.setMode('dice');
   systemControls?.closeSettings();
+  systemControls?.sync();
   renderModeLoading('骰子', token, '正在載入 DiceEngine / Three.js / cannon-es。首頁不等待 physics。');
 
   try {
@@ -79,6 +81,7 @@ async function showChoice() {
   const token = ++navigationToken;
   state.setMode('choice');
   systemControls?.closeSettings();
+  systemControls?.sync();
   renderModeLoading('選擇', token, '正在載入 DecisionEngine。若使用 SLOT，不會載入 DiceEngine；選 DICE 並按 ROLL 後才載入 physics。');
 
   try {
@@ -100,7 +103,10 @@ async function showChoice() {
 systemControls = mountSystemControls({
   state,
   audioEngine,
-  onHome: showHome,
+  onRefreshMode(mode) {
+    if (mode === 'dice') showDice();
+    else if (mode === 'choice') showChoice();
+  },
 });
 
 showHome();
