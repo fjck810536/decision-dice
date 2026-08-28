@@ -33,7 +33,7 @@ export function mountSystemControls({ state, audioEngine, onHome }) {
   host.className = 'system-controls-host';
   host.innerHTML = `
     <div class="system-dock" aria-label="系統控制">
-      <button type="button" class="system-dock-button" id="global-mute">SOUND ON</button>
+      <button type="button" class="system-dock-button" id="global-mute">MUTE</button>
       <button type="button" class="system-dock-button" id="global-settings">SET</button>
     </div>
     <section class="system-settings" id="system-settings" hidden aria-label="系統設定">
@@ -42,7 +42,7 @@ export function mountSystemControls({ state, audioEngine, onHome }) {
         <button type="button" class="system-dock-button" id="settings-close">×</button>
       </div>
       <button type="button" class="system-setting-row" id="settings-sound">
-        <span>聲音</span><strong>SOUND ON</strong>
+        <span>聲音</span><strong>ON</strong>
       </button>
       <div class="system-setting-note">Dice 碰撞與 Choice reel 使用不同的暫定程序音。音色之後可整批替換。</div>
       <button type="button" class="system-setting-row danger" id="reset-session">
@@ -59,9 +59,8 @@ export function mountSystemControls({ state, audioEngine, onHome }) {
   const soundSettingValue = soundSetting.querySelector('strong');
 
   const syncSoundUi = () => {
-    const text = audioEngine.isMuted ? 'MUTED' : 'SOUND ON';
-    muteButton.textContent = text;
-    soundSettingValue.textContent = text;
+    muteButton.textContent = audioEngine.isMuted ? 'MUTED' : 'MUTE';
+    soundSettingValue.textContent = audioEngine.isMuted ? 'OFF' : 'ON';
     muteButton.classList.toggle('is-muted', audioEngine.isMuted);
   };
 
