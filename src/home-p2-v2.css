@@ -1,0 +1,264 @@
+/* HOME P2 v2 — user review pass.
+   1) textless two/three-tone fake-3D marquee sprites with mesh density
+   2) optically centered oversized logo
+   3) opposite lower marquee tilt
+   4) independent oversized square mode controls
+*/
+
+/* -------------------------------------------------------------------------
+   MARQUEE SPRITES — NO TEXT
+   ------------------------------------------------------------------------- */
+.home-p2-scene .die-chip {
+  display: block;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  box-shadow: none;
+}
+
+.home-p2-scene .die-label {
+  display: none !important;
+}
+
+.home-p2-scene .die-sprite {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid rgba(216, 214, 190, .28);
+  background: #777b67;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, .38);
+}
+
+.home-p2-scene .die-sprite::before,
+.home-p2-scene .die-sprite::after {
+  content: none;
+}
+
+.home-p2-scene .facet {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+
+/* Three hard tone planes. No gradients: the fake volume is deliberately crude. */
+.home-p2-scene .facet-a {
+  z-index: 1;
+  background: #c8c5ad;
+  clip-path: polygon(0 0, 100% 0, 51% 53%);
+}
+
+.home-p2-scene .facet-b {
+  z-index: 2;
+  background: #858a72;
+  clip-path: polygon(0 0, 51% 53%, 50% 100%, 0 100%);
+}
+
+.home-p2-scene .facet-c {
+  z-index: 3;
+  background: #4d5244;
+  clip-path: polygon(100% 0, 100% 100%, 50% 100%, 51% 53%);
+}
+
+.home-p2-scene .facet-mesh {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: block;
+  pointer-events: none;
+  opacity: .42;
+  background-image:
+    linear-gradient(rgba(27, 29, 23, .46) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(27, 29, 23, .40) 1px, transparent 1px);
+  background-size: 5px 5px;
+  mix-blend-mode: multiply;
+}
+
+/* Different mesh densities stop the silhouettes from reading as one repeated icon. */
+.home-p2-scene .die-d3 .facet-mesh,
+.home-p2-scene .die-d6 .facet-mesh { background-size: 7px 7px; }
+.home-p2-scene .die-d4 .facet-mesh,
+.home-p2-scene .die-d8 .facet-mesh { background-size: 5px 5px; }
+.home-p2-scene .die-d10 .facet-mesh { background-size: 4px 6px; }
+.home-p2-scene .die-d20 .facet-mesh { background-size: 3px 4px; }
+.home-p2-scene .die-d100 .facet-mesh { background-size: 3px 5px; }
+
+/* Background field: larger silhouettes, coarse and subdued. */
+.home-marquee-field-back .marquee-row {
+  gap: 24px;
+  padding-inline: 12px;
+}
+
+.home-marquee-field-back .die-sprite {
+  width: 52px;
+  height: 52px;
+  opacity: .92;
+}
+
+.home-marquee-field-back .die-d100 .die-sprite {
+  width: 58px;
+}
+
+.home-marquee-field-back .facet-mesh {
+  opacity: .34;
+  transform: scale(1.08);
+}
+
+/* Foreground field: slightly smaller but brighter, with denser visible mesh. */
+.home-marquee-field-front .marquee-row {
+  gap: 20px;
+  padding-inline: 10px;
+}
+
+.home-marquee-field-front .die-sprite {
+  width: 47px;
+  height: 47px;
+  border-color: rgba(233, 229, 205, .48);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, .46);
+}
+
+.home-marquee-field-front .die-d100 .die-sprite {
+  width: 52px;
+}
+
+.home-marquee-field-front .facet-a { background: #ddd8bc; }
+.home-marquee-field-front .facet-b { background: #9ba083; }
+.home-marquee-field-front .facet-c { background: #5d6250; }
+.home-marquee-field-front .facet-mesh { opacity: .54; }
+
+/* -------------------------------------------------------------------------
+   LOGO — OPTICAL CENTER, KEEP ORIGINAL PROPORTIONS
+   ------------------------------------------------------------------------- */
+.home-p2-logo-wrap {
+  left: 0;
+  width: 100%;
+  margin-inline: auto;
+}
+
+.home-p2-logo {
+  width: 126%;
+  margin-left: -13%;
+  margin-right: -13%;
+  text-align: center;
+  transform: scaleX(.82);
+  transform-origin: 50% 50%;
+}
+
+.home-p2-logo > span {
+  display: block;
+  width: 100%;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  text-align: center;
+  transform: none !important;
+}
+
+.home-p2-logo-wrap .logo-kicker,
+.home-p2-logo-wrap .serial {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+}
+
+/* -------------------------------------------------------------------------
+   LOWER MARQUEE — OPPOSITE DIAGONAL
+   ------------------------------------------------------------------------- */
+.home-marquee-field-front {
+  transform: rotate(1.35deg) scale(1.035);
+  transform-origin: 50% 50%;
+}
+
+/* -------------------------------------------------------------------------
+   MODE CONTROLS — TWO INDEPENDENT LARGE SQUARES
+   ------------------------------------------------------------------------- */
+.home-p2-controls {
+  position: absolute;
+  z-index: 60;
+  left: 12px;
+  right: 12px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.home-p2-controls .mode-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  border: 2px solid #747b67;
+  background:
+    linear-gradient(90deg, rgba(211, 220, 130, .045), transparent 52%),
+    #151712;
+  color: #f0ead9;
+  box-shadow:
+    inset 3px 0 0 rgba(211, 220, 130, .055),
+    inset -3px 0 0 rgba(152, 83, 67, .045),
+    4px 4px 0 #050604;
+  text-align: center;
+}
+
+.home-p2-controls .mode-button + .mode-button {
+  background:
+    linear-gradient(270deg, rgba(152, 83, 67, .055), transparent 52%),
+    #151712;
+}
+
+.home-p2-controls .mode-button::before,
+.home-p2-controls .mode-button::after {
+  display: none !important;
+  content: none !important;
+}
+
+.home-p2-controls .mode-title {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  color: #f0ead9;
+  font-family: "Songti TC", "Noto Serif TC", PMingLiU, MingLiU, serif;
+  font-size: clamp(52px, 15.5vw, 76px);
+  font-weight: 900;
+  line-height: .86;
+  letter-spacing: .015em;
+  text-align: center;
+  white-space: nowrap;
+  transform: scaleX(.91);
+  text-shadow:
+    2px 0 0 rgba(152, 83, 67, .34),
+    -1px 0 0 rgba(211, 220, 130, .13);
+}
+
+.home-p2-controls .mode-button:active {
+  transform: translate(2px, 3px);
+  border-color: var(--acid);
+  box-shadow:
+    inset 0 0 0 1px var(--acid),
+    1px 1px 0 #050604;
+}
+
+@media (max-width: 360px) {
+  .home-p2-controls {
+    left: 9px;
+    right: 9px;
+    gap: 10px;
+  }
+
+  .home-p2-controls .mode-title {
+    font-size: clamp(46px, 14.6vw, 58px);
+  }
+}
