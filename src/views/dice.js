@@ -19,8 +19,9 @@ function physicalCountForCounts(counts) {
 }
 
 function renderHistory(history) {
-  if (!history.length) return '<p class="history-empty">本次 session 尚無紀錄。</p>';
-  return history.map((entry, index) => {
+  const entries = history.filter((entry) => entry.kind === 'dice');
+  if (!entries.length) return '<p class="history-empty">本次 session 尚無骰子紀錄。</p>';
+  return entries.map((entry, index) => {
     const values = entry.result.dice.map((die) => `${die.type}:${die.value}`).join(' / ');
     return `
       <details class="history-item" ${index === 0 ? 'open' : ''}>
@@ -47,25 +48,32 @@ function resultRows(result) {
   }).join('');
 }
 
-export function renderDiceMode(container, { state, onHome }) {
+export function renderDiceMode(container, { state, onHome, onChoice }) {
   let engine = null;
   let rolling = false;
 
-  const leaveMode = () => {
-    if (rolling) return;
+  const disposeEngine = () => {
     if (engine) {
       engine.dispose();
       engine = null;
     }
+  };
+
+  const switchChoice = () => {
+    if (rolling) return;
+    disposeEngine();
+    onChoice();
+  };
+
+  const leaveMode = () => {
+    if (rolling) return;
+    disposeEngine();
     state.clearDiceMode();
     onHome();
   };
 
   const renderSetup = () => {
-    if (engine) {
-      engine.dispose();
-      engine = null;
-    }
+    disposeEngine();
 
     const rows = PUBLIC_DIE_TYPES.map((type) => `
       <div class="die-counter" data-type="${type}">
@@ -82,11 +90,15 @@ export function renderDiceMode(container, { state, onHome }) {
 
     const physicalCount = physicalCountForCounts(state.diceCounts);
     const logicalCount = Object.values(state.diceCounts).reduce((a, b) => a + b, 0);
+    const diceHistory = state.history.filter((entry) => entry.kind === 'dice');
 
     container.innerHTML = `
       <header class="mode-header">
         <div><span class="eyebrow">MODE 01</span><h1>骰子</h1></div>
-        <button type="button" class="text-button danger" id="leave-mode">清除並離開</button>
+        <div class="mode-actions">
+          <button type="button" class="text-button" id="switch-choice">選擇</button>
+          <button type="button" class="text-button danger" id="leave-mode">清除並離開</button>
+        </div>
       </header>
 
       <section class="function-panel">
@@ -102,11 +114,12 @@ export function renderDiceMode(container, { state, onHome }) {
       <button type="button" class="primary-action" id="confirm-pool" ${physicalCount === 0 ? 'disabled' : ''}>CONFIRM / 確認骰池</button>
 
       <section class="history-block">
-        <p class="section-code">SESSION HISTORY / ${state.history.length} OF 20</p>
+        <p class="section-code">DICE HISTORY / ${diceHistory.length} OF 20</p>
         ${renderHistory(state.history)}
       </section>
     `;
 
+    container.querySelector('#switch-choice').addEventListener('click', switchChoice);
     container.querySelector('#leave-mode').addEventListener('click', leaveMode);
     const confirm = container.querySelector('#confirm-pool');
 
@@ -137,7 +150,10 @@ export function renderDiceMode(container, { state, onHome }) {
     container.innerHTML = `
       <header class="mode-header">
         <div><span class="eyebrow">MODE 01 / ARMED</span><h1>骰子</h1></div>
-        <button type="button" class="text-button" id="back-setup">返回設定</button>
+        <div class="mode-actions">
+          <button type="button" class="text-button" id="switch-choice">選擇</button>
+          <button type="button" class="text-button" id="back-setup">返回設定</button>
+        </div>
       </header>
 
       <section class="roll-summary">
@@ -156,6 +172,7 @@ export function renderDiceMode(container, { state, onHome }) {
     `;
 
     const back = container.querySelector('#back-setup');
+    const switchButton = container.querySelector('#switch-choice');
     const rollButton = container.querySelector('#roll-button');
     const badge = container.querySelector('#stage-badge');
     const resultRegion = container.querySelector('#result-region');
@@ -164,6 +181,7 @@ export function renderDiceMode(container, { state, onHome }) {
 
     engine = new DiceEngine({ canvas, stage });
 
+    switchButton.addEventListener('click', switchChoice);
     back.addEventListener('click', () => {
       if (rolling) return;
       renderSetup();
@@ -173,6 +191,7 @@ export function renderDiceMode(container, { state, onHome }) {
       if (rolling) return;
       rolling = true;
       back.disabled = true;
+      switchButton.disabled = true;
       rollButton.disabled = true;
       rollButton.textContent = 'ROLLING…';
       resultRegion.innerHTML = '';
@@ -210,6 +229,7 @@ export function renderDiceMode(container, { state, onHome }) {
       } catch (error) {
         rolling = false;
         back.disabled = false;
+        switchButton.disabled = false;
         rollButton.disabled = false;
         rollButton.textContent = 'ROLL';
         badge.textContent = 'ERROR';
