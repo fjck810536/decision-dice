@@ -69,6 +69,12 @@
 .system-setting-row.danger { margin-top: 10px; border-color: #70483e; color: #d39b89; }
 .system-setting-note { margin: 5px 2px 0; color: #858a7c; font-size: 8px; line-height: 1.45; }
 
+/* HOME is navigation only. Clearing lives in Settings, not in mode headers. */
+#leave-mode,
+#leave-choice {
+  display: none !important;
+}
+
 .system-modal-backdrop {
   position: fixed;
   inset: 0;
