@@ -4,7 +4,8 @@ const DICE_GROUP = 1;
 const ENV_GROUP = 2;
 
 export class PhysicsWorld {
-  constructor() {
+  constructor({ onCollision = null } = {}) {
+    this.onCollision = typeof onCollision === 'function' ? onCollision : null;
     this.cage = {
       halfWidth: 5.8,
       floorY: -1.45,
@@ -112,6 +113,23 @@ export class PhysicsWorld {
     body.quaternion.copy(spawn.quaternion);
     body.velocity.set(spawn.velocity.x, spawn.velocity.y, spawn.velocity.z);
     body.angularVelocity.set(spawn.angularVelocity.x, spawn.angularVelocity.y, spawn.angularVelocity.z);
+
+    if (this.onCollision) {
+      body.addEventListener('collide', (event) => {
+        let impact = 0;
+        try {
+          impact = Math.abs(event.contact?.getImpactVelocityAlongNormal?.() ?? 0);
+        } catch {
+          impact = body.velocity.length();
+        }
+        this.onCollision({
+          impact,
+          physicalId: meta.physicalId,
+          logicalType: meta.logicalType,
+        });
+      });
+    }
+
     this.world.addBody(body);
 
     return {
