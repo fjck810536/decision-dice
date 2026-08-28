@@ -1,0 +1,234 @@
+/* HOME P2.3 — composition/alignment review pass.
+   Keeps P2 v2 sprite language intact; changes only hierarchy/composition/control character. */
+
+/* --- 1. Original-style thin marquee strip at the very top ---------------- */
+.home-marquee-strip {
+  position: absolute;
+  z-index: 14;
+  top: max(30px, calc(env(safe-area-inset-top) + 20px));
+  left: -3%;
+  width: 106%;
+  height: 52px;
+  overflow: hidden;
+  pointer-events: none;
+  border-top: 1px solid rgba(211,220,130,.17);
+  border-bottom: 1px solid rgba(211,220,130,.13);
+  background: rgba(13,15,11,.88);
+  box-shadow: 0 3px 0 rgba(0,0,0,.25);
+  transform: rotate(-.55deg) scale(1.01);
+}
+
+.home-marquee-strip .marquee,
+.home-marquee-strip .marquee-track,
+.home-marquee-strip .marquee-row {
+  height: 100%;
+}
+
+.home-marquee-strip .marquee-row {
+  gap: 13px;
+  padding: 5px 8px;
+}
+
+.home-marquee-strip .die-sprite {
+  width: 34px;
+  height: 34px;
+  border-color: rgba(231,227,202,.46);
+  box-shadow: 2px 2px 0 rgba(0,0,0,.42);
+}
+
+.home-marquee-strip .die-d100 .die-sprite { width: 38px; }
+.home-marquee-strip .facet-a { background: #d5d0b4; }
+.home-marquee-strip .facet-b { background: #969b7e; }
+.home-marquee-strip .facet-c { background: #565b49; }
+.home-marquee-strip .facet-mesh { opacity: .48; }
+.home-marquee-strip .marquee-track { animation-duration: 20s; }
+
+/* --- 2. Dim background remains large, but begins below the thin strip ----- */
+.home-marquee-field-back {
+  top: max(69px, calc(env(safe-area-inset-top) + 58px));
+  height: 44svh;
+  opacity: .24;
+  transform: rotate(-1.25deg) scale(1.035);
+}
+
+/* --- 3. Bright lower marquee becomes a large diagonal Z stroke ----------- */
+.home-marquee-field-front {
+  z-index: 22;
+  top: 49svh;
+  left: -24%;
+  width: 148%;
+  height: 34svh;
+  display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  opacity: .92;
+  overflow: hidden;
+  transform: rotate(7.2deg) scale(1.04);
+  transform-origin: 50% 50%;
+  clip-path: polygon(2% 3%, 100% 0, 96% 97%, 0 100%);
+  background: rgba(12,14,10,.24);
+}
+
+.home-marquee-field-front .marquee:nth-child(2) {
+  background: rgba(211,220,130,.035);
+}
+
+.home-marquee-field-front .marquee-row {
+  gap: 27px;
+  padding-inline: 16px;
+}
+
+.home-marquee-field-front .die-sprite {
+  width: 62px;
+  height: 62px;
+  border-color: rgba(238,233,208,.55);
+  box-shadow: 4px 4px 0 rgba(0,0,0,.46);
+}
+
+.home-marquee-field-front .die-d100 .die-sprite { width: 68px; }
+.home-marquee-field-front .front-row-a .marquee-track { animation-duration: 17s; }
+.home-marquee-field-front .front-row-b .marquee-track { animation-duration: 21s; }
+.home-marquee-field-front .front-row-c .marquee-track { animation-duration: 15s; }
+
+/* --- 4. Logo sits ABOVE every marquee and regains the original line voice - */
+.home-p2-hero {
+  z-index: 40;
+  top: 13svh;
+}
+
+.home-p2-logo-wrap {
+  left: 0;
+  width: min(100%, 560px);
+  margin-inline: auto;
+}
+
+.home-p2-logo {
+  width: 116%;
+  margin-left: -8%;
+  margin-right: -8%;
+  text-align: center;
+  transform: scaleX(.82);
+  transform-origin: 50% 50%;
+}
+
+.home-p2-logo > span {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin-right: auto !important;
+  text-align: center;
+  transform-origin: center center;
+}
+
+/* Restore the original asymmetrical three-line rhythm, but around one optical centre. */
+.home-p2-logo .title-line-a {
+  margin-left: auto !important;
+}
+
+.home-p2-logo .title-line-b {
+  margin-left: calc(auto + 0px) !important;
+  transform: translateX(.15em) !important;
+  margin-right: auto !important;
+}
+
+.home-p2-logo .title-line-c {
+  margin-left: auto !important;
+  transform: translateX(-.09em) !important;
+}
+
+.home-p2-logo-wrap .logo-kicker {
+  width: 100%;
+  text-align: center;
+}
+
+.home-p2-logo-wrap .serial {
+  width: 100%;
+  justify-content: center;
+}
+
+/* --- 5. Two large independent blocks: keep size, restore machine/arcade bite */
+.home-p2-controls {
+  z-index: 70;
+  left: 10px;
+  right: 10px;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  gap: 12px;
+}
+
+.home-p2-controls .mode-button {
+  overflow: hidden;
+  border: 2px solid #81876f;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 5px, rgba(0,0,0,.09) 5px 6px),
+    repeating-linear-gradient(90deg, rgba(211,220,130,.025) 0 1px, transparent 1px 7px),
+    #171914;
+  box-shadow:
+    inset 5px 5px 0 rgba(238,234,214,.035),
+    inset -6px -6px 0 rgba(0,0,0,.30),
+    5px 5px 0 #040504;
+}
+
+.home-p2-controls .mode-button + .mode-button {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 5px, rgba(0,0,0,.09) 5px 6px),
+    repeating-linear-gradient(90deg, rgba(152,83,67,.027) 0 1px, transparent 1px 7px),
+    #171914;
+}
+
+.home-p2-controls .mode-button::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(211,220,130,.15);
+  pointer-events: none;
+}
+
+.home-p2-controls .mode-button::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  left: 9px;
+  right: 9px;
+  bottom: 9px;
+  height: 7px;
+  border-top: 2px solid rgba(211,220,130,.30);
+  border-bottom: 1px solid rgba(0,0,0,.52);
+  pointer-events: none;
+}
+
+.home-p2-controls .mode-title {
+  position: relative;
+  z-index: 2;
+  font-size: clamp(58px, 17vw, 84px);
+  line-height: .80;
+  letter-spacing: -.02em;
+  transform: scaleX(.94);
+  text-shadow:
+    3px 0 0 rgba(152,83,67,.38),
+    -1px 0 0 rgba(211,220,130,.15),
+    0 4px 0 rgba(0,0,0,.35);
+}
+
+.home-p2-controls .mode-button:active {
+  transform: translate(3px, 4px);
+  border-color: var(--acid);
+  box-shadow:
+    inset 4px 4px 0 rgba(0,0,0,.20),
+    1px 1px 0 #040504;
+}
+
+@media (max-width: 360px) {
+  .home-marquee-field-front {
+    top: 51svh;
+    height: 31svh;
+  }
+
+  .home-marquee-field-front .die-sprite {
+    width: 55px;
+    height: 55px;
+  }
+
+  .home-p2-controls .mode-title {
+    font-size: clamp(52px, 16vw, 66px);
+  }
+}
