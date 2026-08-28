@@ -1,0 +1,300 @@
+.settlement-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(7, 8, 6, .18);
+  pointer-events: none;
+}
+
+.settlement-overlay[hidden] { display: none; }
+
+.settlement-overlay.is-active {
+  background: rgba(7, 8, 6, .42);
+}
+
+.settlement-card {
+  width: min(88%, 360px);
+  min-height: 46%;
+  display: grid;
+  align-content: center;
+  gap: 12px;
+  padding: 18px 18px 16px;
+  border: 1px solid rgba(229, 224, 204, .66);
+  background: rgba(10, 11, 8, .89);
+  box-shadow:
+    0 0 0 4px rgba(8, 9, 7, .62),
+    0 12px 36px rgba(0, 0, 0, .42);
+  pointer-events: auto;
+}
+
+.settlement-phase,
+.settlement-total,
+.choice-settlement-label,
+.settlement-details {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 110ms steps(2, end), transform 110ms steps(2, end);
+}
+
+.settlement-phase.is-visible,
+.settlement-total.is-visible,
+.choice-settlement-label.is-visible,
+.settlement-details.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.settlement-dice-row,
+.settlement-math-row {
+  display: grid;
+  grid-template-columns: minmax(70px, .6fr) 1fr;
+  align-items: baseline;
+  gap: 12px;
+  padding: 7px 0;
+  border-top: 1px solid rgba(124, 131, 111, .25);
+}
+
+.settlement-dice-row:first-child,
+.settlement-math-row:first-child { border-top: 0; }
+
+.settlement-dice-row span,
+.settlement-math-row span {
+  color: #a7aa99;
+  font-size: 10px;
+  letter-spacing: .16em;
+}
+
+.settlement-dice-row strong,
+.settlement-math-row strong {
+  justify-self: end;
+  color: #f0ead9;
+  font-family: "Songti TC", "Noto Serif TC", PMingLiU, MingLiU, serif;
+  font-size: clamp(25px, 8vw, 38px);
+  line-height: 1;
+}
+
+.settlement-phase--math {
+  transition: transform 150ms steps(3, end), opacity 110ms steps(2, end), font-size 150ms steps(3, end);
+}
+
+.settlement-phase--math.is-compact {
+  transform: translateY(-12px) scale(.82);
+  transform-origin: center top;
+  opacity: .72;
+}
+
+.settlement-card.has-total {
+  align-content: center;
+  gap: 4px;
+}
+
+.settlement-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: -4px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(211, 220, 130, .86);
+}
+
+.settlement-total span {
+  color: #d3dc82;
+  font-size: 11px;
+  letter-spacing: .24em;
+}
+
+.settlement-total strong {
+  color: #f4eedb;
+  font-family: "Songti TC", "Noto Serif TC", PMingLiU, MingLiU, serif;
+  font-size: clamp(54px, 18vw, 88px);
+  line-height: .84;
+  letter-spacing: -.04em;
+  text-shadow: 3px 0 0 rgba(152, 83, 67, .32);
+}
+
+.settlement-details {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 9px;
+  border: 1px solid #555c4d;
+  border-radius: 0;
+  background: rgba(15, 17, 13, .92);
+  color: #d7d3c4;
+  font: 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .12em;
+}
+
+.settlement-card--choice {
+  min-height: 48%;
+  text-align: center;
+}
+
+.choice-settlement-index {
+  color: #f2ecda;
+  font-family: "Songti TC", "Noto Serif TC", PMingLiU, MingLiU, serif;
+  font-size: clamp(88px, 30vw, 150px);
+  font-weight: 900;
+  line-height: .82;
+  transition: transform 150ms steps(3, end), opacity 110ms steps(2, end);
+}
+
+.choice-settlement-index.is-compact {
+  transform: translateY(-8px) scale(.58);
+  opacity: .68;
+}
+
+.choice-settlement-label {
+  margin-top: -16px;
+  color: #f0ead9;
+  font-family: "Songti TC", "Noto Serif TC", PMingLiU, MingLiU, serif;
+  font-size: clamp(30px, 10vw, 52px);
+  font-weight: 900;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.settlement-card--rejection {
+  min-height: 42%;
+  text-align: center;
+  border-color: rgba(181, 101, 82, .72);
+}
+
+.rejection-raw {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 18px;
+}
+
+.rejection-raw span { color: #a9aa9c; font-size: 10px; letter-spacing: .18em; }
+.rejection-raw strong { color: #f0ead9; font-size: 48px; }
+.rejection-word { color: #d48a77; font-size: 28px; letter-spacing: .16em; }
+.rejection-next { color: #d3dc82; font-size: 12px; letter-spacing: .25em; }
+
+.roll-control-row,
+.choice-roll-control-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(110px, .8fr);
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.roll-control-row .primary-action,
+.choice-roll-control-row .primary-action,
+.roll-control-row .secondary-action,
+.choice-roll-control-row .secondary-action {
+  margin-top: 0;
+  min-height: 66px;
+}
+
+.roll-control-row .secondary-action,
+.choice-roll-control-row .secondary-action {
+  font-size: 10px;
+}
+
+.projection-ab {
+  position: absolute;
+  z-index: 55;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 4px;
+  pointer-events: auto;
+}
+
+.projection-ab button {
+  min-height: 30px;
+  border: 1px solid rgba(235, 229, 213, .28);
+  border-radius: 0;
+  background: rgba(8, 9, 7, .76);
+  color: #8c9181;
+  padding: 4px 6px;
+  font: 7px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .08em;
+}
+
+.projection-ab button.active {
+  border-color: rgba(211, 220, 130, .72);
+  color: #d3dc82;
+}
+
+.details-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 700;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(5, 6, 4, .68);
+}
+
+.details-sheet {
+  width: min(100%, 560px);
+  max-height: min(78svh, 720px);
+  overflow: hidden;
+  border: 1px solid #68705e;
+  border-bottom: 0;
+  background: #10120e;
+  color: #e9e4d4;
+  box-shadow: 0 -18px 48px rgba(0, 0, 0, .5);
+}
+
+.details-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #3d4338;
+}
+
+.details-sheet-head span {
+  display: block;
+  color: #d3dc82;
+  font-size: 8px;
+  letter-spacing: .2em;
+}
+
+.details-sheet-head strong {
+  display: block;
+  margin-top: 2px;
+  font-family: "Songti TC", "Noto Serif TC", PMingLiU, serif;
+  font-size: 24px;
+}
+
+.details-sheet-head button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid #505647;
+  border-radius: 0;
+  background: #0b0d0a;
+  color: #ddd8c9;
+  font-size: 20px;
+}
+
+.details-sheet-body {
+  max-height: calc(min(78svh, 720px) - 70px);
+  overflow-y: auto;
+  padding: 13px 14px max(18px, env(safe-area-inset-bottom));
+}
+
+.details-sheet-body .result-panel {
+  margin: 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settlement-phase,
+  .settlement-total,
+  .choice-settlement-index,
+  .choice-settlement-label,
+  .settlement-details {
+    transition: none;
+  }
+}
