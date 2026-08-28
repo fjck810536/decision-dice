@@ -8,11 +8,14 @@ const rows = {
 
 function dieSprite(label) {
   const type = label.toLowerCase();
-  const face = label === 'D100' ? '00' : label.replace('D', '');
   return `
-    <span class="die-chip die-${type}">
-      <span class="die-sprite" aria-hidden="true"><b>${face}</b></span>
-      <span class="die-label">${label}</span>
+    <span class="die-chip die-${type}" aria-hidden="true">
+      <span class="die-sprite">
+        <i class="facet facet-a"></i>
+        <i class="facet facet-b"></i>
+        <i class="facet facet-c"></i>
+        <i class="facet-mesh"></i>
+      </span>
     </span>
   `;
 }
@@ -63,19 +66,12 @@ export function renderHome(container, { onDice, onChoice }) {
         ${marqueeRow(rows.d, 'front-row front-row-c')}
       </div>
 
-      <div class="home-lower-readout" aria-hidden="true">
-        <span>PHYSICAL DICE / DECISION ENGINE</span>
-        <span>READY</span>
-      </div>
-
       <nav class="home-controls home-controls-paired home-p2-controls" aria-label="主要模式">
-        <button class="mode-button" id="home-dice" type="button" data-index="01">
+        <button class="mode-button" id="home-dice" type="button">
           <span class="mode-title">骰子</span>
-          <span class="mode-subtitle">DICE POOL</span>
         </button>
-        <button class="mode-button" id="home-choice" type="button" data-index="02">
+        <button class="mode-button" id="home-choice" type="button">
           <span class="mode-title">選擇</span>
-          <span class="mode-subtitle">DECISION</span>
         </button>
       </nav>
     </section>
