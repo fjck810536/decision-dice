@@ -76,6 +76,19 @@
   line-height: 1;
 }
 
+.settlement-value-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px 10px;
+  min-width: 0;
+}
+
+.settlement-value-list b {
+  font: inherit;
+  font-weight: 900;
+}
+
 .settlement-phase--math {
   transition: transform 150ms steps(3, end), opacity 110ms steps(2, end), font-size 150ms steps(3, end);
 }
