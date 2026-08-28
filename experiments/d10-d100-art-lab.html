@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d0f0c">
-<title>D10 / D100 Art Lab</title>
+<title>D10 / D100 Art Lab v2</title>
 <style>
-:root{color-scheme:dark;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#0d0f0c;color:#e7e8df;--line:#505747;--acid:#cdd58b}*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0d0f0c}body{min-height:100svh;-webkit-text-size-adjust:100%;touch-action:manipulation}main{width:min(100%,620px);margin:auto;padding:max(12px,env(safe-area-inset-top)) 12px max(20px,env(safe-area-inset-bottom));display:grid;gap:9px}.controls{border:1px solid var(--line);background:#151812;padding:9px;display:grid;gap:7px}.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.row>span{width:58px;color:#8f9583;font-size:10px;letter-spacing:.13em}button{appearance:none;border:1px solid #4b5144;border-radius:0;background:#0f110d;color:#d7d9ce;font:inherit;min-height:40px;padding:0 12px;touch-action:manipulation}button.active{border-color:var(--acid);color:var(--acid)}button:disabled{opacity:.35}.stage{position:relative;aspect-ratio:1/1;width:100%;overflow:hidden;border:1px solid #626957;background:#0c0e0b}.stage canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}.badge,.status{position:absolute;top:8px;padding:6px 7px;border:1px solid rgba(205,213,139,.35);background:rgba(8,9,7,.78);font-size:9px;letter-spacing:.08em;pointer-events:none}.status{left:8px}.badge{right:8px}.bottom{display:grid;grid-template-columns:1.4fr 1fr;gap:7px}.roll{min-height:62px;background:var(--acid);border-color:#dbe29a;color:#10120c;font-size:18px;font-weight:900;letter-spacing:.18em}.result{border:1px solid var(--line);background:#11130f;display:grid;place-items:center;text-align:center;padding:6px}.result small{display:block;color:#8f9583;font-size:9px;letter-spacing:.12em;margin-bottom:4px}.result strong{font-size:24px}.note{color:#8f9583;font-size:10px;line-height:1.45;margin:0 2px}@media(max-width:420px){.bottom{grid-template-columns:1fr}.result{min-height:64px}.stage{min-height:340px}}
+:root{color-scheme:dark;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#0d0f0c;color:#e7e8df;--line:#505747;--acid:#cdd58b}*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0d0f0c}body{min-height:100svh;-webkit-text-size-adjust:100%;touch-action:manipulation}main{width:min(100%,620px);margin:auto;padding:max(12px,env(safe-area-inset-top)) 12px max(20px,env(safe-area-inset-bottom));display:grid;gap:9px}.controls{border:1px solid var(--line);background:#151812;padding:9px;display:grid;gap:7px}.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.row>span{width:58px;color:#8f9583;font-size:10px;letter-spacing:.13em}button{appearance:none;border:1px solid #4b5144;border-radius:0;background:#0f110d;color:#d7d9ce;font:inherit;min-height:40px;padding:0 12px;touch-action:manipulation}button.active{border-color:var(--acid);color:var(--acid)}button:disabled{opacity:.35}.stage{position:relative;aspect-ratio:1/1;width:100%;overflow:hidden;border:1px solid #626957;background:#0c0e0b}.stage canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}.badge,.status{position:absolute;top:8px;padding:6px 7px;border:1px solid rgba(205,213,139,.35);background:rgba(8,9,7,.78);font-size:9px;letter-spacing:.08em;pointer-events:none}.status{left:8px}.badge{right:8px}.bottom{display:grid;grid-template-columns:1.4fr 1fr;gap:7px}.roll{min-height:62px;background:var(--acid);border-color:#dbe29a;color:#10120c;font-size:18px;font-weight:900;letter-spacing:.18em}.result{border:1px solid var(--line);background:#11130f;display:grid;place-items:center;text-align:center;padding:6px}.result small{display:block;color:#8f9583;font-size:9px;letter-spacing:.12em;margin-bottom:4px}.result strong{font-size:24px}.note{color:#8f9583;font-size:10px;line-height:1.45;margin:0 2px}.warning{color:#c9bca2}@media(max-width:420px){.bottom{grid-template-columns:1fr}.result{min-height:64px}.stage{min-height:340px}}
 </style>
 </head>
 <body>
@@ -15,29 +15,112 @@
 <div class="row"><span>DICE</span><button class="active" data-die="d10">D10</button><button data-die="d100">D100</button></div>
 <div class="row"><span>VIEW</span><button class="active" data-view="high">HIGH</button><button data-view="low">LOW</button><button data-view="side">SIDE</button></div>
 </section>
-<section class="stage" id="stage"><canvas id="c"></canvas><div class="status" id="status">READY</div><div class="badge" id="badge">ART LAB / D10</div></section>
+<section class="stage" id="stage"><canvas id="c"></canvas><div class="status" id="status">READY</div><div class="badge" id="badge">PRODUCTION BODY / D10</div></section>
 <section class="bottom"><button class="roll" id="roll">ROLL</button><div class="result"><div><small>RESULT</small><strong id="result">—</strong></div></div></section>
-<p class="note">M6.2B art-direction prototype：先看幾何、個位／十位排字、字面比例與可讀性。這頁的 ROLL 只是視覺測試，不取代正式頁的物理與公平性。</p>
+<p class="note"><span class="warning">v2：</span>骰體、物理、ORDERED+、REAL128 shadow、切割墊與 wobble 全部直接沿用正式主檔；這頁只替換 D10 / D100 的字面。HIGH 是正式 90° 俯瞰，LOW / SIDE 只在落定後供美術檢查。</p>
 </main>
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js';
-const stage=document.querySelector('#stage'),canvas=document.querySelector('#c'),roll=document.querySelector('#roll'),result=document.querySelector('#result'),status=document.querySelector('#status'),badge=document.querySelector('#badge');
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x10120e);const camera=new THREE.PerspectiveCamera(38,1,.1,60);const renderer=new THREE.WebGLRenderer({canvas,antialias:false,powerPreference:'default'});renderer.setPixelRatio(1);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.BasicShadowMap;
-scene.add(new THREE.AmbientLight(0xc8cbbb,.78));const sun=new THREE.DirectionalLight(0xfff1d8,1.62);sun.position.set(4.5,8,4.2);sun.castShadow=true;sun.shadow.mapSize.set(128,128);sun.shadow.camera.left=-5;sun.shadow.camera.right=5;sun.shadow.camera.top=5;sun.shadow.camera.bottom=-5;sun.shadow.camera.near=.1;sun.shadow.camera.far=22;scene.add(sun);
-function matTex(){const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');x.fillStyle='#315947';x.fillRect(0,0,128,128);for(let i=0;i<=128;i+=16){x.strokeStyle=i%64===0?'rgba(226,224,204,.58)':'rgba(226,224,204,.13)';x.lineWidth=i%64===0?2:1;x.beginPath();x.moveTo(i+.5,0);x.lineTo(i+.5,128);x.stroke();x.beginPath();x.moveTo(0,i+.5);x.lineTo(128,i+.5);x.stroke()}for(let y=0;y<128;y+=2)for(let z=0;z<128;z+=2){const n=((z*17+y*31+(z*y)%53)%37)/36;if(n>.8){x.fillStyle='rgba(240,230,208,.045)';x.fillRect(z,y,2,2)}}const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(5,5);t.magFilter=t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;t.colorSpace=THREE.SRGBColorSpace;return t}
-const floor=new THREE.Mesh(new THREE.PlaneGeometry(12,12),new THREE.MeshLambertMaterial({map:matTex(),flatShading:true}));floor.rotation.x=-Math.PI/2;floor.position.y=-1.38;floor.receiveShadow=true;scene.add(floor);scene.fog=new THREE.Fog(0x10120e,8.5,18);
-function faceTexture(label,tens=false){const c=document.createElement('canvas');c.width=c.height=192;const x=c.getContext('2d');x.fillStyle='#d7ceb5';x.fillRect(0,0,192,192);const ink='#171511';x.fillStyle=ink;x.strokeStyle='#423a2e';x.lineJoin='round';x.lineCap='round';x.textBaseline='middle';if(!tens){x.textAlign='center';x.font='700 118px Georgia,Times New Roman,serif';x.lineWidth=3;x.strokeText(label,96,103);x.fillText(label,96,103);if(label==='6'||label==='9'){x.lineWidth=6;x.beginPath();x.moveTo(58,151);x.lineTo(134,151);x.stroke()}}else{const a=label[0],b=label[1];x.textAlign='center';x.font='700 122px Georgia,Times New Roman,serif';x.lineWidth=3;x.strokeText(a,74,112);x.fillText(a,74,112);x.font='700 76px Georgia,Times New Roman,serif';x.strokeText(b,132,62);x.fillText(b,132,62);if(a==='6'||a==='9'){x.lineWidth=5;x.beginPath();x.moveTo(42,156);x.lineTo(103,156);x.stroke()}}const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.magFilter=t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;return t}
-function makeD10(labels,tens=false){const top=new THREE.Vector3(0,1.25,0),bot=new THREE.Vector3(0,-1.25,0),ring=[];for(let i=0;i<10;i++){const a=i*Math.PI*2/10;ring.push(new THREE.Vector3(Math.cos(a),0,Math.sin(a)))}const pos=[],uv=[],groups=[];let start=0;for(let i=0;i<10;i++){const a=top,b=ring[i],c=bot,d=ring[(i+1)%10];pos.push(...a.toArray(),...b.toArray(),...c.toArray(),...a.toArray(),...c.toArray(),...d.toArray());uv.push(.5,0,0,.53,.5,1,.5,0,.5,1,1,.53);groups.push({start,count:6,index:i});start+=6}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.computeVertexNormals();groups.forEach(o=>g.addGroup(o.start,o.count,o.index));const mats=labels.map(v=>new THREE.MeshLambertMaterial({map:faceTexture(v,tens),flatShading:true}));const m=new THREE.Mesh(g,mats);m.castShadow=true;const e=new THREE.LineSegments(new THREE.EdgesGeometry(g,24),new THREE.LineBasicMaterial({color:0x2b2a22,transparent:true,opacity:.8}));m.add(e);m.userData.labels=labels;m.userData.normals=[];for(let i=0;i<10;i++){const p=groups[i].start*3;const A=new THREE.Vector3(pos[p],pos[p+1],pos[p+2]),B=new THREE.Vector3(pos[p+3],pos[p+4],pos[p+5]),C=new THREE.Vector3(pos[p+6],pos[p+7],pos[p+8]);const n=new THREE.Vector3().crossVectors(B.clone().sub(A),C.clone().sub(A)).normalize();const center=A.clone().add(B).add(C).multiplyScalar(1/3);if(n.dot(center)<0)n.negate();m.userData.normals.push(n)}return m}
-let mode='d10',view='high',dice=[],anim=null,nextRender=0;const ones=['0','1','2','3','4','5','6','7','8','9'],tens=['00','10','20','30','40','50','60','70','80','90'];
-function clearDice(){dice.forEach(d=>scene.remove(d.mesh));dice=[]}
-function qFor(d,label,yaw=0){const i=d.mesh.userData.labels.indexOf(label),n=d.mesh.userData.normals[Math.max(0,i)].clone(),q=new THREE.Quaternion().setFromUnitVectors(n,new THREE.Vector3(0,1,0));q.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),yaw));return q}
-function build(){clearDice();if(mode==='d10'){const mesh=makeD10(ones,false);mesh.position.set(0,0,0);scene.add(mesh);dice=[{mesh,type:'ones'}];mesh.quaternion.copy(qFor(dice[0],'7',.18));badge.textContent='ART LAB / D10'}else{const A=makeD10(tens,true),B=makeD10(ones,false);A.position.set(-1.35,0,.05);B.position.set(1.35,0,.3);scene.add(A,B);dice=[{mesh:A,type:'tens'},{mesh:B,type:'ones'}];A.quaternion.copy(qFor(dice[0],'80',-.18));B.quaternion.copy(qFor(dice[1],'7',.2));badge.textContent='ART LAB / D100'}result.textContent='—';status.textContent='READY';nextRender=0}
-const views={high:[[0,7.4,4.4],[0,-.05,0]],low:[[0,4.0,7.2],[0,-.15,.2]],side:[[6.5,3.3,2.7],[0,-.05,0]]};function setView(v){view=v;const p=views[v];camera.position.set(...p[0]);camera.lookAt(...p[1]);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===v));nextRender=0}
-function rnd(n){const u=new Uint32Array(1);crypto.getRandomValues(u);return u[0]%n}function startRoll(){if(anim)return;roll.disabled=true;status.textContent='ROLLING';const now=performance.now(),items=[];if(mode==='d10'){const raw=rnd(10),lab=String(raw),val=raw||10;items.push({d:dice[0],from:dice[0].mesh.quaternion.clone(),to:qFor(dice[0],lab,(Math.random()-.5)*.8),spin:7+Math.random()*5});result.textContent='…';anim={now,dur:1300,items,final:String(val)}}else{const T=tens[rnd(10)],O=ones[rnd(10)],tv=Number(T),ov=Number(O),val=tv===0&&ov===0?100:tv+ov;items.push({d:dice[0],from:dice[0].mesh.quaternion.clone(),to:qFor(dice[0],T,(Math.random()-.5)*.8),spin:8+Math.random()*5},{d:dice[1],from:dice[1].mesh.quaternion.clone(),to:qFor(dice[1],O,(Math.random()-.5)*.8),spin:9+Math.random()*5});result.textContent='…';anim={now,dur:1300,items,final:`${val} (${T}+${O})`}}}
-function update(now){if(!anim)return;const t=Math.min(1,(now-anim.now)/anim.dur),ease=1-Math.pow(1-t,3);anim.items.forEach((o,i)=>{o.d.mesh.quaternion.slerpQuaternions(o.from,o.to,ease);o.d.mesh.rotateY((1-t)*.045*o.spin);const base=mode==='d100'?(i?1.35:-1.35):0;o.d.mesh.position.x=base;o.d.mesh.position.y=Math.sin(Math.PI*t)*.35;o.d.mesh.position.z=mode==='d100'?(i?.3:.05):0});if(t>=1){anim.items.forEach(o=>o.d.mesh.quaternion.copy(o.to));result.textContent=anim.final;status.textContent='DONE';anim=null;roll.disabled=false}}
-function resize(){const r=stage.getBoundingClientRect();const w=Math.min(360,Math.max(260,Math.round(r.width*.82))),h=Math.max(260,Math.round(w*r.height/r.width));renderer.setSize(w,h,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();nextRender=0}
-function loop(now){requestAnimationFrame(loop);update(now);if(now>=nextRender){renderer.render(scene,camera);nextRender=now+1000/12}}
-document.querySelectorAll('[data-die]').forEach(b=>b.onclick=()=>{if(anim)return;mode=b.dataset.die;document.querySelectorAll('[data-die]').forEach(x=>x.classList.toggle('active',x===b));build()});document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));roll.onclick=startRoll;new ResizeObserver(resize).observe(stage);setView('high');build();resize();requestAnimationFrame(loop);
+import { DiceEngine } from '../src/dice/engine.js';
+import { D10D100ArtMarkingFactory } from './d10-d100-art-markings.js';
+import { installDoubleTapZoomGuard } from '../src/ui/mobile-gesture-guard.js';
+
+installDoubleTapZoomGuard();
+
+const stage=document.querySelector('#stage');
+const canvas=document.querySelector('#c');
+const rollButton=document.querySelector('#roll');
+const resultEl=document.querySelector('#result');
+const statusEl=document.querySelector('#status');
+const badgeEl=document.querySelector('#badge');
+const dieButtons=[...document.querySelectorAll('[data-die]')];
+const viewButtons=[...document.querySelectorAll('[data-view]')];
+
+let mode='d10';
+let view='high';
+let rolling=false;
+
+const engine=new DiceEngine({canvas,stage,rendererOptions:{internalWidth:360,projectionMode:'perspective'}});
+engine.renderer.faceMarkings.dispose();
+engine.renderer.faceMarkings=new D10D100ArtMarkingFactory();
+
+function setButtonState(buttons,key,value){
+  buttons.forEach(button=>button.classList.toggle('active',button.dataset[key]===value));
+}
+
+function pool(){
+  return [{type:mode,count:1}];
+}
+
+function applyView(){
+  const r=engine.renderer;
+  const camera=r.perspectiveCamera;
+  if(view==='high'){
+    r.setProjectionMode('perspective');
+    r.setPhysicalCount(mode==='d100'?2:1);
+  }else{
+    r.setProjectionMode('perspective');
+    camera.up.set(0,1,0);
+    if(view==='low') camera.position.set(0,r.floorY+6.5,7.8);
+    else camera.position.set(8.1,r.floorY+4.2,4.7);
+    camera.lookAt(0,r.floorY+.15,0);
+    camera.updateProjectionMatrix();
+  }
+  r.lastRenderAt=0;
+  r.render(r.records,performance.now(),true);
+}
+
+function resultText(result){
+  const die=result.dice?.[0];
+  if(!die)return '—';
+  return String(die.value);
+}
+
+dieButtons.forEach(button=>button.addEventListener('click',()=>{
+  if(rolling)return;
+  mode=button.dataset.die;
+  setButtonState(dieButtons,'die',mode);
+  badgeEl.textContent=`PRODUCTION BODY / ${mode.toUpperCase()}`;
+  resultEl.textContent='—';
+  statusEl.textContent='READY';
+  engine.renderer.reset();
+  applyView();
+}));
+
+viewButtons.forEach(button=>button.addEventListener('click',()=>{
+  if(rolling)return;
+  view=button.dataset.view;
+  setButtonState(viewButtons,'view',view);
+  applyView();
+  statusEl.textContent=view==='high'?'PRODUCT CAMERA':'INSPECTION VIEW';
+}));
+
+rollButton.addEventListener('click',async()=>{
+  if(rolling)return;
+  rolling=true;
+  rollButton.disabled=true;
+  resultEl.textContent='…';
+  statusEl.textContent='ROLL / 0';
+  try{
+    const result=await engine.roll({
+      pool:pool(),
+      onProgress(progress){
+        if(String(progress.phase).startsWith('FEEDING')) statusEl.textContent=`FEED / ${progress.spawned} OF ${progress.physicalCount}`;
+        else statusEl.textContent=`SETTLE / ${progress.frozen} OF ${progress.physicalCount}`;
+      },
+    });
+    resultEl.textContent=resultText(result);
+    statusEl.textContent='LOCKED / ART CHECK';
+    applyView();
+  }catch(error){
+    statusEl.textContent='ERROR';
+    resultEl.textContent=error?.message??String(error);
+  }finally{
+    rolling=false;
+    rollButton.disabled=false;
+  }
+});
+
+applyView();
 </script>
 </body>
 </html>
