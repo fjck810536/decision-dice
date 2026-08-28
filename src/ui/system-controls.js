@@ -1,34 +1,4 @@
-function makeLeaveGate({ mode, onClear }) {
-  const modeLabel = mode === 'choice' ? '選擇' : '骰子';
-  const backdrop = document.createElement('div');
-  backdrop.className = 'system-modal-backdrop';
-  backdrop.innerHTML = `
-    <section class="system-modal" role="dialog" aria-modal="true" aria-labelledby="leave-title">
-      <p class="system-code">LEAVE ${mode.toUpperCase()} MODE</p>
-      <h2 id="leave-title">返回 HOME？</h2>
-      <p>目前 v0.1 只開放「清除並離開」。這會重設${modeLabel}模式的設定，但 session history 仍保留。</p>
-      <div class="system-modal-actions">
-        <button type="button" class="system-option" disabled>保留｜尚未開放</button>
-        <button type="button" class="system-option danger" data-clear>清除並離開</button>
-        <button type="button" class="system-option" data-cancel>取消</button>
-      </div>
-    </section>
-  `;
-
-  const close = () => backdrop.remove();
-  backdrop.querySelector('[data-cancel]').addEventListener('click', close);
-  backdrop.querySelector('[data-clear]').addEventListener('click', () => {
-    close();
-    onClear();
-  });
-  backdrop.addEventListener('click', (event) => {
-    if (event.target === backdrop) close();
-  });
-  document.body.appendChild(backdrop);
-  backdrop.querySelector('[data-clear]').focus();
-}
-
-export function mountSystemControls({ state, audioEngine, onHome }) {
+export function mountSystemControls({ state, audioEngine, onRefreshMode }) {
   const host = document.createElement('div');
   host.className = 'system-controls-host';
   host.innerHTML = `
@@ -42,13 +12,20 @@ export function mountSystemControls({ state, audioEngine, onHome }) {
         <button type="button" class="system-dock-button" id="settings-close">×</button>
       </div>
       <button type="button" class="system-setting-row" id="settings-sound">
-        <span>聲音</span><strong>ON</strong>
+        <span>聲音</span><strong>SOUND ON</strong>
       </button>
-      <div class="system-setting-note">Dice 碰撞與 Choice reel 使用不同的暫定程序音。音色之後可整批替換。</div>
+      <button type="button" class="system-setting-row" id="test-sound">
+        <span>TEST SOUND</span><strong id="audio-status">LOCKED</strong>
+      </button>
+      <div class="system-setting-note">TEST SOUND 會直接檢查 iPhone Safari 的 Web Audio 是否已解鎖；目前音色仍是暫定程序音。</div>
+      <button type="button" class="system-setting-row danger" id="clear-current-mode">
+        <span>CLEAR MODE</span><strong>目前模式設定</strong>
+      </button>
+      <div class="system-setting-note">HOME 只是返回首頁，不清資料。Clear Mode 才會重設目前 Dice / Choice 的設定；history 保留。</div>
       <button type="button" class="system-setting-row danger" id="reset-session">
         <span>RESET SESSION</span><strong>全部清除</strong>
       </button>
-      <div class="system-setting-note">Reset Session 會清除 Dice、Choice 與全部 history；等同重新整理。Clear Mode 只清目前模式設定。</div>
+      <div class="system-setting-note">Reset Session 會清除 Dice、Choice 與全部 history；等同重新整理。</div>
     </section>
   `;
   document.body.appendChild(host);
@@ -57,57 +34,80 @@ export function mountSystemControls({ state, audioEngine, onHome }) {
   const settings = host.querySelector('#system-settings');
   const soundSetting = host.querySelector('#settings-sound');
   const soundSettingValue = soundSetting.querySelector('strong');
+  const audioStatus = host.querySelector('#audio-status');
+  const clearModeButton = host.querySelector('#clear-current-mode');
+  const clearModeValue = clearModeButton.querySelector('strong');
 
   const syncSoundUi = () => {
-    muteButton.textContent = audioEngine.isMuted ? 'MUTED' : 'MUTE';
-    soundSettingValue.textContent = audioEngine.isMuted ? 'OFF' : 'ON';
+    muteButton.textContent = audioEngine.isMuted ? 'UNMUTE' : 'MUTE';
+    soundSettingValue.textContent = audioEngine.isMuted ? 'MUTED' : 'SOUND ON';
+    audioStatus.textContent = audioEngine.status;
     muteButton.classList.toggle('is-muted', audioEngine.isMuted);
   };
 
-  const toggleMute = () => {
+  const syncModeUi = () => {
+    const active = state.mode === 'dice' || state.mode === 'choice';
+    clearModeButton.disabled = !active;
+    clearModeValue.textContent = active
+      ? (state.mode === 'dice' ? '清除骰子設定' : '清除選擇設定')
+      : 'HOME 無目前模式';
+  };
+
+  const syncAll = () => {
+    syncSoundUi();
+    syncModeUi();
+  };
+
+  const toggleMute = async () => {
     audioEngine.toggleMuted();
-    if (!audioEngine.isMuted) audioEngine.unlock();
+    if (!audioEngine.isMuted) await audioEngine.unlock();
     syncSoundUi();
   };
 
   muteButton.addEventListener('click', toggleMute);
   soundSetting.addEventListener('click', toggleMute);
+
+  host.querySelector('#test-sound').addEventListener('click', async () => {
+    if (audioEngine.isMuted) audioEngine.setMuted(false);
+    await audioEngine.playTestSound();
+    syncSoundUi();
+  });
+
   host.querySelector('#global-settings').addEventListener('click', () => {
     settings.hidden = !settings.hidden;
+    syncAll();
   });
   host.querySelector('#settings-close').addEventListener('click', () => {
     settings.hidden = true;
   });
+
+  clearModeButton.addEventListener('click', () => {
+    const mode = state.mode;
+    if (mode !== 'dice' && mode !== 'choice') return;
+    const label = mode === 'dice' ? '骰子' : '選擇';
+    const confirmed = window.confirm(`清除${label}模式目前設定？History 會保留。`);
+    if (!confirmed) return;
+    if (mode === 'dice') state.clearDiceMode();
+    else state.clearChoiceMode();
+    settings.hidden = true;
+    onRefreshMode?.(mode);
+  });
+
   host.querySelector('#reset-session').addEventListener('click', () => {
     const confirmed = window.confirm('RESET SESSION？Dice、Choice 與全部 history 都會清除。');
     if (confirmed) window.location.reload();
   });
 
-  document.addEventListener('pointerdown', () => {
-    audioEngine.unlock();
-  }, { passive: true });
+  const unlockFromGesture = () => {
+    audioEngine.unlock().finally(syncSoundUi);
+  };
+  document.addEventListener('pointerdown', unlockFromGesture, { passive: true });
+  document.addEventListener('touchend', unlockFromGesture, { passive: true });
 
-  document.addEventListener('click', (event) => {
-    const leaveButton = event.target.closest('#leave-mode, #leave-choice');
-    if (!leaveButton) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-
-    const mode = leaveButton.id === 'leave-choice' ? 'choice' : 'dice';
-    makeLeaveGate({
-      mode,
-      onClear() {
-        if (mode === 'choice') state.clearChoiceMode();
-        else state.clearDiceMode();
-        onHome();
-      },
-    });
-  }, true);
-
-  syncSoundUi();
+  syncAll();
 
   return {
-    sync: syncSoundUi,
+    sync: syncAll,
     closeSettings() {
       settings.hidden = true;
     },
