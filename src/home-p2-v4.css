@@ -1,0 +1,198 @@
+/* HOME P2.4 — bottom marquee base + explicit hierarchy + button material candidate A. */
+
+/* The screen texture belongs to the field, not above the title. */
+.home-p2-scene::after {
+  z-index: 35;
+}
+
+/* Keep the three moving fields behind the title. */
+.home-marquee-strip { z-index: 14; }
+.home-marquee-field-back { z-index: 5; }
+.home-marquee-field-front { z-index: 22; }
+
+/* -------------------------------------------------------------------------
+   LOGO — deliberately on top of every marquee.
+   Keep P2.3 line rhythm; move the whole group high and enlarge it.
+   ------------------------------------------------------------------------- */
+.home-p2-hero {
+  z-index: 90 !important;
+  top: 5.5svh;
+  isolation: isolate;
+}
+
+.home-p2-logo-wrap {
+  position: relative;
+  z-index: 91;
+  width: min(103%, 590px);
+}
+
+.home-p2-logo {
+  width: 122%;
+  margin-left: -11%;
+  margin-right: -11%;
+  font-size: clamp(82px, 27vw, 142px);
+  color: #f5efdc;
+  text-shadow:
+    4px 0 0 rgba(152,83,67,.52),
+    -2px 0 0 rgba(211,220,130,.23),
+    0 6px 0 rgba(0,0,0,.48),
+    0 0 1px #f5efdc;
+}
+
+.home-p2-logo-wrap .logo-kicker,
+.home-p2-logo-wrap .serial {
+  position: relative;
+  z-index: 92;
+}
+
+/* -------------------------------------------------------------------------
+   BOTTOM MARQUEE BASE — a final narrow conveyor that visually supports the
+   mode controls instead of becoming another main diagonal.
+   ------------------------------------------------------------------------- */
+.home-marquee-base {
+  position: absolute;
+  z-index: 48;
+  left: -4%;
+  bottom: max(-5px, calc(env(safe-area-inset-bottom) - 5px));
+  width: 108%;
+  height: 68px;
+  overflow: hidden;
+  pointer-events: none;
+  border-top: 1px solid rgba(222,225,157,.30);
+  border-bottom: 1px solid rgba(79,84,69,.55);
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.12) 0 1px, transparent 1px 4px),
+    rgba(16,18,13,.94);
+  box-shadow: 0 -3px 0 rgba(0,0,0,.25);
+  transform: rotate(-1.2deg) scale(1.015);
+  transform-origin: 50% 50%;
+}
+
+.home-marquee-base .marquee,
+.home-marquee-base .marquee-track,
+.home-marquee-base .marquee-row {
+  height: 100%;
+}
+
+.home-marquee-base .marquee-row {
+  gap: 15px;
+  padding: 7px 10px;
+}
+
+.home-marquee-base .die-sprite {
+  width: 43px;
+  height: 43px;
+  border-color: rgba(235,232,205,.50);
+  box-shadow: 3px 3px 0 rgba(0,0,0,.44);
+}
+
+.home-marquee-base .die-d100 .die-sprite { width: 48px; }
+.home-marquee-base .facet-a { background: #ded9bc; }
+.home-marquee-base .facet-b { background: #9ea384; }
+.home-marquee-base .facet-c { background: #5a604d; }
+.home-marquee-base .facet-mesh { opacity: .50; }
+.home-marquee-base .marquee-track { animation-duration: 18s; }
+
+/* -------------------------------------------------------------------------
+   MODE CONTROLS — candidate A from the button grill:
+   physical machine key x arcade mode tile, subtle split colour personalities,
+   old Photoshop-style bevel, low-res clipped corners, giant label, real press.
+   ------------------------------------------------------------------------- */
+.home-p2-controls {
+  z-index: 110;
+  left: 21px;
+  right: 21px;
+  bottom: max(34px, calc(env(safe-area-inset-bottom) + 25px));
+  gap: 14px;
+}
+
+.home-p2-controls .mode-button {
+  aspect-ratio: 1 / 1;
+  clip-path: polygon(7px 0, calc(100% - 3px) 0, 100% 5px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 4px 100%, 0 calc(100% - 4px), 0 7px);
+  border: 0;
+  background:
+    linear-gradient(180deg, rgba(244,242,217,.13) 0%, rgba(211,220,130,.045) 14%, transparent 32%, rgba(0,0,0,.16) 72%, rgba(0,0,0,.36) 100%),
+    linear-gradient(125deg, rgba(198,207,126,.13) 0%, rgba(53,58,44,.04) 48%, rgba(104,57,49,.09) 100%),
+    repeating-linear-gradient(0deg, transparent 0 5px, rgba(0,0,0,.08) 5px 6px),
+    #1b1e17;
+  box-shadow:
+    inset 5px 5px 0 rgba(244,241,220,.12),
+    inset -6px -7px 0 rgba(0,0,0,.34),
+    inset 0 0 0 2px rgba(120,127,102,.70),
+    5px 6px 0 #030403;
+}
+
+.home-p2-controls .mode-button + .mode-button {
+  background:
+    linear-gradient(180deg, rgba(244,234,218,.12) 0%, rgba(152,83,67,.055) 16%, transparent 34%, rgba(0,0,0,.17) 72%, rgba(0,0,0,.36) 100%),
+    linear-gradient(235deg, rgba(152,83,67,.14) 0%, rgba(53,58,44,.04) 49%, rgba(198,207,126,.07) 100%),
+    repeating-linear-gradient(0deg, transparent 0 5px, rgba(0,0,0,.08) 5px 6px),
+    #1b1e17;
+}
+
+/* Replace the clean inner rectangle with a low-resolution, slightly broken rim. */
+.home-p2-controls .mode-button::before {
+  inset: 7px 9px 10px 7px;
+  border: 0;
+  background:
+    linear-gradient(#a7ad8b,#a7ad8b) left top / calc(100% - 15px) 1px no-repeat,
+    linear-gradient(#a7ad8b,#a7ad8b) left top / 1px calc(100% - 18px) no-repeat,
+    linear-gradient(rgba(54,58,46,.95),rgba(54,58,46,.95)) right bottom / calc(100% - 11px) 2px no-repeat,
+    linear-gradient(rgba(54,58,46,.95),rgba(54,58,46,.95)) right bottom / 2px calc(100% - 13px) no-repeat;
+  opacity: .58;
+}
+
+.home-p2-controls .mode-button::after {
+  left: 12px;
+  right: 17px;
+  bottom: 12px;
+  height: 5px;
+  border-top: 2px solid rgba(211,220,130,.29);
+  border-bottom: 2px solid rgba(0,0,0,.48);
+  opacity: .82;
+}
+
+.home-p2-controls .mode-title {
+  width: 108%;
+  margin-left: -4%;
+  font-size: clamp(60px, 17.8vw, 88px);
+  line-height: .78;
+  letter-spacing: -.04em;
+  transform: scaleX(.96);
+  text-shadow:
+    3px 0 0 rgba(152,83,67,.40),
+    -2px 0 0 rgba(211,220,130,.16),
+    0 4px 0 rgba(0,0,0,.42);
+}
+
+/* Real physical press: travel downward, lose the cast shadow, darken bevel. */
+.home-p2-controls .mode-button:active {
+  transform: translate(4px, 6px);
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.22), rgba(245,241,215,.03) 35%, rgba(0,0,0,.16) 100%),
+    #151712;
+  box-shadow:
+    inset 5px 6px 0 rgba(0,0,0,.32),
+    inset -2px -2px 0 rgba(230,227,202,.045),
+    inset 0 0 0 2px rgba(113,121,95,.62),
+    1px 1px 0 #030403;
+}
+
+@media (max-width: 360px) {
+  .home-p2-hero { top: 5svh; }
+  .home-p2-logo { font-size: clamp(72px, 26.5vw, 104px); }
+
+  .home-p2-controls {
+    left: 17px;
+    right: 17px;
+    gap: 11px;
+    bottom: max(32px, calc(env(safe-area-inset-bottom) + 23px));
+  }
+
+  .home-p2-controls .mode-title {
+    font-size: clamp(53px, 17vw, 68px);
+  }
+
+  .home-marquee-base { height: 62px; }
+  .home-marquee-base .die-sprite { width: 39px; height: 39px; }
+}
