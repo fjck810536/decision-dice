@@ -4,6 +4,7 @@ import { D10D100ArtMarkingFactory as LockedD10D100Factory } from './d10-d100-art
 const ATLAS_CELL = 96;
 const FACE_OFFSET = 0.012;
 const INK = '#241d16';
+const OLD_DICE_RED = '#96372f';
 const CUT_HIGHLIGHT = 'rgba(239,228,199,.28)';
 
 function pipPoints(value) {
@@ -27,8 +28,10 @@ function drawD6Cell(ctx, cell, value) {
   ctx.save();
   ctx.clearRect(0, 0, cell, cell);
 
-  // First pass: subtle light lip to fake a shallow engraved cut.
+  // Approved D6 treatment: large shallow engraved pips. The single pip on
+  // face 1 uses a muted traditional dice red; every other face stays warm ink.
   const radius = cell * 0.112;
+  const pipInk = value === 1 ? OLD_DICE_RED : INK;
   for (const [px, py] of pipPoints(value)) {
     const x = px * cell;
     const y = py * cell;
@@ -38,7 +41,7 @@ function drawD6Cell(ctx, cell, value) {
     ctx.arc(x, y + cell * 0.025, radius * 1.12, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = INK;
+    ctx.fillStyle = pipInk;
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.fill();
