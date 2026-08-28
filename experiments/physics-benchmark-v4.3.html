@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0f110e">
+  <title>Dice Physics Benchmark V4.3</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0f110e;--panel:#171a15;--line:#565c50;--text:#e4e0c9;--muted:#9da08f;--hot:#d8d079}
+    *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    body{min-height:100%;padding:max(14px,env(safe-area-inset-top)) 12px max(22px,env(safe-area-inset-bottom))}
+    main{width:min(760px,100%);margin:auto}h1{font-size:18px;margin:0 0 5px}.lead,.foot{font-size:10px;line-height:1.55;color:var(--muted)}
+    .group{border:1px solid var(--line);padding:8px;background:var(--panel);margin-top:8px}.label{display:block;font-size:9px;color:var(--muted);margin-bottom:7px}.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.choices.two{grid-template-columns:1fr 1fr}
+    button{min-height:42px;border:1px solid var(--line);border-radius:0;background:#10120e;color:var(--text);font:inherit;font-size:11px;font-weight:800}button[aria-pressed="true"]{background:var(--text);color:var(--bg)}button:disabled{opacity:.45}
+    #run{width:100%;margin-top:8px;background:var(--hot);color:#11130f;border-color:var(--hot);font-size:14px}
+    .stage{position:relative;overflow:hidden;border:1px solid var(--line);margin-top:9px;aspect-ratio:3/4;max-height:58vh;background:#11130f}.stage canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+    .dither{position:absolute;inset:0;pointer-events:none;opacity:.45;background-image:radial-gradient(rgba(0,0,0,.26) .55px,transparent .7px);background-size:3px 3px;mix-blend-mode:multiply}
+    .hopper{position:absolute;top:0;left:50%;width:76%;height:20px;transform:translateX(-50%);border:1px solid rgba(228,224,201,.28);border-top:0;background:rgba(228,224,201,.06);pointer-events:none}.hopper:after{content:'DICE IN';position:absolute;right:5px;bottom:2px;font-size:7px;color:rgba(228,224,201,.45)}
+    .badge{position:absolute;left:7px;top:7px;padding:4px 6px;border:1px solid rgba(228,224,201,.45);background:rgba(15,17,14,.72);font-size:9px}
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:8px;border:1px solid var(--line);background:var(--line)}.stat{background:var(--panel);padding:7px;min-width:0}.stat b{display:block;font-size:8px;color:var(--muted);font-weight:500}.stat span{font-size:12px;overflow-wrap:anywhere}
+    .log{border:1px solid var(--line);margin-top:8px;background:var(--panel);padding:8px}.rows{font-size:9px;line-height:1.55;color:var(--muted);white-space:pre-wrap;margin-top:7px}
+    .orientation{display:none;position:fixed;inset:0;z-index:100;background:#0f110e;align-items:center;justify-content:center;text-align:center;padding:30px;font-weight:800}@media(orientation:landscape) and (max-height:600px){.orientation{display:flex}}@media(min-width:620px){.stage{aspect-ratio:4/3;max-height:none}.stats{grid-template-columns:repeat(4,1fr)}}
+  </style>
+</head>
+<body>
+<div class="orientation">PHYSICS BENCHMARK V4.3<br><br>請轉回直向</div>
+<main>
+  <h1>D20 PHYSICS BENCHMARK / FEED SPEED A/B V4.3</h1>
+  <p class="lead">Random Feeder 與 settling 都沿用 V4.2，只新增投料速度 A/B。NORMAL 保留原本節奏；FAST 只縮短骰子生成間隔，不改骰子物理速度、碰撞或落地規則。</p>
+  <div class="group"><span class="label">COUNT</span><div class="choices" id="counts"><button data-count="10" aria-pressed="true" disabled>10</button><button data-count="20" disabled>20</button><button data-count="50" disabled>50</button></div></div>
+  <div class="group"><span class="label">FEED SPEED</span><div class="choices two" id="speeds"><button data-speed="normal" aria-pressed="true" disabled>NORMAL</button><button data-speed="fast" disabled>FAST</button></div></div>
+  <button id="run" disabled>LOADING…</button>
+  <section class="stage" id="stage"><canvas id="canvas"></canvas><div class="dither"></div><div class="hopper"></div><div class="badge" id="badge">LOADING JS…</div></section>
+  <section class="stats">
+    <div class="stat"><b>PHYSICS AVG</b><span id="avg">—</span></div><div class="stat"><b>PHYSICS MAX</b><span id="max">—</span></div><div class="stat"><b>FEED DURATION</b><span id="feed">—</span></div><div class="stat"><b>SETTLE AFTER FEED</b><span id="settle">—</span></div>
+    <div class="stat"><b>TOTAL TIME</b><span id="total">—</span></div><div class="stat"><b>ACTIVE / SPAWNED</b><span id="active">—</span></div><div class="stat"><b>PHASE</b><span id="phase">LOADING</span></div><div class="stat"><b>ESCAPED</b><span id="escaped">0</span></div>
+    <div class="stat"><b>LAST GAP</b><span id="gap">—</span></div><div class="stat"><b>SPAWN DEFERS</b><span id="defers">0</span></div><div class="stat"><b>SPEED</b><span id="speedOut">NORMAL</span></div>
+  </section>
+  <section class="log"><button id="copy" disabled>COPY LAST</button><div class="rows" id="rows">尚未執行。</div></section>
+  <p class="foot">NORMAL：一般 35–85ms，約 12% 機率停 100–140ms。FAST：一般 22–50ms，約 8% 機率停 65–95ms。兩者都保留出生點防重疊檢查。</p>
+</main>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js';
+import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
+
+const $=s=>document.querySelector(s), canvas=$('#canvas'), stage=$('#stage'), runBtn=$('#run');
+const out={avg:$('#avg'),max:$('#max'),feed:$('#feed'),settle:$('#settle'),total:$('#total'),active:$('#active'),phase:$('#phase'),escaped:$('#escaped'),gap:$('#gap'),defers:$('#defers'),speed:$('#speedOut')};
+const DICE=1,ENV=2,UP=new CANNON.Vec3(0,1,0),POST_FEED_NATURAL=.30;
+const HOPPER_X=3.45,HOPPER_Z=.55,MIN_SPAWN_DIST=1.48;
+let cfg={count:10,speed:'normal'},renderer,scene,camera,world,dieMaterial,bodies=[],meshes=[],running=false,lastFrame=0,lastRender=0,runStart=0,lastSpawnAt=0,nextSpawnAt=0,spawned=0,stepTimes=[],lastLine='',spawnDefers=0,lastGapMs=0;
+
+const rand=(a,b)=>a+Math.random()*(b-a);
+function nextGap(){if(cfg.speed==='fast')return Math.random()<.08?rand(65,95):rand(22,50);return Math.random()<.12?rand(100,140):rand(35,85)}
+function choose(sel,key,val){document.querySelectorAll(`${sel} button`).forEach(b=>b.setAttribute('aria-pressed','false'));document.querySelector(`${sel} [data-${key}="${val}"]`)?.setAttribute('aria-pressed','true')}
+$('#counts').addEventListener('click',e=>{if(running||!e.target.dataset.count)return;cfg.count=+e.target.dataset.count;choose('#counts','count',cfg.count);preview()});
+$('#speeds').addEventListener('click',e=>{if(running||!e.target.dataset.speed)return;cfg.speed=e.target.dataset.speed;choose('#speeds','speed',cfg.speed);preview()});
+
+function makeRenderer(){scene=new THREE.Scene();scene.background=new THREE.Color(0x11130f);camera=new THREE.PerspectiveCamera(45,1,.1,100);camera.position.set(0,7.3,10.8);camera.lookAt(0,.9,0);scene.add(new THREE.AmbientLight(0xd8d1b9,1.18));const sun=new THREE.DirectionalLight(0xffffff,1.4);sun.position.set(4,10,5);scene.add(sun);renderer=new THREE.WebGLRenderer({canvas,antialias:false,powerPreference:'default'});renderer.outputColorSpace=THREE.SRGBColorSpace;resize();addEventListener('resize',resize,{passive:true})}
+function resize(){const r=stage.getBoundingClientRect(),w=240,h=Math.max(1,Math.round(w*r.height/r.width));renderer.setPixelRatio(1);renderer.setSize(w,h,false);canvas.style.width='100%';canvas.style.height='100%';camera.aspect=r.width/r.height;camera.updateProjectionMatrix()}
+function convexFromGeo(geo){const g=geo.toNonIndexed(),p=g.attributes.position.array,verts=[],map=new Map(),faces=[];const key=(x,y,z)=>`${x.toFixed(5)},${y.toFixed(5)},${z.toFixed(5)}`;for(let i=0;i<p.length;i+=9){const f=[];for(let j=0;j<9;j+=3){const x=p[i+j],y=p[i+j+1],z=p[i+j+2],k=key(x,y,z);let n=map.get(k);if(n===undefined){n=verts.length;map.set(k,n);verts.push(new CANNON.Vec3(x,y,z))}f.push(n)}if(new Set(f).size===3)faces.push(f)}return new CANNON.ConvexPolyhedron({vertices:verts,faces})}
+
+function initWorld(){world=new CANNON.World({gravity:new CANNON.Vec3(0,-12,0)});world.allowSleep=true;world.broadphase=new CANNON.SAPBroadphase(world);world.solver.iterations=10;world.solver.tolerance=.001;dieMaterial=new CANNON.Material('die');const envMaterial=new CANNON.Material('env');world.addContactMaterial(new CANNON.ContactMaterial(dieMaterial,envMaterial,{friction:.44,restitution:.26,contactEquationStiffness:1e7,contactEquationRelaxation:4}));world.addContactMaterial(new CANNON.ContactMaterial(dieMaterial,dieMaterial,{friction:.30,restitution:.23,contactEquationStiffness:1e7,contactEquationRelaxation:4}));const env=(shape,pos)=>{const b=new CANNON.Body({mass:0,shape,material:envMaterial,collisionFilterGroup:ENV,collisionFilterMask:DICE});b.position.copy(pos);world.addBody(b)};const W=5.2;env(new CANNON.Box(new CANNON.Vec3(W,.18,W)),new CANNON.Vec3(0,-1.45,0));env(new CANNON.Box(new CANNON.Vec3(.18,3.7,W)),new CANNON.Vec3(-W,2.05,0));env(new CANNON.Box(new CANNON.Vec3(.18,3.7,W)),new CANNON.Vec3(W,2.05,0));env(new CANNON.Box(new CANNON.Vec3(W,3.7,.18)),new CANNON.Vec3(0,2.05,-W));env(new CANNON.Box(new CANNON.Vec3(W,3.7,.18)),new CANNON.Vec3(0,2.05,W));env(new CANNON.Box(new CANNON.Vec3(W,.18,W)),new CANNON.Vec3(0,5.75,0))}
+
+const geo=new THREE.IcosahedronGeometry(.72,0),shape=convexFromGeo(geo),mat=new THREE.MeshLambertMaterial({color:0xb9b48f,flatShading:true}),edgeMat=new THREE.LineBasicMaterial({color:0x26291f,transparent:true,opacity:.72});
+function clearDice(){for(const m of meshes)scene.remove(m);meshes=[];bodies=[]}
+function candidateSpawn(){return{x:rand(-HOPPER_X,HOPPER_X),y:4.45,z:rand(-HOPPER_Z,HOPPER_Z)}}
+function spawnClear(p){for(const b of bodies){if(b.position.y<3.35)continue;const dx=b.position.x-p.x,dz=b.position.z-p.z,dy=(b.position.y-p.y)*.65;if(Math.hypot(dx,dz,dy)<MIN_SPAWN_DIST)return false}return true}
+function findSpawn(){for(let i=0;i<9;i++){const p=candidateSpawn();if(spawnClear(p))return p}return null}
+function randomQuaternion(q){q.setFromEuler(rand(0,Math.PI*2),rand(0,Math.PI*2),rand(0,Math.PI*2),'XYZ')}
+function spawnOne(i,p){const mesh=new THREE.Mesh(geo,mat);mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),edgeMat));scene.add(mesh);meshes.push(mesh);const b=new CANNON.Body({mass:1,shape,material:dieMaterial,linearDamping:.07,angularDamping:.08,allowSleep:true,sleepSpeedLimit:.16,sleepTimeLimit:.26,collisionFilterGroup:DICE,collisionFilterMask:DICE|ENV});b.position.set(p.x,p.y,p.z);randomQuaternion(b.quaternion);b.velocity.set(rand(-.85,.85),rand(-5.8,-4.6),rand(-.85,.85));b.angularVelocity.set(rand(-9,9),rand(-9,9),rand(-9,9));if(b.angularVelocity.length()<5)b.angularVelocity.set(rand(5,9),rand(-9,-5),rand(5,9));world.addBody(b);bodies.push(b);lastSpawnAt=performance.now()}
+function sync(){for(let i=0;i<bodies.length;i++){meshes[i].position.copy(bodies[i].position);meshes[i].quaternion.copy(bodies[i].quaternion)}}
+function topInfo(b){const normals=b.shapes[0].faceNormals||[];let best=null,d=-Infinity,w=new CANNON.Vec3();for(const local of normals){b.quaternion.vmult(local,w);if(w.y>d){d=w.y;best=w.clone()}}return{normal:best,dot:d}}
+
+function assist(afterFeed){if(afterFeed<=POST_FEED_NATURAL)return;const t=afterFeed-POST_FEED_NATURAL,a=1-Math.pow(.5,t/.125);for(const b of bodies){b.linearDamping=.07+a*.24;b.angularDamping=.08+a*.34;const speed=b.velocity.length(),spin=b.angularVelocity.length();if(speed<1.8&&spin<4){const top=topInfo(b);if(top.normal){const axis=top.normal.cross(UP);if(axis.lengthSquared()>1e-8){axis.normalize();const angle=Math.acos(Math.max(-1,Math.min(1,top.dot))),k=3.4*a*angle;b.torque.x+=axis.x*k;b.torque.y+=axis.y*k;b.torque.z+=axis.z*k}b.torque.x-=b.angularVelocity.x*(.72*a);b.torque.y-=b.angularVelocity.y*(.72*a);b.torque.z-=b.angularVelocity.z*(.72*a);if(t>.45&&top.dot>.982&&speed<.22&&spin<.32){b.velocity.setZero();b.angularVelocity.setZero();b.sleep()}}}}}
+
+function preview(){running=false;clearDice();initWorld();out.avg.textContent=out.max.textContent=out.feed.textContent=out.settle.textContent=out.total.textContent='—';out.active.textContent=`0 / ${cfg.count}`;out.phase.textContent='READY';out.escaped.textContent='0';out.gap.textContent='—';out.defers.textContent='0';out.speed.textContent=cfg.speed.toUpperCase();$('#badge').textContent=`READY / ${cfg.count} × D20 / ${cfg.speed.toUpperCase()} / JS OK`;renderer.render(scene,camera)}
+function scheduleNext(now){lastGapMs=nextGap();nextSpawnAt=now+lastGapMs;out.gap.textContent=`${Math.round(lastGapMs)} ms`}
+function setControlsDisabled(disabled){document.querySelectorAll('#counts button,#speeds button').forEach(b=>b.disabled=disabled)}
+function startRun(){if(running)return;running=true;runBtn.disabled=true;runBtn.textContent='RUNNING…';setControlsDisabled(true);clearDice();initWorld();stepTimes=[];spawned=0;spawnDefers=0;runStart=performance.now();lastFrame=runStart;lastRender=0;lastSpawnAt=runStart;nextSpawnAt=runStart;out.phase.textContent=`FEEDING / ${cfg.speed.toUpperCase()} / FULL`;out.escaped.textContent='0';out.defers.textContent='0';out.speed.textContent=cfg.speed.toUpperCase();requestAnimationFrame(loop)}
+function loop(now){if(!running)return;const dt=Math.min(.05,(now-lastFrame)/1000);lastFrame=now;if(spawned<cfg.count&&now>=nextSpawnAt){const p=findSpawn();if(p){spawnOne(spawned,p);spawned++;scheduleNext(now)}else{spawnDefers++;nextSpawnAt=now+28;out.defers.textContent=String(spawnDefers)}}const feedDone=spawned===cfg.count;const afterFeed=feedDone?(now-lastSpawnAt)/1000:0;if(feedDone){out.phase.textContent=afterFeed<=POST_FEED_NATURAL?'POST-FEED / NATURAL':'SETTLING / FULL';assist(afterFeed)}const p0=performance.now();world.step(1/60,dt,3);stepTimes.push(performance.now()-p0);const active=bodies.filter(b=>b.sleepState!==CANNON.Body.SLEEPING&&(b.velocity.length()>.08||b.angularVelocity.length()>.12)).length;const escaped=bodies.filter(b=>Math.abs(b.position.x)>5.05||Math.abs(b.position.z)>5.05||b.position.y<-1.7||b.position.y>5.95).length;out.active.textContent=`${active} / ${spawned}`;out.escaped.textContent=String(escaped);if(now-lastRender>=1000/12){sync();renderer.render(scene,camera);lastRender=now}if(feedDone&&active===0&&afterFeed>.45){finish(now,true);return}if(feedDone&&afterFeed>4.5){finish(now,false);return}requestAnimationFrame(loop)}
+function finish(now,settled){running=false;runBtn.disabled=false;runBtn.textContent='ROLL / RUN TEST';setControlsDisabled(false);sync();renderer.render(scene,camera);const avg=stepTimes.reduce((a,b)=>a+b,0)/Math.max(1,stepTimes.length),max=Math.max(0,...stepTimes),feed=(lastSpawnAt-runStart)/1000,settle=(now-lastSpawnAt)/1000,total=(now-runStart)/1000,escaped=bodies.filter(b=>Math.abs(b.position.x)>5.05||Math.abs(b.position.z)>5.05||b.position.y<-1.7||b.position.y>5.95).length;out.avg.textContent=`${avg.toFixed(2)} ms`;out.max.textContent=`${max.toFixed(2)} ms`;out.feed.textContent=`${feed.toFixed(2)} s`;out.settle.textContent=settled?`${settle.toFixed(2)} s`:`timeout >${settle.toFixed(2)} s`;out.total.textContent=`${total.toFixed(2)} s`;out.phase.textContent=settled?'DONE / SETTLED':'DONE / TIMEOUT';out.escaped.textContent=String(escaped);lastLine=`${cfg.count}xD20 RANDOM FEED ${cfg.speed.toUpperCase()} FULL V4.3 | avg ${avg.toFixed(2)}ms | max ${max.toFixed(2)}ms | feed ${feed.toFixed(2)}s | settle ${settled?settle.toFixed(2)+'s':'timeout'} | total ${total.toFixed(2)}s | escaped ${escaped} | defers ${spawnDefers}`;$('#rows').textContent=lastLine;$('#badge').textContent=settled?'DONE / SETTLED':'DONE / TIMEOUT'}
+
+runBtn.addEventListener('click',startRun);$('#copy').addEventListener('click',async()=>{if(!lastLine)return;try{await navigator.clipboard.writeText(lastLine);$('#copy').textContent='COPIED';setTimeout(()=>$('#copy').textContent='COPY LAST',800)}catch{alert(lastLine)}});
+makeRenderer();setControlsDisabled(false);runBtn.disabled=false;runBtn.textContent='ROLL / RUN TEST';$('#copy').disabled=false;preview();
+</script>
+</body>
+</html>

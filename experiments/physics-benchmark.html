@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0f110e">
+  <title>Dice Physics Benchmark</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0f110e;--panel:#171a15;--line:#565c50;--text:#e4e0c9;--muted:#9da08f;--hot:#d8d079;--bad:#d9947a}
+    *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    body{min-height:100%;padding:max(14px,env(safe-area-inset-top)) 12px max(22px,env(safe-area-inset-bottom))}
+    main{width:min(760px,100%);margin:0 auto}h1{font-size:18px;letter-spacing:.07em;margin:0 0 5px}.lead{font-size:11px;line-height:1.5;color:var(--muted);margin:0 0 12px}
+    .controls{display:grid;gap:8px}.group{border:1px solid var(--line);padding:8px;background:var(--panel)}.label{display:block;color:var(--muted);font-size:9px;margin-bottom:7px;letter-spacing:.08em}
+    .choices{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.choices.two{grid-template-columns:1fr 1fr}.choices button,.run,.copy{min-height:42px;border:1px solid var(--line);border-radius:0;background:#10120e;color:var(--text);font:inherit;font-size:11px;font-weight:800}.choices button[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+    .run{width:100%;margin-top:8px;background:var(--hot);color:#11130f;border-color:var(--hot);font-size:14px;letter-spacing:.12em}.run:disabled{opacity:.5}.stage{position:relative;overflow:hidden;border:1px solid var(--line);margin-top:9px;aspect-ratio:3/4;max-height:58vh;background:#11130f}.stage canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}.dither{position:absolute;inset:0;pointer-events:none;opacity:.45;background-image:radial-gradient(rgba(0,0,0,.26) .55px,transparent .7px);background-size:3px 3px;mix-blend-mode:multiply}.badge{position:absolute;left:7px;top:7px;padding:4px 6px;border:1px solid rgba(228,224,201,.45);background:rgba(15,17,14,.72);font-size:9px}
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:8px;border:1px solid var(--line);background:var(--line)}.stat{background:var(--panel);padding:7px;min-width:0}.stat b{display:block;font-size:8px;color:var(--muted);font-weight:500;margin-bottom:3px}.stat span{font-size:12px;overflow-wrap:anywhere}.status[data-tone="good"]{color:var(--hot)}.status[data-tone="bad"]{color:var(--bad)}
+    .log{border:1px solid var(--line);margin-top:8px;background:var(--panel);padding:8px}.loghead{display:flex;align-items:center;justify-content:space-between;gap:8px}.loghead b{font-size:10px}.copy{min-height:34px;padding:0 9px}.rows{font-size:9px;line-height:1.55;color:var(--muted);white-space:pre-wrap;margin-top:7px;max-height:130px;overflow:auto}.foot{font-size:9px;line-height:1.5;color:var(--muted);margin:8px 0 0}.orientation{display:none;position:fixed;inset:0;z-index:100;background:#0f110e;align-items:center;justify-content:center;text-align:center;padding:30px;font-weight:800;letter-spacing:.08em}@media(orientation:landscape) and (max-height:600px){.orientation{display:flex}}@media(min-width:620px){.stage{aspect-ratio:4/3;max-height:none}.stats{grid-template-columns:repeat(4,1fr)}}
+  </style>
+</head>
+<body>
+  <div class="orientation">PHYSICS BENCHMARK<br><br>請轉回直向</div>
+  <main>
+    <h1>DICE PHYSICS BENCHMARK / SETTLE V2</h1>
+    <p class="lead">診斷頁，不是正式介面。Renderer 固定使用 C′：240px internal buffer、12fps、flat、無 AA、像素放大。物理固定 60Hz。V2 在 1 秒後以目前最朝上的面為依據施加收斂 torque，不預抽結果。</p>
+
+    <section class="controls">
+      <div class="group">
+        <span class="label">DIE TYPE</span>
+        <div class="choices" id="typeChoices">
+          <button data-type="d4">D4</button><button data-type="d6">D6</button><button data-type="d8">D8</button><button data-type="d10">D10</button><button data-type="d20" aria-pressed="true">D20</button>
+        </div>
+      </div>
+      <div class="group">
+        <span class="label">COUNT</span>
+        <div class="choices" id="countChoices">
+          <button data-count="1">1</button><button data-count="5">5</button><button data-count="10" aria-pressed="true">10</button><button data-count="20">20</button><button data-count="50">50</button>
+        </div>
+      </div>
+      <div class="group">
+        <span class="label">COLLISION POLICY</span>
+        <div class="choices two" id="collisionChoices">
+          <button data-collision="full" aria-pressed="true">FULL / 骰子互撞</button><button data-collision="ghost">GHOST / 只撞環境</button>
+        </div>
+      </div>
+    </section>
+    <button class="run" id="runBtn">ROLL / RUN TEST</button>
+
+    <section class="stage" id="stage">
+      <canvas id="canvas"></canvas><div class="dither"></div><div class="badge" id="badge">READY / SETTLE V2</div>
+    </section>
+
+    <section class="stats">
+      <div class="stat"><b>PHYSICS AVG</b><span id="avg">—</span></div>
+      <div class="stat"><b>PHYSICS MAX</b><span id="max">—</span></div>
+      <div class="stat"><b>SETTLE TIME</b><span id="settle">—</span></div>
+      <div class="stat"><b>ACTIVE BODIES</b><span id="active">—</span></div>
+      <div class="stat"><b>PHYSICS STEPS</b><span id="steps">—</span></div>
+      <div class="stat"><b>3D PRESENTATION</b><span>12 fps</span></div>
+      <div class="stat"><b>BROADPHASE</b><span>SAP</span></div>
+      <div class="stat"><b>HEURISTIC</b><span class="status" id="status">READY</span></div>
+    </section>
+
+    <section class="log">
+      <div class="loghead"><b>RUN LOG</b><button class="copy" id="copyBtn">COPY LAST</button></div>
+      <div class="rows" id="rows">尚未執行。</div>
+    </section>
+    <p class="foot">第二輪仍測：10×D20 FULL、20×D20 FULL、20×D20 GHOST、50×D20 GHOST。目標是確認 face-aware settling 能否把收斂壓進約 1.5–2 秒。</p>
+  </main>
+
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js';
+    import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
+
+    const $=s=>document.querySelector(s); const canvas=$('#canvas'),stage=$('#stage'),runBtn=$('#runBtn'),badge=$('#badge');
+    const outs={avg:$('#avg'),max:$('#max'),settle:$('#settle'),active:$('#active'),steps:$('#steps'),status:$('#status')};
+    let cfg={type:'d20',count:10,collision:'full'}, renderer,scene,camera,world,visuals=[],bodies=[],running=false,lastRender=0,lastFrame=performance.now(),runStart=0,stepTimes=[],physicsSteps=0,lastLine='';
+    const history=[]; const DICE=1,ENV=2,UP=new CANNON.Vec3(0,1,0);
+
+    function choose(container,key,value){document.querySelectorAll(`${container} button`).forEach(b=>b.setAttribute('aria-pressed','false')); const b=document.querySelector(`${container} [data-${key}="${value}"]`); if(b)b.setAttribute('aria-pressed','true')}
+    $('#typeChoices').addEventListener('click',e=>{const v=e.target.dataset.type;if(!v||running)return;cfg.type=v;choose('#typeChoices','type',v);buildPreview()});
+    $('#countChoices').addEventListener('click',e=>{const v=+e.target.dataset.count;if(!v||running)return;cfg.count=v;choose('#countChoices','count',v);buildPreview()});
+    $('#collisionChoices').addEventListener('click',e=>{const v=e.target.dataset.collision;if(!v||running)return;cfg.collision=v;choose('#collisionChoices','collision',v);buildPreview()});
+
+    function dedupConvex(geometry,scale=1){const g=geometry.toNonIndexed(),p=g.attributes.position.array,verts=[],map=new Map(),faces=[]; const key=(x,y,z)=>`${x.toFixed(5)},${y.toFixed(5)},${z.toFixed(5)}`; for(let i=0;i<p.length;i+=9){const face=[];for(let j=0;j<9;j+=3){const x=p[i+j]*scale,y=p[i+j+1]*scale,z=p[i+j+2]*scale,k=key(x,y,z);let idx=map.get(k);if(idx===undefined){idx=verts.length;map.set(k,idx);verts.push(new CANNON.Vec3(x,y,z))}face.push(idx)}if(new Set(face).size===3)faces.push(face)} return new CANNON.ConvexPolyhedron({vertices:verts,faces});}
+
+    function d10Geometry(r=.68){const verts=[]; const n=5; verts.push(0,.92*r,0); verts.push(0,-.92*r,0); for(let i=0;i<n;i++){let a=i*Math.PI*2/n;verts.push(Math.cos(a)*r,.18*r,Math.sin(a)*r)} for(let i=0;i<n;i++){let a=(i+.5)*Math.PI*2/n;verts.push(Math.cos(a)*r,-.18*r,Math.sin(a)*r)} const pos=[]; for(let i=0;i<n;i++){let u=2+i,un=2+(i+1)%n,l=7+i; for(const tri of [[0,u,un],[u,l,un],[un,l,7+(i+1)%n],[1,7+(i+1)%n,l]]) for(const q of tri)pos.push(...verts[q])} const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g;}
+    function shapeAndGeometry(type){if(type==='d6'){return{geo:new THREE.BoxGeometry(1,1,1),shape:new CANNON.Box(new CANNON.Vec3(.5,.5,.5))}} let geo; if(type==='d4')geo=new THREE.TetrahedronGeometry(.72,0); if(type==='d8')geo=new THREE.OctahedronGeometry(.72,0); if(type==='d10')geo=d10Geometry(1); if(type==='d20')geo=new THREE.IcosahedronGeometry(.72,0); return{geo,shape:dedupConvex(geo,1)}}
+
+    function initScene(){scene=new THREE.Scene();scene.background=new THREE.Color(0x11130f);camera=new THREE.PerspectiveCamera(43,1,.1,80);camera.position.set(0,7.8,8.4);camera.lookAt(0,.5,0);scene.add(new THREE.AmbientLight(0xd8d1b9,1.15));const sun=new THREE.DirectionalLight(0xffffff,1.45);sun.position.set(4,9,5);scene.add(sun);renderer=new THREE.WebGLRenderer({canvas,antialias:false,powerPreference:'default'});renderer.outputColorSpace=THREE.SRGBColorSpace;resize();addEventListener('resize',resize,{passive:true});}
+    function resize(){if(!renderer)return;const r=stage.getBoundingClientRect(),w=240,h=Math.max(1,Math.round(w*r.height/r.width));renderer.setPixelRatio(1);renderer.setSize(w,h,false);canvas.style.width='100%';canvas.style.height='100%';camera.aspect=r.width/r.height;camera.updateProjectionMatrix()}
+
+    function initWorld(){world=new CANNON.World({gravity:new CANNON.Vec3(0,-12,0)});world.allowSleep=true;world.broadphase=new CANNON.SAPBroadphase(world);world.solver.iterations=10;world.solver.tolerance=.001;const dm=new CANNON.Material('die'),em=new CANNON.Material('env');world.addContactMaterial(new CANNON.ContactMaterial(dm,em,{friction:.42,restitution:.28,contactEquationStiffness:1e7,contactEquationRelaxation:4}));world.addContactMaterial(new CANNON.ContactMaterial(dm,dm,{friction:.28,restitution:.24,contactEquationStiffness:1e7,contactEquationRelaxation:4})); world._dieMaterial=dm;world._envMaterial=em;
+      const env=(shape,pos)=>{const b=new CANNON.Body({mass:0,shape,material:em,collisionFilterGroup:ENV,collisionFilterMask:DICE});b.position.copy(pos);world.addBody(b);return b};env(new CANNON.Box(new CANNON.Vec3(4.2,.18,4.2)),new CANNON.Vec3(0,-1.4,0));env(new CANNON.Box(new CANNON.Vec3(.18,2.5,4.2)),new CANNON.Vec3(-4.2,.9,0));env(new CANNON.Box(new CANNON.Vec3(.18,2.5,4.2)),new CANNON.Vec3(4.2,.9,0));env(new CANNON.Box(new CANNON.Vec3(4.2,2.5,.18)),new CANNON.Vec3(0,.9,-4.2));env(new CANNON.Box(new CANNON.Vec3(4.2,2.5,.18)),new CANNON.Vec3(0,.9,4.2));}
+
+    function clearVisuals(){for(const v of visuals)scene.remove(v);visuals=[];bodies=[]}
+    function buildDice({throwing=false}={}){clearVisuals();initWorld(); const mat=new THREE.MeshLambertMaterial({color:0xb9b48f,flatShading:true}); const edgeMat=new THREE.LineBasicMaterial({color:0x26291f,transparent:true,opacity:.72}); const {geo,shape}=shapeAndGeometry(cfg.type); const cols=Math.ceil(Math.sqrt(cfg.count)); const rows=Math.ceil(cfg.count/cols); const spread=Math.min(1.02,5.7/Math.max(cols,rows));
+      for(let i=0;i<cfg.count;i++){const mesh=new THREE.Mesh(geo,mat);const edges=new THREE.LineSegments(new THREE.EdgesGeometry(geo),edgeMat);mesh.add(edges);scene.add(mesh);visuals.push(mesh); const body=new CANNON.Body({mass:1,shape,material:world._dieMaterial,linearDamping:.08,angularDamping:.09,allowSleep:true,sleepSpeedLimit:.13,sleepTimeLimit:.32,collisionFilterGroup:DICE,collisionFilterMask:cfg.collision==='full'?(DICE|ENV):ENV}); const c=i%cols,r=Math.floor(i/cols);body.position.set((c-(cols-1)/2)*spread,throwing?1.8+(i%4)*.25:.2,(r-(rows-1)/2)*spread);body.quaternion.setFromEuler((i*1.73)%3,(i*2.21)%3,(i*.87)%3); if(throwing){body.velocity.set((Math.sin(i*2.3))*1.8,2.7+(i%3)*.45,(Math.cos(i*1.7))*1.8);body.angularVelocity.set(5+(i%5),7+(i%7),4+(i%3))}world.addBody(body);bodies.push(body)} }
+    function buildPreview(){buildDice({throwing:false});syncMeshes();renderer.render(scene,camera);badge.textContent=`${cfg.count} × ${cfg.type.toUpperCase()} / ${cfg.collision.toUpperCase()}`}
+    function syncMeshes(){for(let i=0;i<bodies.length;i++){const b=bodies[i],m=visuals[i];m.position.copy(b.position);m.quaternion.copy(b.quaternion)}}
+
+    function faceNormals(body){const shape=body.shapes[0];if(shape.faceNormals?.length)return shape.faceNormals;if(shape.convexPolyhedronRepresentation?.faceNormals?.length)return shape.convexPolyhedronRepresentation.faceNormals;return [new CANNON.Vec3(1,0,0),new CANNON.Vec3(-1,0,0),new CANNON.Vec3(0,1,0),new CANNON.Vec3(0,-1,0),new CANNON.Vec3(0,0,1),new CANNON.Vec3(0,0,-1)]}
+    function topFace(body){let best=null,bestDot=-Infinity;const worldN=new CANNON.Vec3();for(const local of faceNormals(body)){body.quaternion.vmult(local,worldN);const d=worldN.y;if(d>bestDot){bestDot=d;best=worldN.clone()}}return{normal:best,dot:bestDot}}
+    function startRun(){if(running)return;running=true;runBtn.disabled=true;runBtn.textContent='RUNNING…';stepTimes=[];physicsSteps=0;runStart=performance.now();lastFrame=runStart;lastRender=0;buildDice({throwing:true});badge.textContent=`RUN ${cfg.count} × ${cfg.type.toUpperCase()} / ${cfg.collision.toUpperCase()} / V2`;outs.avg.textContent=outs.max.textContent=outs.settle.textContent='…';outs.status.textContent='RUNNING';outs.status.dataset.tone=''; requestAnimationFrame(loop)}
+    function assist(elapsed){if(elapsed<=1)return;const half=.125,a=1-Math.pow(.5,(elapsed-1)/half);for(const b of bodies){b.linearDamping=.08+a*.22;b.angularDamping=.09+a*.32;const speed=b.velocity.length(),spin=b.angularVelocity.length();if(speed<2.2&&spin<5.5){const top=topFace(b),axis=top.normal.cross(UP);b.torque.x+=axis.x*(2.8*a);b.torque.y+=axis.y*(2.8*a);b.torque.z+=axis.z*(2.8*a);if(elapsed>1.32){b.velocity.x*=.94;b.velocity.z*=.94;b.angularVelocity.scale(.94,b.angularVelocity)}if(elapsed>1.55&&top.dot>.985&&speed<.24&&spin<.34){b.velocity.setZero();b.angularVelocity.setZero();b.sleep()}}}}
+    function loop(now){if(!running)return;const dt=Math.min(.05,(now-lastFrame)/1000);lastFrame=now;const elapsed=(now-runStart)/1000;assist(elapsed);const p0=performance.now();world.step(1/60,dt,3);const pms=performance.now()-p0;stepTimes.push(pms);physicsSteps++; const active=bodies.filter(b=>b.sleepState!==CANNON.Body.SLEEPING&&(b.velocity.length()>0.08||b.angularVelocity.length()>0.12)).length;outs.active.textContent=String(active);outs.steps.textContent=String(physicsSteps); if(now-lastRender>=1000/12){syncMeshes();renderer.render(scene,camera);lastRender=now}
+      const allSettled=active===0&&elapsed>.7; if(allSettled||elapsed>3.2){finish(elapsed,allSettled);return}requestAnimationFrame(loop)}
+    function finish(elapsed,settled){running=false;runBtn.disabled=false;runBtn.textContent='ROLL / RUN TEST';syncMeshes();renderer.render(scene,camera);const avg=stepTimes.reduce((a,b)=>a+b,0)/Math.max(1,stepTimes.length),max=Math.max(0,...stepTimes);outs.avg.textContent=`${avg.toFixed(2)} ms`;outs.max.textContent=`${max.toFixed(2)} ms`;outs.settle.textContent=settled?`${elapsed.toFixed(2)} s`:`>${elapsed.toFixed(2)} s`; const good=avg<8&&max<30&&settled&&elapsed<=2.2;outs.status.textContent=good?'OK':'SLOW / CHECK';outs.status.dataset.tone=good?'good':'bad';lastLine=`${cfg.count}x${cfg.type.toUpperCase()} ${cfg.collision.toUpperCase()} V2 | avg ${avg.toFixed(2)}ms | max ${max.toFixed(2)}ms | settle ${settled?elapsed.toFixed(2)+'s':'timeout'} | steps ${physicsSteps}`;history.unshift(lastLine);history.splice(8);$('#rows').textContent=history.join('\n');badge.textContent=good?'DONE / OK':'DONE / CHECK'}
+    runBtn.addEventListener('click',startRun);$('#copyBtn').addEventListener('click',async()=>{if(!lastLine)return;try{await navigator.clipboard.writeText(lastLine);$('#copyBtn').textContent='COPIED';setTimeout(()=>$('#copyBtn').textContent='COPY LAST',900)}catch{alert(lastLine)}});
+
+    initScene();buildPreview();
+  </script>
+</body>
+</html>
