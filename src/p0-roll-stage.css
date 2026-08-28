@@ -10,8 +10,9 @@
   min-height: 0;
 }
 
+/* Perspective won the iPhone A/B. Keep the alternate renderer path internal only. */
 .projection-ab {
-  top: 38px;
+  display: none !important;
 }
 
 .stage-hopper {
