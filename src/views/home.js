@@ -10,7 +10,7 @@ function dieChips(items) {
   return `<div class="marquee-row">${oneRow}</div><div class="marquee-row" aria-hidden="true">${oneRow}</div>`;
 }
 
-export function renderHome(container, { onDice }) {
+export function renderHome(container, { onDice, onChoice }) {
   container.innerHTML = `
     <div class="top-code" aria-hidden="true">
       <span>DECISION AUXILIARY DEVICE</span>
@@ -43,13 +43,13 @@ export function renderHome(container, { onDice }) {
         <span class="mode-title">骰子</span>
         <span class="mode-subtitle">DICE POOL / MULTI-DIE MODE</span>
       </button>
-      <button class="mode-button is-disabled" type="button" data-index="02" disabled aria-disabled="true">
+      <button class="mode-button" id="home-choice" type="button" data-index="02">
         <span class="mode-title">選擇</span>
-        <span class="mode-subtitle">CHOICE / NEXT MILESTONE</span>
+        <span class="mode-subtitle">CHOICE / DECISION ENGINE</span>
       </button>
     </nav>
 
-    <p class="home-status">DICE ENGINE MILESTONE 01｜CHOICE 尚未接入</p>
+    <p class="home-status">DICE ENGINE READY｜CHOICE ENGINE MILESTONE 03</p>
     <div class="footer-code" aria-hidden="true">
       <span>NO SERVER / SESSION ONLY</span>
       <span>READY</span>
@@ -57,4 +57,5 @@ export function renderHome(container, { onDice }) {
   `;
 
   container.querySelector('#home-dice').addEventListener('click', onDice);
+  container.querySelector('#home-choice').addEventListener('click', onChoice);
 }
