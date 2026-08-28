@@ -10,7 +10,11 @@
   min-height: 0;
 }
 
-/* Perspective won the iPhone A/B. Keep the alternate renderer path internal only. */
+/*
+  P0 projection decision: fixed 90-degree overhead perspective.
+  The orthographic renderer path can remain available internally for diagnostics,
+  but it is no longer a product-facing control.
+*/
 .projection-ab {
   display: none !important;
 }
