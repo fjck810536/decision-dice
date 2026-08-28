@@ -60,9 +60,18 @@ function resultRows(result) {
   }).join('');
 }
 
+function diceMath(result) {
+  const hasExplicitSubtotal = Number.isFinite(Number(result?.subtotal));
+  const subtotal = hasExplicitSubtotal ? Number(result.subtotal) : Number(result?.total ?? 0);
+  const modifier = Number.isFinite(Number(result?.modifier)) ? Number(result.modifier) : 0;
+  const total = hasExplicitSubtotal
+    ? (Number.isFinite(Number(result?.total)) ? Number(result.total) : subtotal + modifier)
+    : subtotal + modifier;
+  return { subtotal, modifier, total };
+}
+
 function diceDetailMarkup(result) {
-  const modifier = Number(result.modifier ?? 0) || 0;
-  const subtotal = Number(result.subtotal ?? result.total) || 0;
+  const { subtotal, modifier, total } = diceMath(result);
   return `
     <section class="result-panel">
       <p class="section-code">FINAL FACE / PROVENANCE</p>
@@ -71,7 +80,7 @@ function diceDetailMarkup(result) {
         <span>骰子</span><strong>${subtotal}</strong>
         <span>修正</span><strong>${modifier >= 0 ? '+' : ''}${modifier}</strong>
       </div>
-      <div class="total-line"><span>TOTAL</span><strong>${result.total}</strong></div>
+      <div class="total-line"><span>TOTAL</span><strong>${total}</strong></div>
       <p class="microcopy">最終值只由落定後的實體骰面讀取。詳細資料不會改變已完成的結算。</p>
     </section>`;
 }
