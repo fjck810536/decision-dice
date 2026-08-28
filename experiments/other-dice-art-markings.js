@@ -203,8 +203,13 @@ function buildGeometry(entry, cols, rows, halfScale) {
 function buildD4VertexGeometry(entry, cols, rows, valueIndex) {
   const positions = [];
   const uvs = [];
-  const half = entry.radius * 0.165;
-  const cornerPull = 0.80;
+
+  // v4: make the visible numerals genuinely enormous rather than pulling the
+  // same small decal farther toward the tip. The decal is a little over 2x the
+  // v3 size, while its center retreats toward the face center so the enlarged
+  // glyph still belongs to the corner instead of spilling entirely past it.
+  const half = entry.radius * 0.34;
+  const cornerPull = 0.67;
 
   // Each face value represents the opposite top vertex when that face rests on
   // the floor. On every other (incident) face, place that value close to the
