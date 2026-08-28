@@ -94,7 +94,7 @@
   <main class="lab">
     <header>
       <div>
-        <div class="code">M2 / FACE VISIBILITY ROLL LAB</div>
+        <div class="code">M2.1 / FACE VISIBILITY ROLL LAB</div>
         <h1>大型骰面檢查</h1>
         <p class="note">480px internal render / 12fps presentation / same physical DiceEngine</p>
       </div>
@@ -132,7 +132,7 @@
       <div id="result"><small>RESULT</small><strong>—</strong></div>
     </div>
 
-    <p class="help">D10 / D100 的十個面全部都有建立標記。骰子停在地板後，背面與朝下的面本來就會被實體幾何遮住；骰完可切 LOW / SIDE 觀察側面。這個頁面只用於驗骰面，不代表正式 Roll UI。</p>
+    <p class="help">M2.1：D10 / D100 改為真正 10 個風箏面的 pentagonal trapezohedron，每面文字朝向自己的尖端；D3 暫定為 ⭕=1、❌=2、空白=3。這個頁面只用於驗骰面，不代表正式 Roll UI。</p>
   </main>
 
   <script type="module">
@@ -204,7 +204,7 @@
     });
 
     function d3Label(value) {
-      return ({ 1: '剪刀', 2: '石頭', 3: '布' })[value] ?? String(value);
+      return ({ 1: '⭕ 1', 2: '❌ 2', 3: '空白 3' })[value] ?? String(value);
     }
 
     function formatResult(rollResult) {
