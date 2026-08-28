@@ -1,11 +1,20 @@
-const rowA = ['D3', 'D4', 'D6', 'D8', 'D10', 'D20', 'D100'];
-const rowB = ['D20', 'D8', 'D3', 'D100', 'D4', 'D6', 'D10'];
-const rowC = ['D10', 'D4', 'D100', 'D6', 'D8', 'D20', 'D3'];
+const rowA = ['D4', 'D6', 'D8', 'D10', 'D20', 'D100'];
+const rowB = ['D20', 'D8', 'D3', 'D100', 'D4', 'D6'];
+const rowC = ['D10', 'D4', 'D100', 'D6', 'D8', 'D20'];
+
+function dieSprite(label) {
+  const type = label.toLowerCase();
+  const face = label === 'D100' ? '00' : label.replace('D', '');
+  return `
+    <span class="die-chip die-${type}">
+      <span class="die-sprite" aria-hidden="true"><b>${face}</b></span>
+      <span class="die-label">${label}</span>
+    </span>
+  `;
+}
 
 function dieChips(items) {
-  const oneRow = items.map((label) => (
-    `<span class="die-chip"><span class="die-label">${label}</span></span>`
-  )).join('');
+  const oneRow = items.map(dieSprite).join('');
   return `<div class="marquee-row">${oneRow}</div><div class="marquee-row" aria-hidden="true">${oneRow}</div>`;
 }
 
@@ -16,7 +25,7 @@ export function renderHome(container, { onDice, onChoice }) {
       <span>SYS:01</span>
     </div>
 
-    <section class="marquee-stack" aria-label="支援骰子類型">
+    <section class="marquee-stack" aria-label="骰子類型跑馬燈">
       <div class="marquee"><div class="marquee-track">${dieChips(rowA)}</div></div>
       <div class="marquee reverse"><div class="marquee-track">${dieChips(rowB)}</div></div>
       <div class="marquee fast"><div class="marquee-track">${dieChips(rowC)}</div></div>
@@ -37,14 +46,14 @@ export function renderHome(container, { onDice, onChoice }) {
       </div>
     </section>
 
-    <nav class="home-controls" aria-label="主要模式">
+    <nav class="home-controls home-controls-paired" aria-label="主要模式">
       <button class="mode-button" id="home-dice" type="button" data-index="01">
         <span class="mode-title">骰子</span>
-        <span class="mode-subtitle">DICE POOL / MULTI-DIE MODE</span>
+        <span class="mode-subtitle">DICE POOL</span>
       </button>
       <button class="mode-button" id="home-choice" type="button" data-index="02">
         <span class="mode-title">選擇</span>
-        <span class="mode-subtitle">CHOICE / DECISION ENGINE</span>
+        <span class="mode-subtitle">DECISION</span>
       </button>
     </nav>
 
