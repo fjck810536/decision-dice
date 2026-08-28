@@ -50,7 +50,7 @@ function diceGroupMarkup(result) {
   return groupedDiceRows(result).map((group) => `
     <div class="settlement-dice-row">
       <span>${escapeSettlementHtml(group.type)}</span>
-      <strong>${group.values.map(escapeSettlementHtml).join('&nbsp;&nbsp;')}</strong>
+      <strong class="settlement-value-list">${group.values.map((value) => `<b>${escapeSettlementHtml(value)}</b>`).join('')}</strong>
     </div>`).join('');
 }
 
