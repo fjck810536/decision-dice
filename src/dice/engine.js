@@ -44,13 +44,13 @@ function expandPool(pool) {
 }
 
 export class DiceEngine {
-  constructor({ canvas, stage }) {
+  constructor({ canvas, stage, rendererOptions = {} }) {
     this.registry = new GeometryRegistry();
     this.physicsWorld = new PhysicsWorld();
     this.faceResolver = new FaceResolver();
     this.feeder = new DiceFeeder({ physicsWorld: this.physicsWorld, registry: this.registry });
     this.settling = new SettlingController({ physicsWorld: this.physicsWorld, faceResolver: this.faceResolver });
-    this.renderer = new RetroRenderer({ canvas, stage });
+    this.renderer = new RetroRenderer({ canvas, stage, ...rendererOptions });
     this.running = false;
   }
 
