@@ -7,7 +7,7 @@ const INK = '#241d16';
 const INK_EDGE = 'rgba(70,55,40,.82)';
 const CUT_HIGHLIGHT = 'rgba(239,228,199,.24)';
 
-// v4 scope rule:
+// v5 scope rule:
 // - single D10: production markings, untouched
 // - D100 ones die: production markings, untouched
 // - D100 tens die only: experimental art direction below
@@ -40,34 +40,11 @@ function drawEngravedGlyph(ctx, text, x, y, fontSize, {
   ctx.restore();
 }
 
-function underline(ctx, cx, cy, width, thickness, rotation = 0) {
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate(rotation);
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = thickness;
-  ctx.lineCap = 'square';
-  ctx.beginPath();
-  ctx.moveTo(-width / 2, 0);
-  ctx.lineTo(width / 2, 0);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function tensGlyphRotation(value) {
-  // GeometryRegistry assigns the physical d10-digit faces in two families:
-  //   family A (indices 0–4): 20, 00, 40, 80, 60
-  //   family B (indices 5–9): 50, 10, 30, 70, 90
-  //
-  // v3 incorrectly treated those families as an orientation rule. iPhone
-  // inspection showed that face family and readable glyph orientation are not
-  // the same thing. Encode the observed percentile faces explicitly by VALUE.
-  //
-  // Confirmed correct in v3: 00 / 20 / 40 / 80 = CCW 90°.
-  // Corrective pass: 10 / 30 / 50 / 70 join that same orientation.
-  // 60 / 90 were observed as reversed relative to each other, so 60 takes the
-  // opposite quarter-turn while 90 takes the common orientation.
-  if (value === 6) return Math.PI / 2;
+function tensGlyphRotation() {
+  // iPhone inspection now confirms all percentile-tens faces share the same
+  // readable quarter-turn. The previous 60-only opposite turn made 60 read
+  // visually as 90. Keep orientation independent from the geometry's
+  // 13579 / 24680 face-family ordering.
   return -Math.PI / 2;
 }
 
@@ -75,10 +52,10 @@ function drawTens(ctx, cell, value) {
   const label = String(value * 10).padStart(2, '0');
   const main = label[0];
   const zero = label[1];
-  const rotation = tensGlyphRotation(value);
+  const rotation = tensGlyphRotation();
 
-  // Approved percentile layout: large primary digit toward the blunt end,
-  // smaller trailing zero toward the apex. Keep the v3 larger/elongated scale.
+  // Percentile layout: large primary digit toward the blunt end,
+  // smaller trailing zero toward the apex.
   const mainX = cell * .48;
   const mainY = cell * .70;
   const zeroX = cell * .51;
@@ -97,12 +74,9 @@ function drawTens(ctx, cell, value) {
     stretchY: 1.13,
   });
 
-  if (main === '6' || main === '9') {
-    const offset = cell * .28;
-    const ux = mainX + Math.sin(rotation) * offset;
-    const uy = mainY + Math.cos(rotation) * offset;
-    underline(ctx, ux, uy, cell * .39, Math.max(4, cell * .036), rotation);
-  }
+  // Important: percentile tens die intentionally has NO 6/9 underline.
+  // The two-digit layout itself disambiguates the face, and the underline
+  // caused 90 to be misread as 06 in the iPhone inspection.
 }
 
 function makeTensAtlas(entry) {
@@ -206,8 +180,8 @@ export class D10D100ArtMarkingFactory {
   getMesh(record) {
     const isTens = record.entry.key === 'd10-digit' && record.componentRole === 'tens';
     if (!isTens) {
-      // Explicit rollback: single D10 and D100 ones are exactly the production
-      // markings again. No v3 size/stretch/orientation experiments apply.
+      // Hard isolation: single D10 and D100 ones always use the production
+      // FaceMarkingFactory and cannot be affected by this experiment.
       return this.production.getMesh(record);
     }
 
