@@ -5,7 +5,11 @@ const ATLAS_CELL = 96;
 const FACE_OFFSET = 0.012;
 const INK = '#241d16';
 const INK_EDGE = 'rgba(70,55,40,.82)';
+const CROSS_RED = '#96372f';
+const CROSS_RED_EDGE = 'rgba(105,40,36,.88)';
 const CUT_HIGHLIGHT = 'rgba(239,228,199,.28)';
+const BODY_GROOVE_SHADOW = 'rgba(48,43,34,.16)';
+const BODY_GROOVE_HIGHLIGHT = 'rgba(239,228,199,.20)';
 
 function strokeCircle(ctx, x, y, radius, strokeStyle, lineWidth, yOffset = 0) {
   ctx.strokeStyle = strokeStyle;
@@ -27,8 +31,6 @@ function strokeCross(ctx, cell, strokeStyle, lineWidth, yOffset = 0) {
 }
 
 function strokeHollowSquare(ctx, cell, strokeStyle, lineWidth, yOffset = 0) {
-  // Value 3 is intentionally an EMPTY engraved frame. Never fill this path:
-  // the body material must remain visible throughout the square interior.
   const side = cell * 0.70;
   const inset = (cell - side) / 2;
   ctx.save();
@@ -46,8 +48,12 @@ function drawD3Cell(ctx, cell, value) {
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
-  // D3 v2: oversized, heavy shallow engravings.
-  // 1 = circle, 2 = cross, 3 = hollow square frame with NO fill.
+  // D3 v3:
+  // 1 = oversized dark circle engraving.
+  // 2 = oversized muted-red cross engraving.
+  // 3 = body-color square groove: NO ink/fill layer at all. The square itself
+  //     stays transparent so the actual die body shows through; only a faint
+  //     offset light/shadow pair suggests the recessed cut.
   const highlightWidth = cell * 0.145;
   const edgeWidth = cell * 0.108;
   const inkWidth = cell * 0.076;
@@ -60,12 +66,13 @@ function drawD3Cell(ctx, cell, value) {
     strokeCircle(ctx, cell * 0.5, cell * 0.5, radius, INK, inkWidth);
   } else if (value === 2) {
     strokeCross(ctx, cell, CUT_HIGHLIGHT, highlightWidth, cutOffset);
-    strokeCross(ctx, cell, INK_EDGE, edgeWidth);
-    strokeCross(ctx, cell, INK, inkWidth);
+    strokeCross(ctx, cell, CROSS_RED_EDGE, edgeWidth);
+    strokeCross(ctx, cell, CROSS_RED, inkWidth);
   } else if (value === 3) {
-    strokeHollowSquare(ctx, cell, CUT_HIGHLIGHT, highlightWidth, cutOffset);
-    strokeHollowSquare(ctx, cell, INK_EDGE, edgeWidth);
-    strokeHollowSquare(ctx, cell, INK, inkWidth);
+    // Important: no INK, no INK_EDGE, no fill. The center and groove line are
+    // transparent; the body material is what supplies the visible base color.
+    strokeHollowSquare(ctx, cell, BODY_GROOVE_SHADOW, cell * 0.050, -cell * 0.018);
+    strokeHollowSquare(ctx, cell, BODY_GROOVE_HIGHLIGHT, cell * 0.050, cell * 0.018);
   }
 
   ctx.restore();
