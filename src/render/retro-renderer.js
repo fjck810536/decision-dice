@@ -2,7 +2,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.m
 import { FaceMarkingFactory } from './face-markings.js';
 
 export class RetroRenderer {
-  constructor({ canvas, stage, internalWidth = 360, inspectionMode = false }) {
+  constructor({ canvas, stage, internalWidth = 360, inspectionMode = false, projectionMode = 'perspective' }) {
     this.canvas = canvas;
     this.stage = stage;
     this.internalWidth = internalWidth;
@@ -13,13 +13,17 @@ export class RetroRenderer {
     this.faceMarkings = new FaceMarkingFactory();
     this.lastRenderAt = 0;
     this.renderInterval = 1000 / 12;
+    this.cageHalfWidth = 5.8;
+    this.floorY = -1.26;
+    this.projectionMode = projectionMode === 'orthographic' ? 'orthographic' : 'perspective';
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x11130f);
 
-    this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-    this.camera.position.set(0, 6.2, 9.6);
-    this.camera.lookAt(0, 0.55, 0);
+    this.perspectiveCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    this.orthographicCamera = new THREE.OrthographicCamera(-5.8, 5.8, 5.8, -5.8, 0.1, 100);
+    this.#configureTopDownCameras();
+    this.camera = this.projectionMode === 'orthographic' ? this.orthographicCamera : this.perspectiveCamera;
 
     this.scene.add(new THREE.AmbientLight(0xd8d1b9, 1.16));
     const sun = new THREE.DirectionalLight(0xffffff, 1.35);
@@ -31,11 +35,11 @@ export class RetroRenderer {
       new THREE.MeshLambertMaterial({ color: 0x1a1d17, flatShading: true }),
     );
     floor.rotation.x = -Math.PI / 2;
-    floor.position.y = -1.26;
+    floor.position.y = this.floorY;
     this.scene.add(floor);
 
     const grid = new THREE.GridHelper(11.6, 12, 0x42483b, 0x282c24);
-    grid.position.y = -1.245;
+    grid.position.y = this.floorY + 0.015;
     this.scene.add(grid);
 
     this.renderer = new THREE.WebGLRenderer({
@@ -51,6 +55,22 @@ export class RetroRenderer {
     this.resize();
   }
 
+  #configureTopDownCameras() {
+    const W = this.cageHalfWidth;
+    const fovRad = THREE.MathUtils.degToRad(this.perspectiveCamera.fov / 2);
+    const distance = W / Math.tan(fovRad);
+
+    this.perspectiveCamera.position.set(0, this.floorY + distance, 0);
+    this.perspectiveCamera.up.set(0, 0, -1);
+    this.perspectiveCamera.lookAt(0, this.floorY, 0);
+    this.perspectiveCamera.updateProjectionMatrix();
+
+    this.orthographicCamera.position.set(0, this.floorY + 20, 0);
+    this.orthographicCamera.up.set(0, 0, -1);
+    this.orthographicCamera.lookAt(0, this.floorY, 0);
+    this.orthographicCamera.updateProjectionMatrix();
+  }
+
   resize() {
     const rect = this.stage.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
@@ -59,44 +79,36 @@ export class RetroRenderer {
     this.renderer.setSize(internalWidth, internalHeight, false);
     this.canvas.style.width = '100%';
     this.canvas.style.height = '100%';
-    this.camera.aspect = rect.width / rect.height;
-    this.camera.updateProjectionMatrix();
+
+    const aspect = rect.width / rect.height;
+    this.perspectiveCamera.aspect = aspect;
+    this.perspectiveCamera.updateProjectionMatrix();
+
+    const W = this.cageHalfWidth;
+    this.orthographicCamera.left = -W * aspect;
+    this.orthographicCamera.right = W * aspect;
+    this.orthographicCamera.top = W;
+    this.orthographicCamera.bottom = -W;
+    this.orthographicCamera.updateProjectionMatrix();
     this.lastRenderAt = 0;
   }
 
-  setPhysicalCount(count) {
-    if (this.inspectionMode) {
-      if (count <= 2) {
-        this.camera.position.set(0, 4.2, 7.2);
-      } else if (count <= 5) {
-        this.camera.position.set(0, 5.0, 8.4);
-      } else if (count <= 10) {
-        this.camera.position.set(0, 6.0, 9.8);
-      } else {
-        this.camera.position.set(0, 7.8, 12.4);
-      }
-      this.camera.lookAt(0, 0.35, 0);
-      this.camera.updateProjectionMatrix();
-      return;
-    }
+  setProjectionMode(mode) {
+    this.projectionMode = mode === 'orthographic' ? 'orthographic' : 'perspective';
+    this.camera = this.projectionMode === 'orthographic' ? this.orthographicCamera : this.perspectiveCamera;
+    this.lastRenderAt = 0;
+    this.render(this.records, performance.now(), true);
+    return this.projectionMode;
+  }
 
-    if (count <= 2) {
-      this.camera.position.set(0, 5.0, 8.0);
-      this.camera.lookAt(0, 0.28, 0);
-    } else if (count <= 5) {
-      this.camera.position.set(0, 5.8, 9.0);
-      this.camera.lookAt(0, 0.42, 0);
-    } else if (count <= 10) {
-      this.camera.position.set(0, 6.8, 10.4);
-      this.camera.lookAt(0, 0.62, 0);
-    } else if (count <= 20) {
-      this.camera.position.set(0, 8.2, 12.5);
-      this.camera.lookAt(0, 0.75, 0);
-    } else {
-      this.camera.position.set(0, 9.6, 15.4);
-      this.camera.lookAt(0, 0.75, 0);
-    }
-    this.camera.updateProjectionMatrix();
+  getProjectionMode() {
+    return this.projectionMode;
+  }
+
+  setPhysicalCount() {
+    // P0 camera contract: the cage is the frame. Do not zoom per die count.
+    this.#configureTopDownCameras();
+    this.resize();
   }
 
   reset() {
