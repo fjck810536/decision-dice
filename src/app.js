@@ -103,6 +103,7 @@ async function showChoice() {
 systemControls = mountSystemControls({
   state,
   audioEngine,
+  onHome: showHome,
   onRefreshMode(mode) {
     if (mode === 'dice') showDice();
     else if (mode === 'choice') showChoice();
