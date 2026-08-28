@@ -7,7 +7,7 @@ const INK = '#241d16';
 const INK_EDGE = 'rgba(70,55,40,.82)';
 const CUT_HIGHLIGHT = 'rgba(239,228,199,.24)';
 
-// v6 scope rule:
+// v7 scope rule:
 // - single D10: production markings, untouched
 // - D100 ones die: production markings, untouched
 // - D100 tens die only: experimental art direction below
@@ -55,31 +55,30 @@ function drawTens(ctx, cell, value) {
   const zero = label[1];
   const rotation = tensGlyphRotation();
 
-  // v6 typography pass, based on the physical percentile-die reference:
-  // move the whole pair deeper into the broad/blunt half of the kite.
-  // The trailing zero is no longer a tiny apex annotation: it becomes a
-  // longer, heavier, clearly legible member of the same printed pair.
+  // v7: keep the approved relative arrangement, but make both marks larger.
+  // Actual blunt-end placement is handled geometrically in buildTensGeometry
+  // so the atlas does not need to push glyphs dangerously close to cell edges.
   const mainX = cell * .48;
   const mainY = cell * .78;
   const zeroX = cell * .51;
   const zeroY = cell * .42;
 
-  drawEngravedGlyph(ctx, main, mainX, mainY, Math.round(cell * .84), {
+  drawEngravedGlyph(ctx, main, mainX, mainY, Math.round(cell * .89), {
     narrowZero: true,
     rotation,
-    stretchX: .95,
-    stretchY: 1.18,
+    stretchX: .96,
+    stretchY: 1.20,
     fontWeight: 700,
-    strokeBoost: 1.04,
+    strokeBoost: 1.06,
   });
 
-  drawEngravedGlyph(ctx, zero, zeroX, zeroY, Math.round(cell * .58), {
+  drawEngravedGlyph(ctx, zero, zeroX, zeroY, Math.round(cell * .64), {
     narrowZero: false,
     rotation,
-    stretchX: .88,
-    stretchY: 1.25,
+    stretchX: .90,
+    stretchY: 1.28,
     fontWeight: 800,
-    strokeBoost: 1.24,
+    strokeBoost: 1.30,
   });
 
   // Percentile tens die intentionally has NO 6/9 underline.
@@ -157,16 +156,22 @@ function pushQuad(positions, uvs, center, tangent, bitangent, half, uv) {
 function buildTensGeometry(entry, cols, rows) {
   const positions = [];
   const uvs = [];
-  const half = entry.radius * .322;
+  const half = entry.radius * .334;
 
   entry.faces.forEach((face, index) => {
     const normal = new THREE.Vector3(...face.normal).normalize();
-    const center = normal.clone().multiplyScalar(
-      supportDistance(entry.visualGeometry, normal) + FACE_OFFSET,
-    );
     const bitangent = new THREE.Vector3(...face.markingUp).normalize();
     const tangent = new THREE.Vector3().crossVectors(bitangent, normal).normalize();
     bitangent.copy(new THREE.Vector3().crossVectors(normal, tangent).normalize());
+
+    const center = normal.clone().multiplyScalar(
+      supportDistance(entry.visualGeometry, normal) + FACE_OFFSET,
+    );
+
+    // markingUp points toward the kite apex. Moving in the negative bitangent
+    // direction therefore shifts the entire marking toward the broad/blunt end.
+    center.addScaledVector(bitangent, -entry.radius * .065);
+
     pushQuad(positions, uvs, center, tangent, bitangent, half, cellUv(index, cols, rows));
   });
 
