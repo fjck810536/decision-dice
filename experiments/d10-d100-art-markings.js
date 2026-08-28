@@ -15,10 +15,20 @@ function displayLabel(entry, face, componentRole) {
   return String(face.label ?? face.value);
 }
 
-function drawEngravedGlyph(ctx, text, x, y, fontSize, { narrowZero = false } = {}) {
+function drawEngravedGlyph(ctx, text, x, y, fontSize, {
+  narrowZero = false,
+  rotation = 0,
+  stretchX = 0.96,
+  stretchY = 1.13,
+} = {}) {
   ctx.save();
   ctx.translate(x, y);
-  if (narrowZero && text === '0') ctx.scale(.82, 1.04);
+  // Important: rotate only the glyph around its own anchor. Do not rotate the
+  // percentile layout itself; the big-digit/blunt + small-zero/apex relation
+  // was already approved in v2.
+  ctx.rotate(rotation);
+  const zeroScale = narrowZero && text === '0' ? 0.84 : 1;
+  ctx.scale(stretchX * zeroScale, stretchY);
   ctx.font = `700 ${fontSize}px Georgia, 'Times New Roman', serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -38,46 +48,82 @@ function drawEngravedGlyph(ctx, text, x, y, fontSize, { narrowZero = false } = {
   ctx.restore();
 }
 
-function underline(ctx, cx, y, width, thickness) {
+function underline(ctx, cx, cy, width, thickness, rotation = 0) {
   ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rotation);
   ctx.strokeStyle = INK;
   ctx.lineWidth = thickness;
   ctx.lineCap = 'square';
   ctx.beginPath();
-  ctx.moveTo(cx - width / 2, y);
-  ctx.lineTo(cx + width / 2, y);
+  ctx.moveTo(-width / 2, 0);
+  ctx.lineTo(width / 2, 0);
   ctx.stroke();
   ctx.restore();
 }
 
-function drawSingle(ctx, cell, label) {
-  // Reference intent: large commercial-d10 digit, filling the blunt half of
-  // the kite rather than sitting as a tiny centered UI label.
-  const fontSize = Math.round(cell * .70);
+function drawSingle(ctx, cell, label, rotation) {
+  // v3: larger, slightly elongated and visibly biased toward the blunt half.
+  // This is based on the supplied commercial d10 / percentile references.
+  const fontSize = Math.round(cell * .79);
   const cx = cell * .50;
-  const cy = cell * .55;
-  drawEngravedGlyph(ctx, label, cx, cy, fontSize, { narrowZero: true });
+  const cy = cell * .64;
+  drawEngravedGlyph(ctx, label, cx, cy, fontSize, {
+    narrowZero: true,
+    rotation,
+    stretchX: .94,
+    stretchY: 1.14,
+  });
   if (label === '6' || label === '9') {
-    underline(ctx, cx, cell * .83, cell * .34, Math.max(4, cell * .038));
+    // Underline rotates with the glyph, rather than staying screen-horizontal.
+    const offset = cell * .28;
+    const ux = cx + Math.sin(rotation) * offset;
+    const uy = cy + Math.cos(rotation) * offset;
+    underline(ctx, ux, uy, cell * .39, Math.max(4, cell * .038), rotation);
   }
 }
 
-function drawTens(ctx, cell, label) {
-  // Percentile reference: a large primary digit toward the blunt end,
-  // with the trailing zero smaller and pulled toward the apex.
+function drawTens(ctx, cell, label, rotation) {
+  // Percentile contract confirmed in v2:
+  // large primary digit toward the blunt end, trailing 0 smaller toward apex.
+  // v3 moves the whole pair farther toward the blunt half, enlarges it, and
+  // rotates each glyph in place without rotating this spatial relationship.
   const main = label[0];
   const zero = label[1];
   const mainX = cell * .48;
-  const mainY = cell * .64;
+  const mainY = cell * .70;
   const zeroX = cell * .51;
-  const zeroY = cell * .24;
+  const zeroY = cell * .25;
 
-  drawEngravedGlyph(ctx, main, mainX, mainY, Math.round(cell * .72), { narrowZero: true });
-  drawEngravedGlyph(ctx, zero, zeroX, zeroY, Math.round(cell * .40), { narrowZero: true });
+  drawEngravedGlyph(ctx, main, mainX, mainY, Math.round(cell * .80), {
+    narrowZero: true,
+    rotation,
+    stretchX: .93,
+    stretchY: 1.15,
+  });
+  drawEngravedGlyph(ctx, zero, zeroX, zeroY, Math.round(cell * .45), {
+    narrowZero: true,
+    rotation,
+    stretchX: .91,
+    stretchY: 1.13,
+  });
 
   if (main === '6' || main === '9') {
-    underline(ctx, mainX, cell * .88, cell * .34, Math.max(4, cell * .036));
+    const offset = cell * .28;
+    const ux = mainX + Math.sin(rotation) * offset;
+    const uy = mainY + Math.cos(rotation) * offset;
+    underline(ctx, ux, uy, cell * .39, Math.max(4, cell * .036), rotation);
   }
+}
+
+function faceGlyphRotation(index) {
+  // Production D10 geometry is built as two five-face families:
+  // indices 0–4 meet one axial tip, indices 5–9 meet the opposite tip.
+  // iPhone reference check on the d100 ones die:
+  //   face carrying 4 (first family) needed CCW 90°
+  //   face carrying 7 (second family) needed CW 90°
+  // Canvas positive rotation is clockwise, so encode that observation directly.
+  return index < 5 ? -Math.PI / 2 : Math.PI / 2;
 }
 
 function makeAtlas(entry, componentRole) {
@@ -99,8 +145,9 @@ function makeAtlas(entry, componentRole) {
     ctx.translate(ox, oy);
     ctx.clearRect(0, 0, ATLAS_CELL, ATLAS_CELL);
     const label = displayLabel(entry, face, componentRole);
-    if (entry.key === 'd10-digit' && componentRole === 'tens') drawTens(ctx, ATLAS_CELL, label);
-    else drawSingle(ctx, ATLAS_CELL, label);
+    const rotation = faceGlyphRotation(i);
+    if (entry.key === 'd10-digit' && componentRole === 'tens') drawTens(ctx, ATLAS_CELL, label, rotation);
+    else drawSingle(ctx, ATLAS_CELL, label, rotation);
     ctx.restore();
   });
 
@@ -154,8 +201,8 @@ function pushQuad(positions, uvs, center, tangent, bitangent, half, uv) {
 }
 
 function faceHalfScale(entry, componentRole) {
-  if (entry.key === 'd10-digit' && componentRole === 'tens') return entry.radius * .315;
-  if (entry.key === 'd10' || entry.key === 'd10-digit') return entry.radius * .295;
+  if (entry.key === 'd10-digit' && componentRole === 'tens') return entry.radius * .322;
+  if (entry.key === 'd10' || entry.key === 'd10-digit') return entry.radius * .302;
   return entry.radius * .26;
 }
 
@@ -187,7 +234,7 @@ export class D10D100ArtMarkingFactory {
 
   #key(record) {
     const role = record.entry.key === 'd10-digit' ? (record.componentRole ?? 'ones') : 'single';
-    return `${record.entry.key}:${role}:art-v2`;
+    return `${record.entry.key}:${role}:art-v3`;
   }
 
   getMesh(record) {
