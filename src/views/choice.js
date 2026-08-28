@@ -1,9 +1,9 @@
 import { DecisionEngine } from '../choice/decision-engine.js';
 import { animateSlot } from '../choice/slot-presenter.js';
+import { escapeHtml, playResultSequence } from '../result/result-sequencer.js';
 
 const decisionEngine = new DecisionEngine();
 const CHOICE_LIMIT = 20;
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function pct(value) {
   return `${Math.round(value * 1000) / 10}%`;
@@ -41,10 +41,11 @@ function choiceHistory(history) {
     const raw = entry.method === 'dice'
       ? `RAW ${entry.rawRolls.join(' → ')} / REROLL ${entry.rerolls}`
       : `SLOT DRAW ${entry.mappedIndex}`;
+    const displayLabel = entry.label || `選項 ${entry.mappedIndex}`;
     return `
       <details class="history-item" ${index === 0 ? 'open' : ''}>
         <summary><span>${entry.choiceCount} OPTIONS / ${entry.method.toUpperCase()}</span><strong>OPTION ${entry.mappedIndex}</strong></summary>
-        <div class="history-detail">${raw}<br>${entry.label || `選項 ${entry.mappedIndex}`}</div>
+        <div class="history-detail">${escapeHtml(raw)}<br>${escapeHtml(displayLabel)}</div>
       </details>`;
   }).join('');
 }
@@ -52,10 +53,7 @@ function choiceHistory(history) {
 function labelsMarkup(state, count) {
   let rows = '';
   for (let i = 1; i <= count; i += 1) {
-    const safe = state.getChoiceLabel(i)
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('"', '&quot;');
+    const safe = escapeHtml(state.getChoiceLabel(i));
     rows += `
       <label class="choice-label-row">
         <span>${i}</span>
@@ -67,7 +65,7 @@ function labelsMarkup(state, count) {
 
 function resultMarkup({ method, plan, rawRolls, mappedIndex, label }) {
   const rawLine = method === 'dice'
-    ? rawRolls.map((raw, index) => {
+    ? rawRolls.map((raw) => {
       const resolved = decisionEngine.resolveDiceRoll(plan, raw);
       return resolved.accepted ? `${raw}` : `${raw} [INVALID]`;
     }).join(' → ')
@@ -80,12 +78,12 @@ function resultMarkup({ method, plan, rawRolls, mappedIndex, label }) {
     <section class="result-panel choice-result-panel">
       <p class="section-code">CHOICE RESULT / DETAILED</p>
       <div class="choice-provenance">
-        <span>METHOD</span><strong>${methodLine}</strong>
-        <span>RAW</span><strong>${rawLine}</strong>
+        <span>METHOD</span><strong>${escapeHtml(methodLine)}</strong>
+        <span>RAW</span><strong>${escapeHtml(rawLine)}</strong>
       </div>
       <div class="choice-final-index"><span>OPTION</span><strong>${mappedIndex}</strong></div>
-      <div class="choice-final-label">${label}</div>
-      <p class="microcopy">骰子模式只把 valid range 映射到選項；INVALID 會明確顯示並重新擲。拉霸模式先公平抽出 index，再播放可見動畫。</p>
+      <div class="choice-final-label">${escapeHtml(label)}</div>
+      <p class="microcopy">實際結果在骰面接受／SLOT 公平抽樣完成時就已成立；逐步揭露只負責呈現，不會改變答案。</p>
       <button type="button" class="secondary-action" id="choice-result-back">返回設定</button>
     </section>`;
 }
@@ -207,7 +205,7 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
         <button type="button" class="choice-label-toggle" id="choice-label-toggle">${labelDrawerOpen ? '▼' : '▲'} 選項名稱 / OPTIONAL</button>
         <div id="choice-label-body" ${labelDrawerOpen ? '' : 'hidden'}>
           <div class="choice-label-list">${labelsMarkup(state, state.choiceCount)}</div>
-          <p class="choice-duplicate-warning" id="duplicate-warning" ${duplicates.length ? '' : 'hidden'}>重複名稱：${duplicates.join('、')}。重複項目仍是不同 index，會形成實質加權。</p>
+          <p class="choice-duplicate-warning" id="duplicate-warning" ${duplicates.length ? '' : 'hidden'}>重複名稱：${escapeHtml(duplicates.join('、'))}。重複項目仍是不同 index，會形成實質加權。</p>
         </div>
       </section>
 
@@ -265,7 +263,7 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
     const rollButton = container.querySelector('#choice-roll');
     const resultRegion = container.querySelector('#choice-result-region');
 
-    const finish = ({ method, finalPlan, rawRolls = [], mappedIndex }) => {
+    const recordResult = ({ method, finalPlan, rawRolls = [], mappedIndex }) => {
       const label = choiceLabel(state, mappedIndex);
       const entry = {
         kind: 'choice',
@@ -280,8 +278,34 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
         timestamp: Date.now(),
       };
       state.pushHistory(entry);
-      resultRegion.innerHTML = resultMarkup({ method, plan: finalPlan, rawRolls, mappedIndex, label });
+      return { entry, label };
+    };
+
+    const revealFinal = async ({ method, finalPlan, rawRolls = [], mappedIndex, label }) => {
+      const accepted = rawRolls.length ? rawRolls[rawRolls.length - 1] : mappedIndex;
+      const steps = method === 'dice'
+        ? [
+          { label: 'METHOD', value: finalPlan.dice.die.toUpperCase() },
+          { label: 'ROLL', value: accepted },
+          { label: 'OPTION', value: mappedIndex, tone: 'option' },
+          { label: 'LABEL', value: label, tone: 'final' },
+        ]
+        : [
+          { label: 'METHOD', value: 'SLOT' },
+          { label: 'DRAW', value: mappedIndex },
+          { label: 'OPTION', value: mappedIndex, tone: 'option' },
+          { label: 'LABEL', value: label, tone: 'final' },
+        ];
+
       rollButton.hidden = true;
+      await playResultSequence({
+        target: resultRegion,
+        title: 'CHOICE RESULT / SEQUENCE',
+        steps,
+        holdMs: 330,
+      });
+
+      resultRegion.innerHTML = resultMarkup({ method, plan: finalPlan, rawRolls, mappedIndex, label });
       resultRegion.querySelector('#choice-result-back').addEventListener('click', () => {
         rolling = false;
         labelDrawerOpen = false;
@@ -304,16 +328,29 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
       try {
         if (selectedMethod === 'slot') {
           const finalIndex = decisionEngine.drawSlotIndex(state.choiceCount);
+          const recorded = recordResult({ method: 'slot', finalPlan, mappedIndex: finalIndex });
           const reel = container.querySelector('#slot-number');
-          await animateSlot({
-            choiceCount: state.choiceCount,
-            finalIndex,
-            onTick(value, info) {
-              reel.textContent = String(value).padStart(2, '0');
-              reel.dataset.final = info.final ? 'true' : 'false';
-            },
+
+          try {
+            await animateSlot({
+              choiceCount: state.choiceCount,
+              finalIndex,
+              onTick(value, info) {
+                reel.textContent = String(value).padStart(2, '0');
+                reel.dataset.final = info.final ? 'true' : 'false';
+              },
+            });
+          } catch {
+            reel.textContent = String(finalIndex).padStart(2, '0');
+            reel.dataset.final = 'true';
+          }
+
+          await revealFinal({
+            method: 'slot',
+            finalPlan,
+            mappedIndex: finalIndex,
+            label: recorded.label,
           });
-          finish({ method: 'slot', finalPlan, mappedIndex: finalIndex });
           return;
         }
 
@@ -344,14 +381,19 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
 
           if (!resolved.accepted) {
             badge.textContent = `${raw} / INVALID / REROLL`;
-            resultRegion.innerHTML = `
-              <section class="choice-sequence">
-                <span>${finalPlan.dice.die.toUpperCase()}</span>
-                <strong>${raw}</strong>
-                <b>INVALID</b>
-                <em>REROLL</em>
-              </section>`;
-            await sleep(720);
+            await playResultSequence({
+              target: resultRegion,
+              title: 'REJECTION / VISIBLE',
+              transient: true,
+              holdMs: 250,
+              finalHoldMs: 120,
+              steps: [
+                { label: finalPlan.dice.die.toUpperCase(), value: raw },
+                { label: 'STATUS', value: 'INVALID', tone: 'invalid' },
+                { label: 'NEXT', value: 'REROLL', tone: 'reroll' },
+              ],
+            });
+            resultRegion.innerHTML = '';
             continue;
           }
 
@@ -359,12 +401,20 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
           badge.textContent = `${raw} / OPTION ${mappedIndex}`;
         }
 
-        finish({ method: 'dice', finalPlan, rawRolls, mappedIndex });
+        const recorded = recordResult({ method: 'dice', finalPlan, rawRolls, mappedIndex });
+        await revealFinal({
+          method: 'dice',
+          finalPlan,
+          rawRolls,
+          mappedIndex,
+          label: recorded.label,
+        });
       } catch (error) {
         rolling = false;
         rollButton.disabled = false;
+        rollButton.hidden = false;
         rollButton.textContent = 'ROLL';
-        resultRegion.innerHTML = `<p class="error-box">${error.message}</p>`;
+        resultRegion.innerHTML = `<p class="error-box">${escapeHtml(error.message)}</p>`;
       }
     });
   };

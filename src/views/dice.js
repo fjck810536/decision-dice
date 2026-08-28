@@ -1,5 +1,6 @@
 import { DiceEngine } from '../dice/engine.js';
 import { GeometryRegistry, PUBLIC_DIE_TYPES } from '../dice/geometry-registry.js';
+import { compactDiceValues, playResultSequence } from '../result/result-sequencer.js';
 
 const registry = new GeometryRegistry();
 const PHYSICAL_LIMIT = 50;
@@ -213,15 +214,26 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
           timestamp: Date.now(),
         });
 
+        rollButton.hidden = true;
+        await playResultSequence({
+          target: resultRegion,
+          title: 'DICE RESULT / SEQUENCE',
+          holdMs: result.dice.length > 6 ? 220 : 340,
+          steps: [
+            { label: 'PHYSICAL POSE', value: 'RESOLVED' },
+            { label: 'DICE', value: compactDiceValues(result) },
+            { label: 'TOTAL', value: result.total, tone: 'final' },
+          ],
+        });
+
         resultRegion.innerHTML = `
           <section class="result-panel">
             <p class="section-code">ROLL RESULT / PHYSICAL FACE RESOLUTION</p>
             <div class="result-dice-list">${resultRows(result)}</div>
             <div class="total-line"><span>TOTAL</span><strong>${result.total}</strong></div>
-            <p class="microcopy">結果在所有骰體停止／hard finalize 後，才由最終姿態讀取；沒有預抽指定面。</p>
+            <p class="microcopy">結果在所有骰體停止／hard finalize 後就已成立；這裡的逐步揭露只負責呈現，不會改變結果。</p>
             <button type="button" class="secondary-action" id="result-back">返回設定</button>
           </section>`;
-        rollButton.hidden = true;
         resultRegion.querySelector('#result-back').addEventListener('click', () => {
           rolling = false;
           renderSetup();
@@ -231,6 +243,7 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
         back.disabled = false;
         switchButton.disabled = false;
         rollButton.disabled = false;
+        rollButton.hidden = false;
         rollButton.textContent = 'ROLL';
         badge.textContent = 'ERROR';
         resultRegion.innerHTML = `<p class="error-box">${error.message}</p>`;
