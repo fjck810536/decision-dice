@@ -30,11 +30,76 @@ function pipPoints(value) {
   return (layouts[value] ?? []).map((key) => p[key]);
 }
 
+function drawRpsSymbol(ctx, cell, value) {
+  ctx.save();
+  ctx.strokeStyle = MARK_COLOR;
+  ctx.fillStyle = MARK_COLOR;
+  ctx.lineWidth = Math.max(3, cell * 0.055);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  if (value === 1) {
+    // SCISSORS: two handles + crossed blades.
+    ctx.beginPath();
+    ctx.arc(cell * 0.34, cell * 0.68, cell * 0.10, 0, Math.PI * 2);
+    ctx.arc(cell * 0.55, cell * 0.68, cell * 0.10, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cell * 0.39, cell * 0.61);
+    ctx.lineTo(cell * 0.76, cell * 0.25);
+    ctx.moveTo(cell * 0.50, cell * 0.61);
+    ctx.lineTo(cell * 0.22, cell * 0.29);
+    ctx.stroke();
+  } else if (value === 2) {
+    // ROCK: deliberately angular pebble/fist-like mark.
+    ctx.beginPath();
+    ctx.moveTo(cell * 0.22, cell * 0.61);
+    ctx.lineTo(cell * 0.27, cell * 0.38);
+    ctx.lineTo(cell * 0.40, cell * 0.25);
+    ctx.lineTo(cell * 0.61, cell * 0.28);
+    ctx.lineTo(cell * 0.76, cell * 0.44);
+    ctx.lineTo(cell * 0.72, cell * 0.67);
+    ctx.lineTo(cell * 0.55, cell * 0.77);
+    ctx.lineTo(cell * 0.34, cell * 0.73);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.moveTo(cell * 0.37, cell * 0.39);
+    ctx.lineTo(cell * 0.58, cell * 0.36);
+    ctx.lineTo(cell * 0.66, cell * 0.49);
+    ctx.stroke();
+  } else {
+    // PAPER: sheet with folded corner and two short lines.
+    ctx.strokeRect(cell * 0.25, cell * 0.19, cell * 0.50, cell * 0.62);
+    ctx.beginPath();
+    ctx.moveTo(cell * 0.57, cell * 0.19);
+    ctx.lineTo(cell * 0.75, cell * 0.37);
+    ctx.lineTo(cell * 0.57, cell * 0.37);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cell * 0.34, cell * 0.51);
+    ctx.lineTo(cell * 0.64, cell * 0.51);
+    ctx.moveTo(cell * 0.34, cell * 0.63);
+    ctx.lineTo(cell * 0.58, cell * 0.63);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
 function drawFaceCell(ctx, x, y, cell, entry, face, componentRole) {
   ctx.save();
   ctx.translate(x, y);
   ctx.clearRect(0, 0, cell, cell);
   ctx.fillStyle = MARK_COLOR;
+
+  if (entry.key === 'd3') {
+    drawRpsSymbol(ctx, cell, face.value);
+    ctx.restore();
+    return;
+  }
 
   if (entry.key === 'd6') {
     const radius = cell * 0.075;
