@@ -6,19 +6,19 @@ const state = new SessionState();
 
 let navigationToken = 0;
 let diceModulePromise = null;
+let choiceModulePromise = null;
 
 function showHome() {
   navigationToken += 1;
   state.setMode('home');
   root.className = 'app-shell home-view';
   renderHome(root, {
-    onDice() {
-      showDice();
-    },
+    onDice: showDice,
+    onChoice: showChoice,
   });
 }
 
-function renderModeLoading(label, token) {
+function renderModeLoading(label, token, note = '正在載入功能模組。首頁本身不等待 3D / physics。') {
   root.className = 'app-shell function-view';
   root.innerHTML = `
     <header class="mode-header">
@@ -27,7 +27,7 @@ function renderModeLoading(label, token) {
     </header>
     <section class="function-panel" aria-live="polite">
       <p class="section-code">LOADING FUNCTION MODULE…</p>
-      <p class="microcopy">正在載入 3D / physics 模組。首頁本身不等待 DiceEngine、Three.js 或 cannon-es。</p>
+      <p class="microcopy">${note}</p>
     </section>
   `;
   root.querySelector('#loading-home').addEventListener('click', () => {
@@ -35,10 +35,24 @@ function renderModeLoading(label, token) {
   });
 }
 
+function renderModeError(label, token, error, retry) {
+  if (token !== navigationToken) return;
+  root.className = 'app-shell function-view';
+  root.innerHTML = `
+    <header class="mode-header">
+      <div><span class="eyebrow">MODULE ERROR</span><h1>${label}</h1></div>
+      <button type="button" class="text-button" id="error-home">HOME</button>
+    </header>
+    <p class="error-box">${label.toUpperCase()} MODULE LOAD FAILED<br>${error?.message ?? 'Unknown module error'}</p>
+  `;
+  root.querySelector('#error-home').addEventListener('click', showHome);
+  retry();
+}
+
 async function showDice() {
   const token = ++navigationToken;
   state.setMode('dice');
-  renderModeLoading('骰子', token);
+  renderModeLoading('骰子', token, '正在載入 DiceEngine / Three.js / cannon-es。首頁不等待 physics。');
 
   try {
     diceModulePromise ??= import('./views/dice.js');
@@ -49,19 +63,31 @@ async function showDice() {
     renderDiceMode(root, {
       state,
       onHome: showHome,
+      onChoice: showChoice,
     });
   } catch (error) {
+    renderModeError('骰子', token, error, () => { diceModulePromise = null; });
+  }
+}
+
+async function showChoice() {
+  const token = ++navigationToken;
+  state.setMode('choice');
+  renderModeLoading('選擇', token, '正在載入 DecisionEngine。若使用 SLOT，不會載入 DiceEngine；選 DICE 並按 ROLL 後才載入 physics。');
+
+  try {
+    choiceModulePromise ??= import('./views/choice.js');
+    const { renderChoiceMode } = await choiceModulePromise;
     if (token !== navigationToken) return;
+
     root.className = 'app-shell function-view';
-    root.innerHTML = `
-      <header class="mode-header">
-        <div><span class="eyebrow">MODULE ERROR</span><h1>骰子</h1></div>
-        <button type="button" class="text-button" id="error-home">HOME</button>
-      </header>
-      <p class="error-box">DICE MODULE LOAD FAILED<br>${error?.message ?? 'Unknown module error'}</p>
-    `;
-    root.querySelector('#error-home').addEventListener('click', showHome);
-    diceModulePromise = null;
+    renderChoiceMode(root, {
+      state,
+      onHome: showHome,
+      onDice: showDice,
+    });
+  } catch (error) {
+    renderModeError('選擇', token, error, () => { choiceModulePromise = null; });
   }
 }
 
