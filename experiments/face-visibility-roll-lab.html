@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e100d">
+  <title>Dice Face Visibility Roll Lab</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:#0e100d;
+      --panel:#171914;
+      --ink:#ece8db;
+      --muted:#8d9284;
+      --line:#53594b;
+      --acid:#cbd483;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    * { box-sizing:border-box; }
+    html, body { margin:0; min-height:100%; background:var(--bg); color:var(--ink); }
+    body { min-height:100svh; padding:max(10px, env(safe-area-inset-top)) 10px max(12px, env(safe-area-inset-bottom)); }
+    button { font:inherit; touch-action:manipulation; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+    .lab { width:min(100%, 760px); margin:0 auto; }
+    header { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:8px; }
+    h1 { margin:0; font-size:18px; letter-spacing:.08em; }
+    .code { color:var(--acid); font-size:9px; letter-spacing:.12em; }
+    .note { margin:4px 0 0; color:var(--muted); font-size:9px; line-height:1.4; }
+    .controls { display:grid; gap:7px; margin-bottom:8px; }
+    .row { display:flex; gap:5px; overflow-x:auto; padding-bottom:1px; }
+    .row button {
+      min-width:50px;
+      min-height:42px;
+      padding:7px 10px;
+      border:1px solid var(--line);
+      border-radius:0;
+      background:var(--panel);
+      color:var(--ink);
+    }
+    .row button.active { border-color:var(--acid); color:var(--acid); background:#22251d; }
+    .row button:active { transform:translate(1px,1px); }
+    .stage {
+      position:relative;
+      width:100%;
+      height:min(72svh, 760px);
+      min-height:430px;
+      overflow:hidden;
+      border:1px solid var(--line);
+      background:#11130f;
+    }
+    canvas { display:block; width:100%; height:100%; image-rendering:pixelated; image-rendering:crisp-edges; }
+    .hud {
+      position:absolute;
+      left:7px;
+      right:7px;
+      top:7px;
+      display:flex;
+      justify-content:space-between;
+      gap:7px;
+      pointer-events:none;
+      font-size:8px;
+    }
+    .hud span { border:1px solid rgba(236,232,219,.38); background:rgba(10,12,9,.76); padding:4px 6px; }
+    .dither { position:absolute; inset:0; pointer-events:none; opacity:.22; background-image:radial-gradient(rgba(0,0,0,.22) .45px,transparent .65px); background-size:3px 3px; }
+    .bottom { display:grid; grid-template-columns:1fr auto; gap:7px; margin-top:8px; }
+    #roll {
+      min-height:58px;
+      border:1px solid var(--acid);
+      border-radius:0;
+      background:var(--acid);
+      color:#11130f;
+      font-weight:900;
+      font-size:18px;
+      letter-spacing:.12em;
+    }
+    #roll:disabled { opacity:.45; }
+    #result {
+      min-width:104px;
+      display:grid;
+      place-items:center;
+      border:1px solid var(--line);
+      background:var(--panel);
+      padding:5px 9px;
+      text-align:center;
+    }
+    #result small { color:var(--muted); font-size:7px; }
+    #result strong { display:block; font-size:24px; line-height:1.05; }
+    .help { margin:8px 0 0; color:var(--muted); font-size:8px; line-height:1.45; }
+    @media (orientation:landscape) and (max-height:600px) {
+      .stage { height:70vh; min-height:300px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="lab">
+    <header>
+      <div>
+        <div class="code">M2 / FACE VISIBILITY ROLL LAB</div>
+        <h1>大型骰面檢查</h1>
+        <p class="note">480px internal render / 12fps presentation / same physical DiceEngine</p>
+      </div>
+      <div class="code">NOT FINAL UI</div>
+    </header>
+
+    <section class="controls" aria-label="Lab controls">
+      <div class="row" id="type-row">
+        <button type="button" data-type="d3">D3</button>
+        <button type="button" data-type="d6">D6</button>
+        <button type="button" data-type="d10">D10</button>
+        <button type="button" data-type="d20">D20</button>
+        <button type="button" data-type="d100" class="active">D100</button>
+      </div>
+      <div class="row" id="count-row">
+        <button type="button" data-count="1" class="active">×1</button>
+        <button type="button" data-count="2">×2</button>
+        <button type="button" data-count="5">×5</button>
+      </div>
+      <div class="row" id="camera-row">
+        <button type="button" data-camera="high">HIGH</button>
+        <button type="button" data-camera="low" class="active">LOW</button>
+        <button type="button" data-camera="side">SIDE</button>
+      </div>
+    </section>
+
+    <section class="stage" id="stage">
+      <canvas id="canvas"></canvas>
+      <div class="dither" aria-hidden="true"></div>
+      <div class="hud"><span id="status">READY</span><span id="selection">1 × D100</span></div>
+    </section>
+
+    <div class="bottom">
+      <button type="button" id="roll">ROLL</button>
+      <div id="result"><small>RESULT</small><strong>—</strong></div>
+    </div>
+
+    <p class="help">D10 / D100 的十個面全部都有建立標記。骰子停在地板後，背面與朝下的面本來就會被實體幾何遮住；骰完可切 LOW / SIDE 觀察側面。這個頁面只用於驗骰面，不代表正式 Roll UI。</p>
+  </main>
+
+  <script type="module">
+    import { DiceEngine } from '../src/dice/engine.js';
+
+    const stage = document.getElementById('stage');
+    const canvas = document.getElementById('canvas');
+    const rollButton = document.getElementById('roll');
+    const status = document.getElementById('status');
+    const selection = document.getElementById('selection');
+    const result = document.querySelector('#result strong');
+
+    let dieType = 'd100';
+    let count = 1;
+    let cameraMode = 'low';
+    let rolling = false;
+
+    const engine = new DiceEngine({
+      canvas,
+      stage,
+      rendererOptions: {
+        internalWidth: 480,
+        inspectionMode: true,
+      },
+    });
+
+    function setActive(rowId, selector, value) {
+      document.querySelectorAll(`#${rowId} button`).forEach((button) => {
+        button.classList.toggle('active', button.dataset[selector] === String(value));
+      });
+    }
+
+    function updateSelection() {
+      selection.textContent = `${count} × ${dieType.toUpperCase()}`;
+    }
+
+    function applyCamera(mode = cameraMode) {
+      cameraMode = mode;
+      const camera = engine.renderer.camera;
+      if (mode === 'high') camera.position.set(0, 6.2, 7.4);
+      if (mode === 'low') camera.position.set(0, 2.8, 6.5);
+      if (mode === 'side') camera.position.set(6.5, 2.8, 0);
+      camera.lookAt(0, -0.05, 0);
+      camera.updateProjectionMatrix();
+      engine.renderer.render(engine.feeder.records, performance.now(), true);
+      setActive('camera-row', 'camera', mode);
+    }
+
+    document.getElementById('type-row').addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-type]');
+      if (!button || rolling) return;
+      dieType = button.dataset.type;
+      setActive('type-row', 'type', dieType);
+      updateSelection();
+    });
+
+    document.getElementById('count-row').addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-count]');
+      if (!button || rolling) return;
+      count = Number(button.dataset.count);
+      setActive('count-row', 'count', count);
+      updateSelection();
+    });
+
+    document.getElementById('camera-row').addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-camera]');
+      if (!button) return;
+      applyCamera(button.dataset.camera);
+    });
+
+    function d3Label(value) {
+      return ({ 1: '剪刀', 2: '石頭', 3: '布' })[value] ?? String(value);
+    }
+
+    function formatResult(rollResult) {
+      if (rollResult.dice.length === 1) {
+        const die = rollResult.dice[0];
+        if (die.type === 'd3') return d3Label(die.value);
+        if (die.type === 'd100' && die.componentResults) {
+          const tens = String(die.componentResults[0].displayValue).padStart(2, '0');
+          const ones = die.componentResults[1].displayValue;
+          return `${die.value} (${tens}+${ones})`;
+        }
+        return String(die.value);
+      }
+      return rollResult.dice.map((die) => die.type === 'd3' ? d3Label(die.value) : die.value).join(' / ');
+    }
+
+    rollButton.addEventListener('click', async () => {
+      if (rolling) return;
+      rolling = true;
+      rollButton.disabled = true;
+      rollButton.textContent = 'ROLLING…';
+      result.textContent = '—';
+      status.textContent = 'START';
+
+      try {
+        const rollResult = await engine.roll({
+          pool: [{ type: dieType, count }],
+          onProgress(progress) {
+            status.textContent = `${progress.phase} / ${progress.spawned}/${progress.physicalCount} / FIX ${progress.frozen}`;
+          },
+        });
+        result.textContent = formatResult(rollResult);
+        status.textContent = 'DONE / FACE RESOLVED';
+        applyCamera(cameraMode);
+      } catch (error) {
+        status.textContent = `ERROR / ${error.message}`;
+      } finally {
+        rolling = false;
+        rollButton.disabled = false;
+        rollButton.textContent = 'ROLL';
+      }
+    });
+
+    updateSelection();
+    applyCamera('low');
+  </script>
+</body>
+</html>
