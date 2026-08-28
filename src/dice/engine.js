@@ -5,6 +5,7 @@ import { DiceFeeder } from './feeder.js';
 import { SettlingController } from './settling.js';
 import { assembleRollResult } from './result.js';
 import { RetroRenderer } from '../render/retro-renderer.js';
+import { audioEngine } from '../audio/audio-engine.js';
 
 function expandPool(pool) {
   const logicalDice = [];
@@ -46,7 +47,11 @@ function expandPool(pool) {
 export class DiceEngine {
   constructor({ canvas, stage, rendererOptions = {} }) {
     this.registry = new GeometryRegistry();
-    this.physicsWorld = new PhysicsWorld();
+    this.physicsWorld = new PhysicsWorld({
+      onCollision({ impact }) {
+        audioEngine.playCollision(impact);
+      },
+    });
     this.faceResolver = new FaceResolver();
     this.feeder = new DiceFeeder({ physicsWorld: this.physicsWorld, registry: this.registry });
     this.settling = new SettlingController({ physicsWorld: this.physicsWorld, faceResolver: this.faceResolver });
@@ -69,6 +74,9 @@ export class DiceEngine {
     if (this.running) throw new Error('DiceEngine is already rolling.');
     const cleanPool = this.validatePool(pool);
     const { logicalDice, units } = expandPool(cleanPool);
+
+    await audioEngine.unlock();
+    audioEngine.playRollCue();
 
     this.running = true;
     this.physicsWorld.reset();
