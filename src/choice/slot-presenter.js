@@ -1,3 +1,5 @@
+import { audioEngine } from '../audio/audio-engine.js';
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function animateSlot({
@@ -6,6 +8,7 @@ export async function animateSlot({
   onTick = () => {},
   durationMs = 920,
 }) {
+  await audioEngine.unlock();
   const startedAt = performance.now();
   let tick = 0;
 
@@ -15,10 +18,12 @@ export async function animateSlot({
     const delay = 34 + Math.round(progress * progress * 105);
     const decoy = ((finalIndex + tick * 7 + Math.floor(elapsed / 37)) % choiceCount) + 1;
     onTick(decoy, { final: false, progress });
+    audioEngine.playSlotTick({ final: false });
     tick += 1;
     await sleep(delay);
   }
 
   onTick(finalIndex, { final: true, progress: 1 });
+  audioEngine.playSlotTick({ final: true });
   return finalIndex;
 }
