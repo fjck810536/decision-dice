@@ -7,7 +7,7 @@ const INK = '#241d16';
 const INK_EDGE = 'rgba(70,55,40,.82)';
 const CUT_HIGHLIGHT = 'rgba(239,228,199,.24)';
 
-// v5 scope rule:
+// v6 scope rule:
 // - single D10: production markings, untouched
 // - D100 ones die: production markings, untouched
 // - D100 tens die only: experimental art direction below
@@ -17,23 +17,25 @@ function drawEngravedGlyph(ctx, text, x, y, fontSize, {
   rotation = 0,
   stretchX = 0.96,
   stretchY = 1.13,
+  fontWeight = 700,
+  strokeBoost = 1,
 } = {}) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(rotation);
   const zeroScale = narrowZero && text === '0' ? 0.84 : 1;
   ctx.scale(stretchX * zeroScale, stretchY);
-  ctx.font = `700 ${fontSize}px Georgia, 'Times New Roman', serif`;
+  ctx.font = `${fontWeight} ${fontSize}px Georgia, 'Times New Roman', serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
 
   ctx.strokeStyle = CUT_HIGHLIGHT;
-  ctx.lineWidth = Math.max(2, fontSize * .045);
+  ctx.lineWidth = Math.max(2, fontSize * .045 * strokeBoost);
   ctx.strokeText(text, 0, 2);
   ctx.strokeStyle = INK_EDGE;
-  ctx.lineWidth = Math.max(2, fontSize * .032);
+  ctx.lineWidth = Math.max(2, fontSize * .032 * strokeBoost);
   ctx.strokeText(text, 0, 0);
   ctx.fillStyle = INK;
   ctx.fillText(text, 0, 0);
@@ -41,9 +43,8 @@ function drawEngravedGlyph(ctx, text, x, y, fontSize, {
 }
 
 function tensGlyphRotation() {
-  // iPhone inspection now confirms all percentile-tens faces share the same
-  // readable quarter-turn. The previous 60-only opposite turn made 60 read
-  // visually as 90. Keep orientation independent from the geometry's
+  // iPhone inspection confirms every percentile-tens face uses this same
+  // readable quarter-turn. Keep this independent from the geometry's
   // 13579 / 24680 face-family ordering.
   return -Math.PI / 2;
 }
@@ -54,29 +55,34 @@ function drawTens(ctx, cell, value) {
   const zero = label[1];
   const rotation = tensGlyphRotation();
 
-  // Percentile layout: large primary digit toward the blunt end,
-  // smaller trailing zero toward the apex.
+  // v6 typography pass, based on the physical percentile-die reference:
+  // move the whole pair deeper into the broad/blunt half of the kite.
+  // The trailing zero is no longer a tiny apex annotation: it becomes a
+  // longer, heavier, clearly legible member of the same printed pair.
   const mainX = cell * .48;
-  const mainY = cell * .70;
+  const mainY = cell * .78;
   const zeroX = cell * .51;
-  const zeroY = cell * .25;
+  const zeroY = cell * .42;
 
-  drawEngravedGlyph(ctx, main, mainX, mainY, Math.round(cell * .80), {
+  drawEngravedGlyph(ctx, main, mainX, mainY, Math.round(cell * .84), {
     narrowZero: true,
     rotation,
-    stretchX: .93,
-    stretchY: 1.15,
-  });
-  drawEngravedGlyph(ctx, zero, zeroX, zeroY, Math.round(cell * .45), {
-    narrowZero: true,
-    rotation,
-    stretchX: .91,
-    stretchY: 1.13,
+    stretchX: .95,
+    stretchY: 1.18,
+    fontWeight: 700,
+    strokeBoost: 1.04,
   });
 
-  // Important: percentile tens die intentionally has NO 6/9 underline.
-  // The two-digit layout itself disambiguates the face, and the underline
-  // caused 90 to be misread as 06 in the iPhone inspection.
+  drawEngravedGlyph(ctx, zero, zeroX, zeroY, Math.round(cell * .58), {
+    narrowZero: false,
+    rotation,
+    stretchX: .88,
+    stretchY: 1.25,
+    fontWeight: 800,
+    strokeBoost: 1.24,
+  });
+
+  // Percentile tens die intentionally has NO 6/9 underline.
 }
 
 function makeTensAtlas(entry) {
@@ -180,7 +186,7 @@ export class D10D100ArtMarkingFactory {
   getMesh(record) {
     const isTens = record.entry.key === 'd10-digit' && record.componentRole === 'tens';
     if (!isTens) {
-      // Hard isolation: single D10 and D100 ones always use the production
+      // Hard isolation: single D10 and D100 ones always use production
       // FaceMarkingFactory and cannot be affected by this experiment.
       return this.production.getMesh(record);
     }
