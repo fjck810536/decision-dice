@@ -30,59 +30,24 @@ function pipPoints(value) {
   return (layouts[value] ?? []).map((key) => p[key]);
 }
 
-function drawRpsSymbol(ctx, cell, value) {
+function drawD3Symbol(ctx, cell, value) {
   ctx.save();
   ctx.strokeStyle = MARK_COLOR;
-  ctx.fillStyle = MARK_COLOR;
-  ctx.lineWidth = Math.max(3, cell * 0.055);
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
+  ctx.lineWidth = Math.max(4, cell * 0.065);
+  ctx.lineCap = 'square';
 
+  // Temporary symbolic d3 contract:
+  // circle = 1, cross = 2, blank = 3.
   if (value === 1) {
-    // SCISSORS: two handles + crossed blades.
     ctx.beginPath();
-    ctx.arc(cell * 0.34, cell * 0.68, cell * 0.10, 0, Math.PI * 2);
-    ctx.arc(cell * 0.55, cell * 0.68, cell * 0.10, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(cell * 0.39, cell * 0.61);
-    ctx.lineTo(cell * 0.76, cell * 0.25);
-    ctx.moveTo(cell * 0.50, cell * 0.61);
-    ctx.lineTo(cell * 0.22, cell * 0.29);
+    ctx.arc(cell * 0.5, cell * 0.5, cell * 0.23, 0, Math.PI * 2);
     ctx.stroke();
   } else if (value === 2) {
-    // ROCK: deliberately angular pebble/fist-like mark.
     ctx.beginPath();
-    ctx.moveTo(cell * 0.22, cell * 0.61);
-    ctx.lineTo(cell * 0.27, cell * 0.38);
-    ctx.lineTo(cell * 0.40, cell * 0.25);
-    ctx.lineTo(cell * 0.61, cell * 0.28);
-    ctx.lineTo(cell * 0.76, cell * 0.44);
-    ctx.lineTo(cell * 0.72, cell * 0.67);
-    ctx.lineTo(cell * 0.55, cell * 0.77);
-    ctx.lineTo(cell * 0.34, cell * 0.73);
-    ctx.closePath();
-    ctx.fill();
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.beginPath();
-    ctx.moveTo(cell * 0.37, cell * 0.39);
-    ctx.lineTo(cell * 0.58, cell * 0.36);
-    ctx.lineTo(cell * 0.66, cell * 0.49);
-    ctx.stroke();
-  } else {
-    // PAPER: sheet with folded corner and two short lines.
-    ctx.strokeRect(cell * 0.25, cell * 0.19, cell * 0.50, cell * 0.62);
-    ctx.beginPath();
-    ctx.moveTo(cell * 0.57, cell * 0.19);
-    ctx.lineTo(cell * 0.75, cell * 0.37);
-    ctx.lineTo(cell * 0.57, cell * 0.37);
-    ctx.closePath();
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(cell * 0.34, cell * 0.51);
-    ctx.lineTo(cell * 0.64, cell * 0.51);
-    ctx.moveTo(cell * 0.34, cell * 0.63);
-    ctx.lineTo(cell * 0.58, cell * 0.63);
+    ctx.moveTo(cell * 0.30, cell * 0.30);
+    ctx.lineTo(cell * 0.70, cell * 0.70);
+    ctx.moveTo(cell * 0.70, cell * 0.30);
+    ctx.lineTo(cell * 0.30, cell * 0.70);
     ctx.stroke();
   }
 
@@ -96,7 +61,7 @@ function drawFaceCell(ctx, x, y, cell, entry, face, componentRole) {
   ctx.fillStyle = MARK_COLOR;
 
   if (entry.key === 'd3') {
-    drawRpsSymbol(ctx, cell, face.value);
+    drawD3Symbol(ctx, cell, face.value);
     ctx.restore();
     return;
   }
@@ -114,15 +79,18 @@ function drawFaceCell(ctx, x, y, cell, entry, face, componentRole) {
 
   const label = labelForFace(entry, face, componentRole);
   const compact = label.length >= 2;
-  const fontSize = compact ? Math.round(cell * 0.43) : Math.round(cell * 0.56);
+  const d10Family = entry.key === 'd10' || entry.key === 'd10-digit';
+  const fontSize = d10Family
+    ? Math.round(cell * (compact ? 0.39 : 0.50))
+    : Math.round(cell * (compact ? 0.43 : 0.56));
   ctx.font = `900 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(label, cell / 2, cell / 2 + cell * 0.02);
 
   if (/^(6|9|60|90)$/.test(label)) {
-    const width = compact ? cell * 0.34 : cell * 0.22;
-    ctx.fillRect(cell / 2 - width / 2, cell * 0.77, width, Math.max(2, cell * 0.035));
+    const width = compact ? cell * 0.31 : cell * 0.20;
+    ctx.fillRect(cell / 2 - width / 2, cell * 0.75, width, Math.max(2, cell * 0.035));
   }
   ctx.restore();
 }
@@ -168,8 +136,8 @@ function faceScale(entry) {
     case 'd4': return entry.radius * 0.24;
     case 'd8': return entry.radius * 0.31;
     case 'd20': return entry.radius * 0.19;
-    case 'd10':
-    case 'd10-digit': return entry.radius * 0.28;
+    case 'd10': return entry.radius * 0.245;
+    case 'd10-digit': return entry.radius * 0.235;
     case 'd6':
     case 'd3': return entry.radius * 0.34;
     default: return entry.radius * 0.26;
@@ -216,9 +184,22 @@ function buildMarkingGeometry(entry, cols, rows) {
     const normal = new THREE.Vector3(...face.normal).normalize();
     const distance = supportDistance(entry.visualGeometry, normal) + FACE_OFFSET;
     const center = normal.clone().multiplyScalar(distance);
-    const ref = Math.abs(normal.dot(yAxis)) > 0.88 ? xAxis : yAxis;
-    const tangent = new THREE.Vector3().crossVectors(ref, normal).normalize();
-    const bitangent = new THREE.Vector3().crossVectors(normal, tangent).normalize();
+
+    let tangent;
+    let bitangent;
+    if (face.markingUp) {
+      // D10 family: text up follows the explicit local kite apex.
+      // This keeps all percentile markings coherent around the die instead of
+      // re-orienting them against world/local Y on alternating faces.
+      bitangent = new THREE.Vector3(...face.markingUp).normalize();
+      tangent = new THREE.Vector3().crossVectors(bitangent, normal).normalize();
+      bitangent = new THREE.Vector3().crossVectors(normal, tangent).normalize();
+    } else {
+      const ref = Math.abs(normal.dot(yAxis)) > 0.88 ? xAxis : yAxis;
+      tangent = new THREE.Vector3().crossVectors(ref, normal).normalize();
+      bitangent = new THREE.Vector3().crossVectors(normal, tangent).normalize();
+    }
+
     pushQuad(positions, uvs, center, tangent, bitangent, half, cellUv(index, cols, rows));
   });
 
