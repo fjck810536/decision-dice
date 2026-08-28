@@ -11,6 +11,26 @@ export class AudioEngine {
     return this.muted;
   }
 
+  get status() {
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor) return 'UNSUPPORTED';
+    if (!this.context) return 'LOCKED';
+    return this.context.state === 'running' ? 'READY' : String(this.context.state || 'LOCKED').toUpperCase();
+  }
+
+  #primeIOSAudio() {
+    if (!this.context) return;
+    try {
+      const buffer = this.context.createBuffer(1, 1, 22050);
+      const source = this.context.createBufferSource();
+      source.buffer = buffer;
+      source.connect(this.context.destination);
+      source.start(0);
+    } catch {
+      // The silent prime is only an iOS compatibility assist.
+    }
+  }
+
   async unlock() {
     if (this.muted) return false;
     const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
@@ -19,11 +39,12 @@ export class AudioEngine {
     if (!this.context) {
       this.context = new AudioContextCtor();
       this.master = this.context.createGain();
-      this.master.gain.value = 0.72;
+      this.master.gain.value = 0.9;
       this.master.connect(this.context.destination);
+      this.#primeIOSAudio();
     }
 
-    if (this.context.state === 'suspended') {
+    if (this.context.state !== 'running') {
       try {
         await this.context.resume();
       } catch {
@@ -38,7 +59,7 @@ export class AudioEngine {
     if (this.master && this.context) {
       const now = this.context.currentTime;
       this.master.gain.cancelScheduledValues(now);
-      this.master.gain.setTargetAtTime(this.muted ? 0 : 0.72, now, 0.012);
+      this.master.gain.setTargetAtTime(this.muted ? 0 : 0.9, now, 0.012);
     }
     return this.muted;
   }
@@ -47,8 +68,8 @@ export class AudioEngine {
     return this.setMuted(!this.muted);
   }
 
-  #tone({ frequency = 440, duration = 0.04, gain = 0.04, type = 'square', endFrequency = null }) {
-    if (this.muted || !this.context || !this.master || this.context.state !== 'running') return;
+  #tone({ frequency = 440, duration = 0.04, gain = 0.08, type = 'square', endFrequency = null }) {
+    if (this.muted || !this.context || !this.master || this.context.state !== 'running') return false;
 
     const now = this.context.currentTime;
     const oscillator = this.context.createOscillator();
@@ -66,6 +87,14 @@ export class AudioEngine {
     envelope.connect(this.master);
     oscillator.start(now);
     oscillator.stop(now + duration + 0.01);
+    return true;
+  }
+
+  async playTestSound() {
+    const ready = await this.unlock();
+    if (!ready || this.muted) return false;
+    this.#tone({ frequency: 440, endFrequency: 720, duration: 0.14, gain: 0.18, type: 'square' });
+    return true;
   }
 
   playCollision(impact = 0) {
@@ -79,17 +108,17 @@ export class AudioEngine {
 
     const normalized = Math.min(1, strength / 8);
     this.#tone({
-      frequency: 105 + Math.random() * 55 + normalized * 35,
-      endFrequency: 72 + normalized * 20,
-      duration: 0.026 + normalized * 0.022,
-      gain: 0.018 + normalized * 0.055,
+      frequency: 120 + Math.random() * 70 + normalized * 45,
+      endFrequency: 78 + normalized * 24,
+      duration: 0.03 + normalized * 0.025,
+      gain: 0.045 + normalized * 0.09,
       type: 'triangle',
     });
   }
 
   playRollCue() {
     if (this.muted) return;
-    this.#tone({ frequency: 145, endFrequency: 92, duration: 0.055, gain: 0.028, type: 'square' });
+    this.#tone({ frequency: 190, endFrequency: 105, duration: 0.075, gain: 0.11, type: 'square' });
   }
 
   playSlotTick({ final = false } = {}) {
@@ -99,8 +128,8 @@ export class AudioEngine {
     this.lastSlotTickAt = nowMs;
 
     this.#tone(final
-      ? { frequency: 330, endFrequency: 660, duration: 0.11, gain: 0.055, type: 'square' }
-      : { frequency: 620, endFrequency: 540, duration: 0.026, gain: 0.022, type: 'square' });
+      ? { frequency: 390, endFrequency: 780, duration: 0.13, gain: 0.14, type: 'square' }
+      : { frequency: 760, endFrequency: 620, duration: 0.03, gain: 0.075, type: 'square' });
   }
 }
 
