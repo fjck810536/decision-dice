@@ -6,18 +6,12 @@
   <meta name="theme-color" content="#10110f">
   <title>擲骰與選擇障礙輔助裝置</title>
   <link rel="stylesheet" href="./src/styles.css">
+  <link rel="stylesheet" href="./src/mobile-interaction.css">
 </head>
 <body>
-  <main id="app" class="app-shell home-view">
-    <p id="boot-status" class="boot-status">LOADING SYSTEM…</p>
-  </main>
+  <main id="app" class="app-shell home-view"></main>
   <div class="orientation-block">目前僅直向使用</div>
-  <script>
-    window.addEventListener('error', () => {
-      const status = document.getElementById('boot-status');
-      if (status) status.textContent = 'BOOT ERROR / MODULE INITIALIZATION FAILED';
-    });
-  </script>
+  <noscript>此裝置需要 JavaScript 才能運作。</noscript>
   <script type="module" src="./src/app.js"></script>
 </body>
 </html>
