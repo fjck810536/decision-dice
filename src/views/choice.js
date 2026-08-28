@@ -1,6 +1,12 @@
 import { DecisionEngine } from '../choice/decision-engine.js';
 import { animateSlot } from '../choice/slot-presenter.js';
-import { escapeHtml, playResultSequence } from '../result/result-sequencer.js';
+import {
+  clearSettlement,
+  escapeSettlementHtml,
+  openDetailsSheet,
+  playChoiceSettlement,
+  playRejectionSettlement,
+} from '../result/settlement-presenter.js';
 
 const decisionEngine = new DecisionEngine();
 const CHOICE_LIMIT = 20;
@@ -45,7 +51,7 @@ function choiceHistory(history) {
     return `
       <details class="history-item" ${index === 0 ? 'open' : ''}>
         <summary><span>${entry.choiceCount} OPTIONS / ${entry.method.toUpperCase()}</span><strong>OPTION ${entry.mappedIndex}</strong></summary>
-        <div class="history-detail">${escapeHtml(raw)}<br>${escapeHtml(displayLabel)}</div>
+        <div class="history-detail">${escapeSettlementHtml(raw)}<br>${escapeSettlementHtml(displayLabel)}</div>
       </details>`;
   }).join('');
 }
@@ -53,7 +59,7 @@ function choiceHistory(history) {
 function labelsMarkup(state, count) {
   let rows = '';
   for (let i = 1; i <= count; i += 1) {
-    const safe = escapeHtml(state.getChoiceLabel(i));
+    const safe = escapeSettlementHtml(state.getChoiceLabel(i));
     rows += `
       <label class="choice-label-row">
         <span>${i}</span>
@@ -63,7 +69,7 @@ function labelsMarkup(state, count) {
   return rows;
 }
 
-function resultMarkup({ method, plan, rawRolls, mappedIndex, label }) {
+function choiceDetailMarkup({ method, plan, rawRolls, mappedIndex, label }) {
   const rawLine = method === 'dice'
     ? rawRolls.map((raw) => {
       const resolved = decisionEngine.resolveDiceRoll(plan, raw);
@@ -71,20 +77,19 @@ function resultMarkup({ method, plan, rawRolls, mappedIndex, label }) {
     }).join(' → ')
     : `${mappedIndex}`;
   const methodLine = method === 'dice'
-    ? `${plan.dice.die.toUpperCase()} / ${rawRolls.length - 1} REROLL`
+    ? `${plan.dice.die.toUpperCase()} / ${Math.max(0, rawRolls.length - 1)} REROLL`
     : 'VISIBLE SLOT / CRYPTO DRAW';
 
   return `
     <section class="result-panel choice-result-panel">
-      <p class="section-code">CHOICE RESULT / DETAILED</p>
+      <p class="section-code">CHOICE / PROVENANCE</p>
       <div class="choice-provenance">
-        <span>METHOD</span><strong>${escapeHtml(methodLine)}</strong>
-        <span>RAW</span><strong>${escapeHtml(rawLine)}</strong>
+        <span>METHOD</span><strong>${escapeSettlementHtml(methodLine)}</strong>
+        <span>RAW</span><strong>${escapeSettlementHtml(rawLine)}</strong>
+        <span>OPTION</span><strong>${mappedIndex}</strong>
       </div>
-      <div class="choice-final-index"><span>OPTION</span><strong>${mappedIndex}</strong></div>
-      <div class="choice-final-label">${escapeHtml(label)}</div>
-      <p class="microcopy">實際結果在骰面接受／SLOT 公平抽樣完成時就已成立；逐步揭露只負責呈現，不會改變答案。</p>
-      <button type="button" class="secondary-action" id="choice-result-back">返回設定</button>
+      <div class="choice-final-label">${escapeSettlementHtml(label)}</div>
+      <p class="microcopy">無效骰與重擲只保留在詳細資料；主結算只停留最終選項。</p>
     </section>`;
 }
 
@@ -92,6 +97,7 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
   let engine = null;
   let rolling = false;
   let labelDrawerOpen = false;
+  let projectionMode = 'perspective';
 
   const disposeEngine = () => {
     if (engine) {
@@ -106,22 +112,14 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
     onDice();
   };
 
-  const leaveMode = () => {
-    if (rolling) return;
-    disposeEngine();
-    state.clearChoiceMode();
-    onHome();
-  };
-
   const renderSetup = () => {
     disposeEngine();
     const choiceEntries = state.history.filter((entry) => entry.kind === 'choice');
     container.innerHTML = `
       <header class="mode-header">
-        <div><span class="eyebrow">MODE 02</span><h1>選擇</h1></div>
+        <div><span class="eyebrow">MODE 02 / CHOICE</span><h1>選擇</h1></div>
         <div class="mode-actions">
-          <button type="button" class="text-button" id="switch-dice">骰子</button>
-          <button type="button" class="text-button danger" id="leave-choice">清除並離開</button>
+          <button type="button" class="text-button" id="switch-dice">切換至骰子</button>
         </div>
       </header>
 
@@ -133,16 +131,15 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
         <p class="error-box" id="choice-count-error" hidden></p>
       </section>
 
-      <button type="button" class="primary-action" id="confirm-choice-count">CONFIRM / 確認數量</button>
+      <button type="button" class="primary-action" id="confirm-choice-count">確認數量 / ARM</button>
 
       <section class="history-block">
-        <p class="section-code">CHOICE HISTORY / ${choiceEntries.length} OF 20</p>
+        <p class="section-code">HISTORY / ${choiceEntries.length} OF 20</p>
         ${choiceHistory(state.history)}
       </section>
     `;
 
     container.querySelector('#switch-dice').addEventListener('click', switchDice);
-    container.querySelector('#leave-choice').addEventListener('click', leaveMode);
     const input = container.querySelector('#choice-count');
     const error = container.querySelector('#choice-count-error');
 
@@ -178,8 +175,7 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
       <header class="mode-header">
         <div><span class="eyebrow">MODE 02 / ARMED</span><h1>選擇</h1></div>
         <div class="mode-actions">
-          <button type="button" class="text-button" id="switch-dice">骰子</button>
-          <button type="button" class="text-button" id="edit-count">修改數量</button>
+          <button type="button" class="text-button" id="switch-dice">切換至骰子</button>
         </div>
       </header>
 
@@ -205,7 +201,7 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
         <button type="button" class="choice-label-toggle" id="choice-label-toggle">${labelDrawerOpen ? '▼' : '▲'} 選項名稱 / OPTIONAL</button>
         <div id="choice-label-body" ${labelDrawerOpen ? '' : 'hidden'}>
           <div class="choice-label-list">${labelsMarkup(state, state.choiceCount)}</div>
-          <p class="choice-duplicate-warning" id="duplicate-warning" ${duplicates.length ? '' : 'hidden'}>重複名稱：${escapeHtml(duplicates.join('、'))}。重複項目仍是不同 index，會形成實質加權。</p>
+          <p class="choice-duplicate-warning" id="duplicate-warning" ${duplicates.length ? '' : 'hidden'}>重複名稱：${escapeSettlementHtml(duplicates.join('、'))}。重複項目仍是不同 index，會形成實質加權。</p>
         </div>
       </section>
 
@@ -213,25 +209,43 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
         <section class="dice-stage" id="choice-dice-stage" aria-label="選擇模式 3D 骰子舞台">
           <canvas id="choice-dice-canvas"></canvas>
           <div class="dither-layer" aria-hidden="true"></div>
-          <div class="stage-hopper" aria-hidden="true">DECISION DIE</div>
           <div class="stage-badge" id="choice-stage-badge">READY / ${dice.die.toUpperCase()}</div>
+          <div class="projection-ab" aria-label="鏡頭投影比較">
+            <button type="button" data-projection="perspective" class="${projectionMode === 'perspective' ? 'active' : ''}">PERSPECTIVE</button>
+            <button type="button" data-projection="orthographic" class="${projectionMode === 'orthographic' ? 'active' : ''}">ORTHO</button>
+          </div>
+          <div id="choice-settlement" class="settlement-overlay" hidden aria-live="polite"></div>
         </section>` : `
         <section class="slot-stage" id="slot-stage" aria-label="選擇模式拉霸">
           <span class="section-code">VISIBLE REEL</span>
           <strong class="slot-number" id="slot-number">${String(1).padStart(2, '0')}</strong>
           <small>1 — ${state.choiceCount}</small>
+          <div id="choice-settlement" class="settlement-overlay" hidden aria-live="polite"></div>
         </section>`}
 
-      <button type="button" class="primary-action roll-action" id="choice-roll">ROLL</button>
-      <div id="choice-result-region" aria-live="polite"></div>
+      <div class="choice-roll-control-row">
+        <button type="button" class="primary-action roll-action" id="choice-roll">ROLL</button>
+        <button type="button" class="secondary-action" id="edit-count">修改選項</button>
+      </div>
+      <div id="choice-error" aria-live="polite"></div>
     `;
 
-    container.querySelector('#switch-dice').addEventListener('click', switchDice);
-    container.querySelector('#edit-count').addEventListener('click', () => {
+    const switchButton = container.querySelector('#switch-dice');
+    const editButton = container.querySelector('#edit-count');
+    const methodSwitch = container.querySelector('#method-switch');
+    const toggle = container.querySelector('#choice-label-toggle');
+    const body = container.querySelector('#choice-label-body');
+    const rollButton = container.querySelector('#choice-roll');
+    const settlement = container.querySelector('#choice-settlement');
+    const errorRegion = container.querySelector('#choice-error');
+    const projectionControls = container.querySelector('.projection-ab');
+
+    switchButton.addEventListener('click', switchDice);
+    editButton.addEventListener('click', () => {
       if (!rolling) renderSetup();
     });
 
-    container.querySelector('#method-switch').addEventListener('click', (event) => {
+    methodSwitch.addEventListener('click', (event) => {
       if (rolling) return;
       const button = event.target.closest('button[data-method]');
       if (!button) return;
@@ -239,8 +253,6 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
       renderReady();
     });
 
-    const toggle = container.querySelector('#choice-label-toggle');
-    const body = container.querySelector('#choice-label-body');
     toggle.addEventListener('click', () => {
       if (rolling) return;
       labelDrawerOpen = !labelDrawerOpen;
@@ -260,8 +272,17 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
         : '';
     });
 
-    const rollButton = container.querySelector('#choice-roll');
-    const resultRegion = container.querySelector('#choice-result-region');
+    if (projectionControls) {
+      projectionControls.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-projection]');
+        if (!button) return;
+        projectionMode = button.dataset.projection === 'orthographic' ? 'orthographic' : 'perspective';
+        if (engine) engine.setProjectionMode(projectionMode);
+        projectionControls.querySelectorAll('button[data-projection]').forEach((item) => {
+          item.classList.toggle('active', item.dataset.projection === projectionMode);
+        });
+      });
+    }
 
     const recordResult = ({ method, finalPlan, rawRolls = [], mappedIndex }) => {
       const label = choiceLabel(state, mappedIndex);
@@ -281,47 +302,35 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
       return { entry, label };
     };
 
-    const revealFinal = async ({ method, finalPlan, rawRolls = [], mappedIndex, label }) => {
-      const accepted = rawRolls.length ? rawRolls[rawRolls.length - 1] : mappedIndex;
-      const steps = method === 'dice'
-        ? [
-          { label: 'METHOD', value: finalPlan.dice.die.toUpperCase() },
-          { label: 'ROLL', value: accepted },
-          { label: 'OPTION', value: mappedIndex, tone: 'option' },
-          { label: 'LABEL', value: label, tone: 'final' },
-        ]
-        : [
-          { label: 'METHOD', value: 'SLOT' },
-          { label: 'DRAW', value: mappedIndex },
-          { label: 'OPTION', value: mappedIndex, tone: 'option' },
-          { label: 'LABEL', value: label, tone: 'final' },
-        ];
-
-      rollButton.hidden = true;
-      await playResultSequence({
-        target: resultRegion,
-        title: 'CHOICE RESULT / SEQUENCE',
-        steps,
-        holdMs: 330,
+    const finishSettlement = async ({ method, finalPlan, rawRolls = [], mappedIndex, label }) => {
+      await playChoiceSettlement({
+        host: settlement,
+        mappedIndex,
+        label,
+        onDetails() {
+          openDetailsSheet({
+            title: '選擇詳細資料',
+            html: choiceDetailMarkup({ method, plan: finalPlan, rawRolls, mappedIndex, label }),
+          });
+        },
       });
-
-      resultRegion.innerHTML = resultMarkup({ method, plan: finalPlan, rawRolls, mappedIndex, label });
-      resultRegion.querySelector('#choice-result-back').addEventListener('click', () => {
-        rolling = false;
-        labelDrawerOpen = false;
-        renderReady();
-      });
+      rolling = false;
+      rollButton.disabled = false;
+      editButton.disabled = false;
+      switchButton.disabled = false;
     };
 
     rollButton.addEventListener('click', async () => {
       if (rolling) return;
       rolling = true;
+      clearSettlement(settlement);
+      errorRegion.innerHTML = '';
       labelDrawerOpen = false;
       body.hidden = true;
       toggle.textContent = '▲ 選項名稱 / OPTIONAL';
       rollButton.disabled = true;
-      rollButton.textContent = 'ROLLING…';
-      resultRegion.innerHTML = '';
+      editButton.disabled = true;
+      switchButton.disabled = true;
 
       const finalPlan = decisionEngine.buildPlan(state.choiceCount, selectedMethod);
 
@@ -345,7 +354,7 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
             reel.dataset.final = 'true';
           }
 
-          await revealFinal({
+          await finishSettlement({
             method: 'slot',
             finalPlan,
             mappedIndex: finalIndex,
@@ -355,12 +364,13 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
         }
 
         const badge = container.querySelector('#choice-stage-badge');
-        badge.textContent = 'LOADING DICE ENGINE…';
+        badge.textContent = 'ROLL';
         const { DiceEngine } = await import('../dice/engine.js');
         if (!engine) {
           engine = new DiceEngine({
             canvas: container.querySelector('#choice-dice-canvas'),
             stage: container.querySelector('#choice-dice-stage'),
+            rendererOptions: { projectionMode },
           });
         }
 
@@ -368,11 +378,11 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
         let mappedIndex = null;
         while (mappedIndex === null) {
           const attempt = rawRolls.length + 1;
-          badge.textContent = `${finalPlan.dice.die.toUpperCase()} / ATTEMPT ${attempt}`;
+          badge.textContent = `${finalPlan.dice.die.toUpperCase()} / ROLL ${attempt}`;
           const rollResult = await engine.roll({
             pool: [{ type: finalPlan.dice.die, count: 1 }],
             onProgress(progress) {
-              badge.textContent = `${progress.phase} / ATTEMPT ${attempt}`;
+              badge.textContent = String(progress.phase).startsWith('FEEDING') ? `ROLL ${attempt}` : `SETTLE ${attempt}`;
             },
           });
           const raw = rollResult.dice[0].value;
@@ -380,29 +390,21 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
           const resolved = decisionEngine.resolveDiceRoll(finalPlan, raw);
 
           if (!resolved.accepted) {
-            badge.textContent = `${raw} / INVALID / REROLL`;
-            await playResultSequence({
-              target: resultRegion,
-              title: 'REJECTION / VISIBLE',
-              transient: true,
-              holdMs: 250,
-              finalHoldMs: 120,
-              steps: [
-                { label: finalPlan.dice.die.toUpperCase(), value: raw },
-                { label: 'STATUS', value: 'INVALID', tone: 'invalid' },
-                { label: 'NEXT', value: 'REROLL', tone: 'reroll' },
-              ],
+            badge.textContent = `${raw} / INVALID`;
+            await playRejectionSettlement({
+              host: settlement,
+              dieType: finalPlan.dice.die,
+              raw,
             });
-            resultRegion.innerHTML = '';
             continue;
           }
 
           mappedIndex = resolved.mappedIndex;
-          badge.textContent = `${raw} / OPTION ${mappedIndex}`;
+          badge.textContent = 'LOCKED';
         }
 
         const recorded = recordResult({ method: 'dice', finalPlan, rawRolls, mappedIndex });
-        await revealFinal({
+        await finishSettlement({
           method: 'dice',
           finalPlan,
           rawRolls,
@@ -412,9 +414,9 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
       } catch (error) {
         rolling = false;
         rollButton.disabled = false;
-        rollButton.hidden = false;
-        rollButton.textContent = 'ROLL';
-        resultRegion.innerHTML = `<p class="error-box">${escapeHtml(error.message)}</p>`;
+        editButton.disabled = false;
+        switchButton.disabled = false;
+        errorRegion.innerHTML = `<p class="error-box">${escapeSettlementHtml(error.message)}</p>`;
       }
     });
   };
