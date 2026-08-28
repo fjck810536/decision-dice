@@ -2,9 +2,11 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.m
 import { FaceMarkingFactory } from './face-markings.js';
 
 export class RetroRenderer {
-  constructor({ canvas, stage }) {
+  constructor({ canvas, stage, internalWidth = 240, inspectionMode = false }) {
     this.canvas = canvas;
     this.stage = stage;
+    this.internalWidth = internalWidth;
+    this.inspectionMode = inspectionMode;
     this.records = [];
     this.meshById = new Map();
     this.edgeGeometryCache = new Map();
@@ -52,7 +54,7 @@ export class RetroRenderer {
   resize() {
     const rect = this.stage.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
-    const internalWidth = 240;
+    const internalWidth = this.internalWidth;
     const internalHeight = Math.max(1, Math.round(internalWidth * rect.height / rect.width));
     this.renderer.setSize(internalWidth, internalHeight, false);
     this.canvas.style.width = '100%';
@@ -63,6 +65,21 @@ export class RetroRenderer {
   }
 
   setPhysicalCount(count) {
+    if (this.inspectionMode) {
+      if (count <= 2) {
+        this.camera.position.set(0, 4.2, 7.2);
+      } else if (count <= 5) {
+        this.camera.position.set(0, 5.0, 8.4);
+      } else if (count <= 10) {
+        this.camera.position.set(0, 6.0, 9.8);
+      } else {
+        this.camera.position.set(0, 7.8, 12.4);
+      }
+      this.camera.lookAt(0, 0.35, 0);
+      this.camera.updateProjectionMatrix();
+      return;
+    }
+
     if (count <= 10) {
       this.camera.position.set(0, 7.3, 10.8);
     } else if (count <= 20) {
