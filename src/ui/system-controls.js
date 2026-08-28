@@ -1,8 +1,9 @@
-export function mountSystemControls({ state, audioEngine, onRefreshMode }) {
+export function mountSystemControls({ state, audioEngine, onHome, onRefreshMode }) {
   const host = document.createElement('div');
   host.className = 'system-controls-host';
   host.innerHTML = `
     <div class="system-dock" aria-label="系統控制">
+      <button type="button" class="system-dock-button" id="global-home" hidden>HOME</button>
       <button type="button" class="system-dock-button" id="global-mute">MUTE</button>
       <button type="button" class="system-dock-button" id="global-settings">SET</button>
     </div>
@@ -30,6 +31,7 @@ export function mountSystemControls({ state, audioEngine, onRefreshMode }) {
   `;
   document.body.appendChild(host);
 
+  const homeButton = host.querySelector('#global-home');
   const muteButton = host.querySelector('#global-mute');
   const settings = host.querySelector('#system-settings');
   const soundSetting = host.querySelector('#settings-sound');
@@ -47,6 +49,7 @@ export function mountSystemControls({ state, audioEngine, onRefreshMode }) {
 
   const syncModeUi = () => {
     const active = state.mode === 'dice' || state.mode === 'choice';
+    homeButton.hidden = !active;
     clearModeButton.disabled = !active;
     clearModeValue.textContent = active
       ? (state.mode === 'dice' ? '清除骰子設定' : '清除選擇設定')
@@ -64,6 +67,10 @@ export function mountSystemControls({ state, audioEngine, onRefreshMode }) {
     syncSoundUi();
   };
 
+  homeButton.addEventListener('click', () => {
+    settings.hidden = true;
+    onHome?.();
+  });
   muteButton.addEventListener('click', toggleMute);
   soundSetting.addEventListener('click', toggleMute);
 
