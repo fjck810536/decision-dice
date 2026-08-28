@@ -64,7 +64,13 @@ function subtotalValues(result) {
   return { subtotal, modifier, total };
 }
 
-export async function playDiceSettlement({ host, result, onDetails = null, holdMs = 390 } = {}) {
+export async function playDiceSettlement({
+  host,
+  result,
+  onDetails = null,
+  firstHoldMs = 520,
+  holdMs = 390,
+} = {}) {
   if (!host) return;
   const { subtotal, modifier, total } = subtotalValues(result);
   host.hidden = false;
@@ -84,7 +90,9 @@ export async function playDiceSettlement({ host, result, onDetails = null, holdM
       <button type="button" class="settlement-details" hidden>查看詳細資料</button>
     </div>`;
 
-  await wait(holdMs);
+  // Grouped raw dice are the first thing the player reads after motion stops,
+  // so let this first beat breathe slightly longer than the later beats.
+  await wait(firstHoldMs);
 
   const individual = host.querySelector('.settlement-phase--individual');
   const math = host.querySelector('.settlement-phase--math');
