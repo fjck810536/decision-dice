@@ -49,10 +49,10 @@ export function renderHome(container, { onDice, onChoice }) {
       </button>
     </nav>
 
-    <p class="home-status">DICE ENGINE READY｜CHOICE ENGINE MILESTONE 03</p>
+    <p class="home-status">PHYSICAL DICE｜DECISION ENGINE｜AUDIO READY</p>
     <div class="footer-code" aria-hidden="true">
       <span>NO SERVER / SESSION ONLY</span>
-      <span>READY</span>
+      <span>STANDBY</span>
     </div>
   `;
 
