@@ -113,6 +113,12 @@ export function installDoubleTapZoomGuard() {
     start = null;
   }, { passive: false, capture: true });
 
+  // Safari can route some zoom gestures through dblclick depending on the
+  // element and OS version, so keep this as a second browser-default guard.
+  document.addEventListener('dblclick', (event) => {
+    event.preventDefault();
+  }, { passive: false, capture: true });
+
   document.addEventListener('touchcancel', () => {
     start = null;
     multiTouch = false;
