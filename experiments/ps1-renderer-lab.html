@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d0a">
+  <title>PS1 Renderer Lab｜擲骰與選擇障礙輔助裝置</title>
+  <link rel="stylesheet" href="./ps1-renderer-lab.css">
+</head>
+<body>
+  <main class="lab-shell">
+    <header class="lab-head">
+      <div>
+        <span>M6.2A / RENDERER LAB</span>
+        <h1>PS1<br>RENDER LAB</h1>
+      </div>
+      <p>固定：90° Perspective / 360px / ~12fps / Flat / LOW Wobble / LOW Fog / Ivory baseline</p>
+    </header>
+
+    <section class="lab-stage" id="lab-stage" aria-label="PS1 renderer 比較舞台">
+      <canvas id="lab-canvas"></canvas>
+      <div class="lab-stage-tag">PHYSICAL RENDER TEST</div>
+      <div class="lab-status" id="lab-status">READY</div>
+    </section>
+
+    <section class="lab-readout" aria-live="polite">
+      <span id="lab-config">HYBRID / REAL / MAT B / POP OFF</span>
+      <strong id="lab-result">—</strong>
+    </section>
+
+    <button type="button" class="lab-roll" id="lab-roll">ROLL</button>
+
+    <section class="lab-controls" aria-label="renderer 比較控制">
+      <div class="control-group" data-control="die">
+        <span>DICE SAMPLE</span>
+        <div class="segmented">
+          <button type="button" data-value="d6" class="active">D6</button>
+          <button type="button" data-value="d10">D10</button>
+          <button type="button" data-value="d20">D20</button>
+          <button type="button" data-value="d100">D100</button>
+        </div>
+      </div>
+
+      <div class="control-group" data-control="dither">
+        <span>DITHER / SCREEN</span>
+        <div class="segmented three">
+          <button type="button" data-value="ordered">ORDERED</button>
+          <button type="button" data-value="halftone">HALFTONE</button>
+          <button type="button" data-value="hybrid" class="active">HYBRID</button>
+        </div>
+      </div>
+
+      <div class="control-group" data-control="shadow">
+        <span>SHADOW</span>
+        <div class="segmented">
+          <button type="button" data-value="real" class="active">LOW-RES REAL</button>
+          <button type="button" data-value="blob">BLOB</button>
+        </div>
+      </div>
+
+      <div class="control-group" data-control="floor">
+        <span>CUTTING MAT FLOOR</span>
+        <div class="segmented three">
+          <button type="button" data-value="cuttingA">A / GREEN</button>
+          <button type="button" data-value="cuttingB" class="active">B / GREY</button>
+          <button type="button" data-value="cuttingC">C / BLACK</button>
+        </div>
+      </div>
+
+      <div class="control-group" data-control="popIn">
+        <span>POP-IN</span>
+        <div class="segmented">
+          <button type="button" data-value="off" class="active">OFF</button>
+          <button type="button" data-value="low">LOW</button>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <span>COMPARE, DON'T POLISH</span>
+      <small>這一頁只用來選 renderer 語言；骰子刻面、字體、雕刻與材質細修留到 M6.2B。</small>
+    </footer>
+  </main>
+
+  <div class="orientation-block">Renderer Lab 目前僅支援直向使用</div>
+  <script type="module" src="./ps1-renderer-lab.js"></script>
+</body>
+</html>
