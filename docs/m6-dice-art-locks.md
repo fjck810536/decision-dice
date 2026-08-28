@@ -29,6 +29,13 @@ This file records the current visual lock state for the M6.2B dice-art pass.
 - `6 / 9` keep underlines.
 - Shallow engraved highlight + dark cut-edge treatment is now included.
 
+### D20
+- Layout A is approved and locked.
+- Numeral baseline is parallel to the selected triangle base edge.
+- Numeral stands higher toward the opposite apex rather than lower toward the base edge.
+- Approved numeral size, warm dark ink, shallow engraved treatment, and `6 / 9` orientation marks remain unchanged.
+- Layout B was comparison-only and is not the selected production direction.
+
 ### D100
 - Uses two physical D10-family bodies.
 - Tens layout is locked: large main digit toward the blunt end, smaller `0` toward the pointed end.
@@ -40,20 +47,13 @@ This file records the current visual lock state for the M6.2B dice-art pass.
 
 ## Pending
 
-### D20
-- Numeral size and engraved style are approved enough for comparison.
-- Position/orientation relative to a triangular face is not locked yet.
-- Use `experiments/d20-layout-lab.html` to compare two same-pose layouts:
-  - A: numeral sits higher toward the apex.
-  - B: numeral sits lower toward the chosen base edge.
-- Both variants keep the numeral baseline parallel to the same chosen triangle edge.
-
 ### D3
-- Current semantic/visual contract remains `circle = 1`, `cross = 2`, `blank = 3` on the existing cube body.
-- First art pass is in `experiments/d3-art-lab.html`.
-- Circle and cross use large shallow engraved marks.
-- Value `3` remains truly blank in the first pass.
+- Semantic contract remains `circle = 1`, `cross = 2`, `hollow square cut = 3` on the existing cube body.
+- Current v2 art pass is in `experiments/d3-art-lab.html`.
+- Circle and cross are oversized, heavier shallow engravings.
+- Value `3` uses a centered hollow square engraving about 70% of the face width.
+- The square is outline-only: its interior and the surrounding face retain the body color with no fill.
 
 ## Scope rule
 
-When working on D20 or D3 experiments, do not refactor or visually alter locked D4 / D6 / D8 / D10 / D100 code paths. Promote art into production only after the remaining D20 and D3 decisions are explicitly approved.
+When working on the remaining D3 experiment, do not refactor or visually alter locked D4 / D6 / D8 / D10 / D20 / D100 code paths. Promote art into production only after the D3 decision is explicitly approved.
