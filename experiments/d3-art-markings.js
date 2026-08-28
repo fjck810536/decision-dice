@@ -19,11 +19,25 @@ function strokeCross(ctx, cell, strokeStyle, lineWidth, yOffset = 0) {
   ctx.strokeStyle = strokeStyle;
   ctx.lineWidth = lineWidth;
   ctx.beginPath();
-  ctx.moveTo(cell * 0.24, cell * 0.24 + yOffset);
-  ctx.lineTo(cell * 0.76, cell * 0.76 + yOffset);
-  ctx.moveTo(cell * 0.76, cell * 0.24 + yOffset);
-  ctx.lineTo(cell * 0.24, cell * 0.76 + yOffset);
+  ctx.moveTo(cell * 0.15, cell * 0.15 + yOffset);
+  ctx.lineTo(cell * 0.85, cell * 0.85 + yOffset);
+  ctx.moveTo(cell * 0.85, cell * 0.15 + yOffset);
+  ctx.lineTo(cell * 0.15, cell * 0.85 + yOffset);
   ctx.stroke();
+}
+
+function strokeHollowSquare(ctx, cell, strokeStyle, lineWidth, yOffset = 0) {
+  // Value 3 is intentionally an EMPTY engraved frame. Never fill this path:
+  // the body material must remain visible throughout the square interior.
+  const side = cell * 0.70;
+  const inset = (cell - side) / 2;
+  ctx.save();
+  ctx.strokeStyle = strokeStyle;
+  ctx.lineWidth = lineWidth;
+  ctx.lineJoin = 'miter';
+  ctx.lineCap = 'square';
+  ctx.strokeRect(inset, inset + yOffset, side, side);
+  ctx.restore();
 }
 
 function drawD3Cell(ctx, cell, value) {
@@ -32,17 +46,26 @@ function drawD3Cell(ctx, cell, value) {
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
-  // D3 visual contract remains symbolic: circle = 1, cross = 2, blank = 3.
-  // Value 3 intentionally draws nothing at all in this first art pass.
+  // D3 v2: oversized, heavy shallow engravings.
+  // 1 = circle, 2 = cross, 3 = hollow square frame with NO fill.
+  const highlightWidth = cell * 0.145;
+  const edgeWidth = cell * 0.108;
+  const inkWidth = cell * 0.076;
+  const cutOffset = cell * 0.028;
+
   if (value === 1) {
-    const radius = cell * 0.285;
-    strokeCircle(ctx, cell * 0.5, cell * 0.5, radius, CUT_HIGHLIGHT, cell * 0.115, cell * 0.026);
-    strokeCircle(ctx, cell * 0.5, cell * 0.5, radius, INK_EDGE, cell * 0.084);
-    strokeCircle(ctx, cell * 0.5, cell * 0.5, radius, INK, cell * 0.058);
+    const radius = cell * 0.355;
+    strokeCircle(ctx, cell * 0.5, cell * 0.5, radius, CUT_HIGHLIGHT, highlightWidth, cutOffset);
+    strokeCircle(ctx, cell * 0.5, cell * 0.5, radius, INK_EDGE, edgeWidth);
+    strokeCircle(ctx, cell * 0.5, cell * 0.5, radius, INK, inkWidth);
   } else if (value === 2) {
-    strokeCross(ctx, cell, CUT_HIGHLIGHT, cell * 0.115, cell * 0.026);
-    strokeCross(ctx, cell, INK_EDGE, cell * 0.084);
-    strokeCross(ctx, cell, INK, cell * 0.058);
+    strokeCross(ctx, cell, CUT_HIGHLIGHT, highlightWidth, cutOffset);
+    strokeCross(ctx, cell, INK_EDGE, edgeWidth);
+    strokeCross(ctx, cell, INK, inkWidth);
+  } else if (value === 3) {
+    strokeHollowSquare(ctx, cell, CUT_HIGHLIGHT, highlightWidth, cutOffset);
+    strokeHollowSquare(ctx, cell, INK_EDGE, edgeWidth);
+    strokeHollowSquare(ctx, cell, INK, inkWidth);
   }
 
   ctx.restore();
@@ -119,7 +142,7 @@ function pushQuad(positions, uvs, center, tangent, bitangent, half, uv) {
 function buildGeometry(entry, cols, rows) {
   const positions = [];
   const uvs = [];
-  const half = entry.radius * 0.43;
+  const half = entry.radius * 0.47;
   const yAxis = new THREE.Vector3(0, 1, 0);
   const xAxis = new THREE.Vector3(1, 0, 0);
 
