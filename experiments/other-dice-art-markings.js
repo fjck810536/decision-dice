@@ -51,25 +51,23 @@ function drawD6Cell(ctx, cell, value) {
   ctx.restore();
 }
 
-function drawD4Cell(ctx, cell, value) {
+function drawD4Glyph(ctx, cell, value) {
   ctx.save();
   ctx.clearRect(0, 0, cell, cell);
   ctx.translate(cell * 0.50, cell * 0.50);
-  ctx.scale(0.96, 1.10);
-  ctx.font = `700 ${Math.round(cell * 0.74)}px Georgia, 'Times New Roman', serif`;
+  ctx.scale(0.94, 1.08);
+  ctx.font = `700 ${Math.round(cell * 0.80)}px Georgia, 'Times New Roman', serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
 
-  // Same shallow engraved illusion as the approved D10/D100 language:
-  // pale lower lip, dark cut edge, then warm-black fill.
   ctx.strokeStyle = CUT_HIGHLIGHT;
-  ctx.lineWidth = Math.max(3, cell * 0.050);
+  ctx.lineWidth = Math.max(3, cell * 0.052);
   ctx.strokeText(String(value), 0, cell * 0.035);
 
   ctx.strokeStyle = INK_EDGE;
-  ctx.lineWidth = Math.max(2, cell * 0.030);
+  ctx.lineWidth = Math.max(2, cell * 0.032);
   ctx.strokeText(String(value), 0, 0);
 
   ctx.fillStyle = INK;
@@ -103,6 +101,36 @@ function makeAtlas(entry, drawCell) {
   texture.generateMipmaps = false;
   texture.needsUpdate = true;
   return { texture, cols, rows };
+}
+
+function makeD4Atlas(entry) {
+  const values = [...new Set(entry.faces.map((face) => face.value))].sort((a, b) => a - b);
+  const cols = 2;
+  const rows = 2;
+  const canvas = document.createElement('canvas');
+  canvas.width = cols * ATLAS_CELL;
+  canvas.height = rows * ATLAS_CELL;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  const valueIndex = new Map();
+
+  values.forEach((value, index) => {
+    valueIndex.set(value, index);
+    const col = index % cols;
+    const row = Math.floor(index / cols);
+    ctx.save();
+    ctx.translate(col * ATLAS_CELL, row * ATLAS_CELL);
+    drawD4Glyph(ctx, ATLAS_CELL, value);
+    ctx.restore();
+  });
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.magFilter = THREE.NearestFilter;
+  texture.minFilter = THREE.NearestFilter;
+  texture.generateMipmaps = false;
+  texture.needsUpdate = true;
+  return { texture, cols, rows, valueIndex };
 }
 
 function supportDistance(geometry, normal) {
@@ -172,10 +200,63 @@ function buildGeometry(entry, cols, rows, halfScale) {
   return geometry;
 }
 
-function makeMarking(entry, drawCell, halfScale) {
-  const { texture, cols, rows } = makeAtlas(entry, drawCell);
-  const geometry = buildGeometry(entry, cols, rows, halfScale);
-  const material = new THREE.MeshBasicMaterial({
+function buildD4VertexGeometry(entry, cols, rows, valueIndex) {
+  const positions = [];
+  const uvs = [];
+  const half = entry.radius * 0.125;
+  const cornerPull = 0.71;
+
+  // Each face value represents the opposite top vertex when that face rests on
+  // the floor. On every other (incident) face, place that value close to the
+  // corresponding vertex. Thus each vertex is surrounded by three identical
+  // numerals: 111 / 222 / 333 / 444.
+  entry.faces.forEach((hostFace, hostIndex) => {
+    const hostNormal = new THREE.Vector3(...hostFace.normal).normalize();
+    const planeCenter = hostNormal.clone().multiplyScalar(
+      supportDistance(entry.visualGeometry, hostNormal),
+    );
+
+    entry.faces.forEach((resultFace, resultIndex) => {
+      if (resultIndex === hostIndex) return;
+
+      // For a centered regular tetrahedron, the vertex opposite resultFace is
+      // exactly opposite that face normal. That vertex lies on hostFace.
+      const vertex = new THREE.Vector3(...resultFace.normal)
+        .normalize()
+        .multiplyScalar(-entry.radius);
+
+      const towardVertex = vertex.clone().sub(planeCenter).normalize();
+      const center = planeCenter.clone().lerp(vertex, cornerPull)
+        .addScaledVector(hostNormal, FACE_OFFSET);
+
+      // Glyph +Y points toward the vertex. When that vertex is on top, all
+      // three copies of its value therefore stand upright toward the tip; the
+      // non-result corner labels naturally look sideways / lying down.
+      const bitangent = towardVertex;
+      const tangent = new THREE.Vector3().crossVectors(bitangent, hostNormal).normalize();
+      const correctedUp = new THREE.Vector3().crossVectors(hostNormal, tangent).normalize();
+
+      pushQuad(
+        positions,
+        uvs,
+        center,
+        tangent,
+        correctedUp,
+        half,
+        cellUv(valueIndex.get(resultFace.value), cols, rows),
+      );
+    });
+  });
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.computeBoundingSphere();
+  return geometry;
+}
+
+function makeMaterial(texture) {
+  return new THREE.MeshBasicMaterial({
     map: texture,
     transparent: true,
     alphaTest: 0.10,
@@ -185,13 +266,24 @@ function makeMarking(entry, drawCell, halfScale) {
     polygonOffsetFactor: -2,
     polygonOffsetUnits: -2,
   });
-  return { texture, geometry, material };
+}
+
+function makeMarking(entry, drawCell, halfScale) {
+  const { texture, cols, rows } = makeAtlas(entry, drawCell);
+  const geometry = buildGeometry(entry, cols, rows, halfScale);
+  return { texture, geometry, material: makeMaterial(texture) };
+}
+
+function makeD4Marking(entry) {
+  const { texture, cols, rows, valueIndex } = makeD4Atlas(entry);
+  const geometry = buildD4VertexGeometry(entry, cols, rows, valueIndex);
+  return { texture, geometry, material: makeMaterial(texture) };
 }
 
 export class OtherDiceArtMarkingFactory {
   constructor() {
     // D10/D100 remain frozen in their approved experiment. D6 is approved;
-    // D4 is the current art pass. D8/D20 still delegate to production.
+    // D4 now uses traditional vertex-read triples. D8/D20 still production.
     this.locked = new LockedD10D100Factory();
     this.d6Cache = null;
     this.d4Cache = null;
@@ -206,7 +298,7 @@ export class OtherDiceArtMarkingFactory {
     }
 
     if (record.entry.key === 'd4') {
-      if (!this.d4Cache) this.d4Cache = makeMarking(record.entry, drawD4Cell, 0.34);
+      if (!this.d4Cache) this.d4Cache = makeD4Marking(record.entry);
       const mesh = new THREE.Mesh(this.d4Cache.geometry, this.d4Cache.material);
       mesh.renderOrder = 2;
       return mesh;
