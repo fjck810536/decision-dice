@@ -4,33 +4,33 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b0d0a">
-  <title>PS1 Renderer v2｜擲骰與選擇障礙輔助裝置</title>
+  <title>PS1 Renderer v2.1｜擲骰與選擇障礙輔助裝置</title>
   <link rel="stylesheet" href="./ps1-renderer-lab.css">
 </head>
 <body>
   <main class="lab-shell">
     <header class="lab-head">
       <div>
-        <span>M6.2A / CONVERGED V2</span>
-        <h1>PS1<br>RENDER V2</h1>
+        <span>M6.2A / CONVERGED V2.1</span>
+        <h1>PS1<br>RENDER V2.1</h1>
       </div>
       <p>固定候選：Perspective / 360px / 12fps / Flat / LOW Wobble / LOW Fog / REAL 128 Shadow / Cutting Mat A / Pop OFF</p>
     </header>
 
-    <section class="lab-stage" id="lab-stage" aria-label="PS1 renderer v2 收斂預覽">
+    <section class="lab-stage" id="lab-stage" aria-label="PS1 renderer v2.1 收斂預覽">
       <canvas id="lab-canvas"></canvas>
-      <div class="lab-stage-tag">ORDERED+ CANDIDATE</div>
+      <div class="lab-stage-tag">ORDERED+ v2.1 CANDIDATE</div>
       <div class="lab-status" id="lab-status">READY</div>
     </section>
 
     <section class="lab-readout" aria-live="polite">
-      <span id="lab-config">ORDERED+ / REAL 128 / MAT A / POP OFF</span>
+      <span id="lab-config">ORDERED+ v2.1 / REAL 128 / MAT A / POP OFF</span>
       <strong id="lab-result">—</strong>
     </section>
 
     <button type="button" class="lab-roll" id="lab-roll">ROLL</button>
 
-    <section class="lab-controls" aria-label="v2 收斂比較控制">
+    <section class="lab-controls" aria-label="v2.1 收斂比較控制">
       <div class="control-group" data-control="die">
         <span>DICE SAMPLE</span>
         <div class="segmented">
@@ -45,18 +45,18 @@
         <span>ORDERED TONE / SAME DOT MATRIX</span>
         <div class="segmented">
           <button type="button" data-value="base">ORDERED BASE</button>
-          <button type="button" data-value="plus" class="active">ORDERED+</button>
+          <button type="button" data-value="plus" class="active">ORDERED+ v2.1</button>
         </div>
       </div>
     </section>
 
     <footer>
-      <span>V2 CANDIDATE / NOT DICE ART YET</span>
-      <small>ORDERED+ 保留原本 ORDERED 的點陣結構，只測較強的暖主光／灰綠環境光色差。骰面雕刻、字體、倒角與材質細修留到 M6.2B。</small>
+      <span>V2.1 CANDIDATE / NOT DICE ART YET</span>
+      <small>v2.1 保留 ORDERED 的 4×4 點陣，只留下很輕的暖主光／冷中性環境光色差；上一版太黃、太重，已退回。骰面雕刻、字體、倒角與材質細修留到 M6.2B。</small>
     </footer>
   </main>
 
-  <div class="orientation-block">Renderer v2 目前僅支援直向使用</div>
+  <div class="orientation-block">Renderer v2.1 目前僅支援直向使用</div>
   <script type="module" src="./ps1-renderer-v2.js"></script>
 </body>
 </html>
