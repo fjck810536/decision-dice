@@ -114,6 +114,7 @@
   display: block;
   width: max-content;
   max-width: 100%;
+  margin-left: auto !important;
   margin-right: auto !important;
   text-align: center;
   transform-origin: center center;
@@ -121,17 +122,14 @@
 
 /* Restore the original asymmetrical three-line rhythm, but around one optical centre. */
 .home-p2-logo .title-line-a {
-  margin-left: auto !important;
+  transform: translateX(0) !important;
 }
 
 .home-p2-logo .title-line-b {
-  margin-left: calc(auto + 0px) !important;
   transform: translateX(.15em) !important;
-  margin-right: auto !important;
 }
 
 .home-p2-logo .title-line-c {
-  margin-left: auto !important;
   transform: translateX(-.09em) !important;
 }
 
