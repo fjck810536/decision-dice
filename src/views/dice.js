@@ -19,6 +19,13 @@ function physicalCountForCounts(counts) {
   );
 }
 
+function stageProgress(progress) {
+  if (String(progress.phase).startsWith('FEEDING')) {
+    return `ROLL / ${progress.spawned} OF ${progress.physicalCount}`;
+  }
+  return `SETTLE / ${progress.frozen} OF ${progress.physicalCount}`;
+}
+
 function renderHistory(history) {
   const entries = history.filter((entry) => entry.kind === 'dice');
   if (!entries.length) return '<p class="history-empty">本次 session 尚無骰子紀錄。</p>';
@@ -80,7 +87,7 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
       <div class="die-counter" data-type="${type}">
         <div class="die-counter-label">
           <strong>${typeLabel(type)}</strong>
-          <span>${type === 'd100' ? '2 physical dice' : '1 physical die'}</span>
+          <span>${type === 'd100' ? 'PERCENTILE / 2 BODY' : 'PHYSICAL DIE / 1 BODY'}</span>
         </div>
         <div class="stepper">
           <button type="button" data-action="minus" aria-label="減少 ${typeLabel(type)}">−</button>
@@ -95,27 +102,27 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
 
     container.innerHTML = `
       <header class="mode-header">
-        <div><span class="eyebrow">MODE 01</span><h1>骰子</h1></div>
+        <div><span class="eyebrow">MODE 01 / DICE</span><h1>骰子</h1></div>
         <div class="mode-actions">
-          <button type="button" class="text-button" id="switch-choice">選擇</button>
+          <button type="button" class="text-button" id="switch-choice">切換至選擇</button>
           <button type="button" class="text-button danger" id="leave-mode">清除並離開</button>
         </div>
       </header>
 
       <section class="function-panel">
-        <p class="section-code">DICE POOL SETUP</p>
+        <p class="section-code">DICE POOL</p>
         <div class="die-counter-list" id="die-counter-list">${rows}</div>
         <div class="pool-meter">
-          <span>LOGICAL ${logicalCount}</span>
-          <span>PHYSICAL ${physicalCount} / ${PHYSICAL_LIMIT}</span>
+          <span>DICE ${logicalCount}</span>
+          <span>BODY ${physicalCount} / ${PHYSICAL_LIMIT}</span>
         </div>
-        <p class="microcopy">D100 會以兩顆 D10 組成。單次正式測試上限為 50 個物理骰體。</p>
+        <p class="microcopy">D100 由兩顆 D10 組成。單次最多 50 個物理骰體。</p>
       </section>
 
-      <button type="button" class="primary-action" id="confirm-pool" ${physicalCount === 0 ? 'disabled' : ''}>CONFIRM / 確認骰池</button>
+      <button type="button" class="primary-action" id="confirm-pool" ${physicalCount === 0 ? 'disabled' : ''}>確認骰池 / ARM</button>
 
       <section class="history-block">
-        <p class="section-code">DICE HISTORY / ${diceHistory.length} OF 20</p>
+        <p class="section-code">HISTORY / ${diceHistory.length} OF 20</p>
         ${renderHistory(state.history)}
       </section>
     `;
@@ -152,20 +159,20 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
       <header class="mode-header">
         <div><span class="eyebrow">MODE 01 / ARMED</span><h1>骰子</h1></div>
         <div class="mode-actions">
-          <button type="button" class="text-button" id="switch-choice">選擇</button>
-          <button type="button" class="text-button" id="back-setup">返回設定</button>
+          <button type="button" class="text-button" id="switch-choice">切換至選擇</button>
+          <button type="button" class="text-button" id="back-setup">修改骰池</button>
         </div>
       </header>
 
       <section class="roll-summary">
-        <span>POOL</span><strong>${poolText(pool)}</strong><small>${physicalCount} PHYSICAL BODIES</small>
+        <span>POOL</span><strong>${poolText(pool)}</strong><small>${physicalCount} PHYSICAL BODY</small>
       </section>
 
       <section class="dice-stage" id="dice-stage" aria-label="3D 骰子物理舞台">
         <canvas id="dice-canvas"></canvas>
         <div class="dither-layer" aria-hidden="true"></div>
-        <div class="stage-hopper" aria-hidden="true">DICE IN</div>
-        <div class="stage-badge" id="stage-badge">READY / ${physicalCount} BODIES</div>
+        <div class="stage-hopper" aria-hidden="true">PHYSICAL DICE</div>
+        <div class="stage-badge" id="stage-badge">READY / ${physicalCount} BODY</div>
       </section>
 
       <button type="button" class="primary-action roll-action" id="roll-button">ROLL</button>
@@ -201,11 +208,11 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
         const result = await engine.roll({
           pool,
           onProgress(progress) {
-            badge.textContent = `${progress.phase} / IN ${progress.spawned}/${progress.physicalCount} / FIX ${progress.frozen}`;
+            badge.textContent = stageProgress(progress);
           },
         });
 
-        badge.textContent = 'DONE / PHYSICAL POSE RESOLVED';
+        badge.textContent = 'LOCKED / FACE RESOLVED';
         state.pushHistory({
           kind: 'dice',
           pool: pool.map((item) => ({ ...item })),
@@ -217,10 +224,10 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
         rollButton.hidden = true;
         await playResultSequence({
           target: resultRegion,
-          title: 'DICE RESULT / SEQUENCE',
+          title: 'ROLL RESULT',
           holdMs: result.dice.length > 6 ? 220 : 340,
           steps: [
-            { label: 'PHYSICAL POSE', value: 'RESOLVED' },
+            { label: 'STATUS', value: 'LOCKED' },
             { label: 'DICE', value: compactDiceValues(result) },
             { label: 'TOTAL', value: result.total, tone: 'final' },
           ],
@@ -228,11 +235,11 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
 
         resultRegion.innerHTML = `
           <section class="result-panel">
-            <p class="section-code">ROLL RESULT / PHYSICAL FACE RESOLUTION</p>
+            <p class="section-code">DETAIL / FINAL FACE</p>
             <div class="result-dice-list">${resultRows(result)}</div>
             <div class="total-line"><span>TOTAL</span><strong>${result.total}</strong></div>
-            <p class="microcopy">結果在所有骰體停止／hard finalize 後就已成立；這裡的逐步揭露只負責呈現，不會改變結果。</p>
-            <button type="button" class="secondary-action" id="result-back">返回設定</button>
+            <p class="microcopy">最終值只由落定後的實體骰面讀取。</p>
+            <button type="button" class="secondary-action" id="result-back">返回骰池</button>
           </section>`;
         resultRegion.querySelector('#result-back').addEventListener('click', () => {
           rolling = false;
