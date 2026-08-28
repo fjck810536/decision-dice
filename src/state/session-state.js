@@ -1,9 +1,12 @@
-import { PUBLIC_DIE_TYPES } from '../dice/geometry-registry.js';
+import { PUBLIC_DIE_TYPES } from '../dice/public-types.js';
 
 export class SessionState {
   constructor() {
     this.mode = 'home';
     this.diceCounts = Object.fromEntries(PUBLIC_DIE_TYPES.map((type) => [type, type === 'd6' ? 1 : 0]));
+    this.choiceCount = 3;
+    this.choiceLabels = {};
+    this.choiceMethodOverride = null;
     this.history = [];
   }
 
@@ -25,6 +28,30 @@ export class SessionState {
   clearDiceMode() {
     Object.keys(this.diceCounts).forEach((type) => { this.diceCounts[type] = 0; });
     this.diceCounts.d6 = 1;
+  }
+
+  setChoiceCount(count) {
+    const next = Math.max(2, Math.floor(Number(count) || 2));
+    this.choiceCount = next;
+  }
+
+  setChoiceLabel(index, label) {
+    const key = String(Math.max(1, Math.floor(Number(index) || 1)));
+    this.choiceLabels[key] = String(label ?? '');
+  }
+
+  getChoiceLabel(index) {
+    return this.choiceLabels[String(index)] ?? '';
+  }
+
+  setChoiceMethodOverride(method) {
+    this.choiceMethodOverride = method === 'dice' || method === 'slot' ? method : null;
+  }
+
+  clearChoiceMode() {
+    this.choiceCount = 3;
+    this.choiceLabels = {};
+    this.choiceMethodOverride = null;
   }
 
   pushHistory(entry) {
