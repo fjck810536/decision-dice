@@ -1,37 +1,44 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js';
 import { D10D100ArtMarkingFactory as LockedTensV7Factory } from './d10-d100-art-markings.js';
 
-const ONES_ATLAS_CELL = 64;
+const ONES_ATLAS_CELL = 96;
 const FACE_OFFSET = 0.012;
 const MARK_COLOR = '#20231c';
 
-function drawOnesCell(ctx, cell, value) {
+function displaySingleValue(entry, face) {
+  // Single D10 is physically labelled 0–9 while the logical face value 10
+  // still resolves as 10 in the engine. D100 ones already stores 0–9.
+  if (entry.key === 'd10' && face.value === 10) return '0';
+  return String(face.value);
+}
+
+function drawSingleCell(ctx, cell, label) {
   ctx.save();
   ctx.clearRect(0, 0, cell, cell);
   ctx.fillStyle = MARK_COLOR;
 
-  // Match the production d10-digit typography exactly; this experiment only
-  // changes how large that marking sits on the physical face.
-  const fontSize = Math.round(cell * 0.50);
+  // v9: intentionally huge single-digit markings. Keep the existing mono,
+  // high-weight production character rather than introducing a new style.
+  const fontSize = Math.round(cell * 0.74);
   ctx.font = `900 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(String(value), cell / 2, cell / 2 + cell * 0.02);
+  ctx.fillText(label, cell / 2, cell / 2 + cell * 0.025);
 
-  if (value === 6 || value === 9) {
-    const width = cell * 0.20;
+  if (label === '6' || label === '9') {
+    const width = cell * 0.34;
     ctx.fillRect(
       cell / 2 - width / 2,
-      cell * 0.75,
+      cell * 0.82,
       width,
-      Math.max(2, cell * 0.035),
+      Math.max(4, cell * 0.052),
     );
   }
 
   ctx.restore();
 }
 
-function makeOnesAtlas(entry) {
+function makeSingleAtlas(entry) {
   const count = entry.faces.length;
   const cols = Math.ceil(Math.sqrt(count));
   const rows = Math.ceil(count / cols);
@@ -46,7 +53,7 @@ function makeOnesAtlas(entry) {
     const row = Math.floor(i / cols);
     ctx.save();
     ctx.translate(col * ONES_ATLAS_CELL, row * ONES_ATLAS_CELL);
-    drawOnesCell(ctx, ONES_ATLAS_CELL, face.value);
+    drawSingleCell(ctx, ONES_ATLAS_CELL, displaySingleValue(entry, face));
     ctx.restore();
   });
 
@@ -100,14 +107,13 @@ function pushQuad(positions, uvs, center, tangent, bitangent, half, uv) {
   }
 }
 
-function buildOnesGeometry(entry, cols, rows) {
+function buildSingleGeometry(entry, cols, rows) {
   const positions = [];
   const uvs = [];
 
-  // Production d10-digit uses radius * .235. v8 intentionally makes the
-  // single-digit marking dramatically larger without changing orientation,
-  // font, underline rules, or face semantics.
-  const half = entry.radius * 0.36;
+  // Production is about .235–.245 radius. v8 tried .36 and was still barely
+  // visible on iPhone. v9 deliberately jumps to .48 for a face-filling look.
+  const half = entry.radius * 0.48;
 
   entry.faces.forEach((face, index) => {
     const normal = new THREE.Vector3(...face.normal).normalize();
@@ -129,50 +135,59 @@ function buildOnesGeometry(entry, cols, rows) {
   return geometry;
 }
 
+function makeSingleMarking(entry) {
+  const { texture, cols, rows } = makeSingleAtlas(entry);
+  const geometry = buildSingleGeometry(entry, cols, rows);
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    alphaTest: 0.12,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2,
+  });
+  return { texture, geometry, material };
+}
+
 export class D10D100ArtMarkingFactory {
   constructor() {
-    // This delegate freezes all v7 behavior, especially the approved D100 tens
-    // die. v8 only intercepts the D100 ones component.
+    // Frozen delegate: D100 tens remains exactly the approved v7 art.
     this.lockedV7 = new LockedTensV7Factory();
-    this.onesCache = null;
+    this.singleCaches = new Map();
   }
 
   getMesh(record) {
+    const isSingleD10 = record.entry.key === 'd10';
     const isD100Ones = record.entry.key === 'd10-digit' && record.componentRole === 'ones';
 
-    if (!isD100Ones) {
-      // Locked v7 tens and production single-D10 behavior pass through intact.
+    if (!isSingleD10 && !isD100Ones) {
+      // In particular, D100 tens always goes through the locked v7 factory.
       return this.lockedV7.getMesh(record);
     }
 
-    if (!this.onesCache) {
-      const { texture, cols, rows } = makeOnesAtlas(record.entry);
-      const geometry = buildOnesGeometry(record.entry, cols, rows);
-      const material = new THREE.MeshBasicMaterial({
-        map: texture,
-        transparent: true,
-        alphaTest: 0.12,
-        side: THREE.DoubleSide,
-        depthWrite: false,
-        polygonOffset: true,
-        polygonOffsetFactor: -2,
-        polygonOffsetUnits: -2,
-      });
-      this.onesCache = { texture, geometry, material };
+    // d10 and d10-digit use the same physical geometry but different face
+    // values/labels, so keep separate atlases and caches.
+    const cacheKey = isSingleD10 ? 'd10' : 'd100-ones';
+    let cached = this.singleCaches.get(cacheKey);
+    if (!cached) {
+      cached = makeSingleMarking(record.entry);
+      this.singleCaches.set(cacheKey, cached);
     }
 
-    const mesh = new THREE.Mesh(this.onesCache.geometry, this.onesCache.material);
+    const mesh = new THREE.Mesh(cached.geometry, cached.material);
     mesh.renderOrder = 2;
     return mesh;
   }
 
   dispose() {
     this.lockedV7.dispose();
-    if (this.onesCache) {
-      this.onesCache.texture.dispose();
-      this.onesCache.geometry.dispose();
-      this.onesCache.material.dispose();
-      this.onesCache = null;
+    for (const cached of this.singleCaches.values()) {
+      cached.texture.dispose();
+      cached.geometry.dispose();
+      cached.material.dispose();
     }
+    this.singleCaches.clear();
   }
 }
