@@ -252,7 +252,9 @@
 }
 
 /* Cached three-angle turntable. Deliberately choppy: three hard poses, no
-   interpolation and no live renderer. */
+   interpolation and no live renderer.
+   Important: do NOT use backwards fill-mode here. Setup re-renders after +/-;
+   backwards would expose the 0% keyframe of delayed frames and stack all poses. */
 .die-preview-slot.is-turntable {
   position: relative;
 }
@@ -261,7 +263,7 @@
   position: absolute;
   inset: 0;
   opacity: 0;
-  animation: dice-preview-turntable 1.8s steps(1, end) infinite backwards;
+  animation: dice-preview-turntable 1.8s steps(1, end) infinite;
 }
 
 .die-preview-slot.is-turntable .die-preview-frame-0 { animation-delay: 0s; }
