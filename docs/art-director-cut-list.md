@@ -44,9 +44,9 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [x] Make the parent instrument enter explicit RESULT / REJECTION states while preserving existing settlement sequencing and data.
 - [x] Dim the physical chamber / reel underneath rather than visually stacking another unrelated card above it.
 - [x] Make Dice TOTAL and Choice final index / label occupy the square instrument aperture itself.
-- [x] Keep Details available as small chassis hardware at the stage edge.
 - [x] Preserve rejection visibility and give it a temporary fault-state treatment instead of a separate modal design.
-- [ ] iPhone acceptance: confirm the result now feels like the instrument changing state rather than a card appearing on top.
+- [x] Pin `查看詳細資料` to a fixed bottom-right chassis position so variable result height cannot move the control.
+- [ ] iPhone acceptance: confirm the result now feels like the instrument changing state and the fixed Details key does not collide with result copy.
 
 ## System chassis
 
@@ -64,9 +64,13 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [x] Visually remove repeated Dice `LOADED / STANDBY`, rack `LOADED / EMPTY`, duplicated LOGICAL count, and repeated D100 explanatory paragraph.
 - [x] Preserve die descriptions and the 3D specimen-window hierarchy requested during review.
 - [x] Choice Setup reduces to count → ARM, with version/help copy removed from the primary surface.
-- [x] Choice ARMED reduces the pre-stage stack to compact summary → DICE/SLOT strip → optional-name strip → instrument.
+- [x] Remove the Choice ARMED summary / method-card stack from above the instrument.
+- [x] Embed `OPTIONS` as a compact numeric readout in the active Choice instrument itself.
+- [x] Replace DICE / SLOT tabs with one physical left-right `骰子 / 滾輪` switch mounted inside the instrument.
+- [x] Preserve method recommendation only as a tiny indicator light instead of another text label.
+- [x] Rebuild the optional naming control as a larger physical drawer with a visible pull handle and recessed tray.
 - [x] History remains available but is visually subordinate and height-limited so it cannot dominate setup.
-- [ ] iPhone acceptance: decide whether this subtraction is enough or whether the next pass should delete redundant DOM rather than only hide/flatten it.
+- [ ] iPhone acceptance: judge switch size, drawer physicality, OPTIONS placement, and whether a second DOM-deletion cleanup is still useful.
 
 ## Remaining cuts / cleanup
 
