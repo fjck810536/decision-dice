@@ -48,7 +48,7 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [x] Preserve rejection visibility and give it a temporary fault-state treatment instead of a separate modal design.
 - [ ] iPhone acceptance: confirm the result now feels like the instrument changing state rather than a card appearing on top.
 
-## Current cut: system chassis
+## System chassis
 
 - [x] Mount HOME / MUTE / SET on one shared fixed service rail instead of presenting three unrelated web buttons.
 - [x] Reuse hard planes, chamfer logic, standing shadow and physical press travel from the mature control-deck language.
@@ -56,6 +56,17 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [x] Turn Settings into a service hatch using the same chassis material rather than a generic floating popover.
 - [x] Preserve current system-control behavior, 44px+ touch targets, audio state, clear-mode behavior and reset-session behavior.
 - [ ] iPhone acceptance: confirm the fixed controls now feel bolted to the device rather than overlaid by the website.
+
+## Current cut: Dice / Choice interface cleanup
+
+- [x] Add a final subtraction pass after the art-direction layers instead of inventing another decorative system.
+- [x] Dice Setup keeps only die identity / description / 3D specimen / count / BODY constraint as primary information.
+- [x] Visually remove repeated Dice `LOADED / STANDBY`, rack `LOADED / EMPTY`, duplicated LOGICAL count, and repeated D100 explanatory paragraph.
+- [x] Preserve die descriptions and the 3D specimen-window hierarchy requested during review.
+- [x] Choice Setup reduces to count → ARM, with version/help copy removed from the primary surface.
+- [x] Choice ARMED reduces the pre-stage stack to compact summary → DICE/SLOT strip → optional-name strip → instrument.
+- [x] History remains available but is visually subordinate and height-limited so it cannot dominate setup.
+- [ ] iPhone acceptance: decide whether this subtraction is enough or whether the next pass should delete redundant DOM rather than only hide/flatten it.
 
 ## Remaining cuts / cleanup
 
@@ -72,7 +83,7 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [ ] Review two-column specimen-window spacing on iPhone.
 - [ ] Check whether the low-frame turntable feels intentional rather than merely flickery.
 - [ ] Remove dead flat-relief CSS after the 3D specimen-window language is accepted.
-- [ ] Reassess rack-level microcopy only after the object hierarchy is visually accepted.
+- [ ] If the interface-cleanup pass is accepted, remove now-hidden redundant status markup and dead selectors instead of leaving them as permanent overrides.
 
 ### 3. HOME asset cleanup
 
