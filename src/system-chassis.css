@@ -1,0 +1,244 @@
+/* SYSTEM CHASSIS — Art Director Pass
+   HOME / MUTE / SET are fixed service controls bolted to the same machine.
+   Interaction semantics and 44px+ touch targets remain unchanged. */
+
+.system-dock {
+  position: fixed;
+  top: max(8px, env(safe-area-inset-top));
+  right: max(8px, env(safe-area-inset-right));
+  display: flex;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid #555c4d;
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, #4b5143 0 3px, #25291f 3px 7px, #11130f 7px 100%);
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+  box-shadow:
+    inset 1px 1px 0 rgba(235,229,213,.08),
+    inset -2px -3px 0 rgba(0,0,0,.34),
+    0 4px 0 #050605;
+  pointer-events: auto;
+}
+
+.system-dock::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  top: 2px;
+  height: 1px;
+  background: rgba(211,220,130,.22);
+  pointer-events: none;
+}
+
+.system-dock-button {
+  position: relative;
+  min-width: 48px;
+  min-height: 44px;
+  padding: 7px 8px;
+  border: 1px solid #444a3e;
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(236,231,209,.07) 0 4px, transparent 4px),
+    linear-gradient(180deg, #30352a 0 6px, #1c2018 6px calc(100% - 6px), #0e100c calc(100% - 6px));
+  color: #c7c5b7;
+  font: 800 8px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: .10em;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+  box-shadow:
+    inset 1px 1px 0 rgba(238,233,211,.055),
+    inset -2px -3px 0 rgba(0,0,0,.34),
+    0 2px 0 #070806;
+  touch-action: manipulation;
+}
+
+.system-dock-button:not(:disabled):active {
+  transform: translate(1px, 2px);
+  background: #171a14;
+  box-shadow: inset 2px 3px 0 rgba(0,0,0,.32);
+}
+
+#global-home:not([hidden]) {
+  border-color: #747b63;
+  color: var(--acid);
+  background:
+    linear-gradient(90deg, rgba(211,220,130,.12) 0 3px, transparent 3px),
+    linear-gradient(180deg, #353b2e 0 6px, #20241b 6px calc(100% - 6px), #0f110d calc(100% - 6px));
+}
+
+#global-mute.is-muted {
+  border-color: #7b4d42;
+  color: #d18a76;
+  background:
+    linear-gradient(90deg, rgba(152,83,67,.16) 0 3px, transparent 3px),
+    linear-gradient(180deg, #3a2d27 0 6px, #241914 6px calc(100% - 6px), #100d0b calc(100% - 6px));
+}
+
+#global-settings {
+  color: #aaa99b;
+}
+
+/* SETTINGS = service hatch, not a floating web popover. */
+.system-settings {
+  position: fixed;
+  top: calc(max(8px, env(safe-area-inset-top)) + 58px);
+  right: max(8px, env(safe-area-inset-right));
+  width: min(326px, calc(100vw - 16px));
+  padding: 11px;
+  border: 1px solid #676e5c;
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(235,229,213,.045) 0 4px, transparent 4px),
+    repeating-linear-gradient(0deg, transparent 0 4px, rgba(255,255,255,.012) 4px 5px),
+    #0c0e0b;
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 5px);
+  box-shadow:
+    inset 3px 0 0 rgba(211,220,130,.035),
+    inset -3px -4px 0 rgba(0,0,0,.34),
+    0 7px 0 #050605,
+    0 18px 42px rgba(0,0,0,.48);
+  pointer-events: auto;
+}
+
+.system-settings::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 18px;
+  height: 3px;
+  border-top: 1px solid #777e69;
+  border-bottom: 1px solid #2e332a;
+  pointer-events: none;
+}
+
+.system-settings-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 9px;
+  padding: 2px 0 9px;
+  border-bottom: 1px solid #343a30;
+}
+
+.system-settings-head strong {
+  margin-top: 3px;
+  color: #e8e2d2;
+  font-family: "Songti TC", "Noto Serif TC", PMingLiU, serif;
+  font-size: 27px;
+  line-height: 1;
+  text-shadow: 2px 0 0 rgba(152,83,67,.26);
+}
+
+.system-settings-head #settings-close {
+  min-width: 44px;
+  width: 44px;
+  padding: 0;
+  font-size: 18px;
+}
+
+.system-code {
+  color: var(--acid);
+  font-size: 7px;
+  letter-spacing: .18em;
+}
+
+.system-setting-row {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+  padding: 9px 10px;
+  border: 1px solid #3e4439;
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(236,231,209,.035) 0 3px, transparent 3px),
+    #11130f;
+  color: #c8c5b6;
+  text-align: left;
+  box-shadow: inset -2px -2px 0 rgba(0,0,0,.24);
+}
+
+.system-setting-row:not(:disabled):active {
+  transform: translate(1px, 2px);
+  background: #1a1d17;
+  box-shadow: inset 2px 3px 0 rgba(0,0,0,.28);
+}
+
+.system-setting-row strong {
+  color: var(--acid);
+  font-size: 8px;
+  letter-spacing: .05em;
+  text-align: right;
+}
+
+.system-setting-row.danger {
+  margin-top: 10px;
+  border-color: #67463d;
+  background:
+    linear-gradient(90deg, rgba(152,83,67,.07), transparent 52%),
+    #15110f;
+  color: #d09a88;
+}
+
+.system-setting-row.danger strong {
+  color: #bd7c69;
+}
+
+.system-setting-note {
+  margin: 5px 3px 8px;
+  color: #73796a;
+  font-size: 7px;
+  line-height: 1.5;
+}
+
+/* Confirmation dialog remains modal by necessity, but uses the same service hardware. */
+.system-modal {
+  border: 1px solid #676e5c;
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(235,229,213,.04) 0 4px, transparent 4px),
+    #0d0f0b;
+  color: #e7e2d3;
+  box-shadow:
+    inset 3px 0 rgba(211,220,130,.035),
+    0 7px 0 #050605,
+    0 18px 50px rgba(0,0,0,.55);
+}
+
+.system-option {
+  min-height: 46px;
+  border-color: #444a3e;
+  background: #141711;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,.28);
+}
+
+.system-option:not(:disabled):active {
+  transform: translateY(2px);
+  background: #1b1f17;
+  box-shadow: inset 0 2px 0 rgba(0,0,0,.30);
+}
+
+@media (max-width: 380px) {
+  .system-dock {
+    right: max(6px, env(safe-area-inset-right));
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .system-dock-button {
+    min-width: 45px;
+    padding-inline: 6px;
+    font-size: 7px;
+  }
+
+  .system-settings {
+    right: 6px;
+    width: calc(100vw - 12px);
+  }
+}
