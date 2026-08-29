@@ -16,6 +16,10 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [x] Replace Dice Setup flat relief icons with the same 3D dice sprites.
 - [x] HOME / Setup previews render once at tiny resolution, cache to images, then release the WebGL context.
 - [x] Keep HOME independent from DiceEngine / physics.
+- [x] Recompose Dice Setup modules as `name + description → 3D specimen window → − count +`.
+- [x] Give Setup previews a deliberately low-frame three-angle turntable using cached sprites, not live WebGL.
+- [x] Keep die descriptions visible as product nameplates instead of removing them for minimalism.
+- [x] Give D100 a larger full-width two-body specimen window.
 
 ## Next cuts
 
@@ -43,12 +47,12 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [ ] Make HOME / MUTE / SET feel like fixed chassis hardware rather than a separate web overlay system.
 - [ ] Preserve touch targets and current settings behavior.
 
-### 5. Dice Setup second pass
+### 5. Dice Setup acceptance / cleanup
 
-- [ ] Review rack spacing after 3D preview replacement.
-- [ ] Decide whether D100 pair needs a stronger two-body visual cue.
-- [ ] Remove dead flat-relief CSS after the new 3D preview language is accepted.
-- [ ] Reassess microcopy / rack labels so the 3D objects stay dominant.
+- [ ] Review two-column specimen-window spacing on iPhone after this pass.
+- [ ] Check whether the low-frame turntable feels intentional rather than merely flickery.
+- [ ] Remove dead flat-relief CSS after the new 3D specimen-window language is accepted.
+- [ ] Reassess rack-level microcopy only after the object hierarchy is visually accepted.
 
 ### 6. HOME asset cleanup
 
