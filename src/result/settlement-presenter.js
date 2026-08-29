@@ -21,6 +21,17 @@ function wait(ms) {
   });
 }
 
+function stageFor(host) {
+  return host?.closest?.('.dice-stage, .slot-stage') ?? null;
+}
+
+function setStageSettlementState(host, state = null) {
+  const stage = stageFor(host);
+  if (!stage) return;
+  stage.classList.remove('is-result-state', 'is-rejection-state');
+  if (state) stage.classList.add(state);
+}
+
 export function escapeSettlementHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -73,6 +84,7 @@ export async function playDiceSettlement({
 } = {}) {
   if (!host) return;
   const { subtotal, modifier, total } = subtotalValues(result);
+  setStageSettlementState(host, 'is-result-state');
   host.hidden = false;
   host.className = 'settlement-overlay settlement-overlay--dice is-active';
   host.innerHTML = `
@@ -90,8 +102,6 @@ export async function playDiceSettlement({
       <button type="button" class="settlement-details" hidden>查看詳細資料</button>
     </div>`;
 
-  // Grouped raw dice are the first thing the player reads after motion stops,
-  // so let this first beat breathe slightly longer than the later beats.
   await wait(firstHoldMs);
 
   const individual = host.querySelector('.settlement-phase--individual');
@@ -119,6 +129,7 @@ export async function playDiceSettlement({
 
 export async function playChoiceSettlement({ host, mappedIndex, label, onDetails = null, holdMs = 390 } = {}) {
   if (!host) return;
+  setStageSettlementState(host, 'is-result-state');
   host.hidden = false;
   host.className = 'settlement-overlay settlement-overlay--choice is-active';
   host.innerHTML = `
@@ -144,6 +155,7 @@ export async function playChoiceSettlement({ host, mappedIndex, label, onDetails
 
 export async function playRejectionSettlement({ host, dieType, raw, holdMs = 300 } = {}) {
   if (!host) return;
+  setStageSettlementState(host, 'is-rejection-state');
   host.hidden = false;
   host.className = 'settlement-overlay settlement-overlay--rejection is-active';
   host.innerHTML = `
@@ -155,6 +167,7 @@ export async function playRejectionSettlement({ host, dieType, raw, holdMs = 300
   await wait(holdMs * 2);
   host.hidden = true;
   host.innerHTML = '';
+  setStageSettlementState(host, null);
 }
 
 export function clearSettlement(host) {
@@ -162,6 +175,7 @@ export function clearSettlement(host) {
   host.hidden = true;
   host.className = 'settlement-overlay';
   host.innerHTML = '';
+  setStageSettlementState(host, null);
 }
 
 export function openDetailsSheet({ title = '詳細資料', html = '' } = {}) {
