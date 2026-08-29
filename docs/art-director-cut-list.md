@@ -20,6 +20,7 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [x] Give Setup previews a deliberately low-frame three-angle turntable using cached sprites, not live WebGL.
 - [x] Keep die descriptions visible as product nameplates instead of removing them for minimalism.
 - [x] Give D100 a larger full-width two-body specimen window.
+- [x] Fix turntable frame overlap and keep +/- updates local so preview animations are not rebuilt on every count change.
 
 ## Next cuts
 
@@ -47,14 +48,21 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [ ] Make HOME / MUTE / SET feel like fixed chassis hardware rather than a separate web overlay system.
 - [ ] Preserve touch targets and current settings behavior.
 
-### 5. Dice Setup acceptance / cleanup
+### 5. Loading / transition sprite animation
+
+- [ ] Bake an 8–12 frame low-resolution dice rotation sprite sheet into the repo for true boot loading.
+- [ ] Play it with CSS `steps()` / frame positioning so it is available before Three.js or WebGL initializes.
+- [ ] Reuse cached runtime preview frames only for post-boot transitions where the sprite cache already exists.
+- [ ] Keep the animation deliberately low-frame and object-focused; no generic spinner or progress-ring styling.
+
+### 6. Dice Setup acceptance / cleanup
 
 - [ ] Review two-column specimen-window spacing on iPhone after this pass.
 - [ ] Check whether the low-frame turntable feels intentional rather than merely flickery.
 - [ ] Remove dead flat-relief CSS after the new 3D specimen-window language is accepted.
 - [ ] Reassess rack-level microcopy only after the object hierarchy is visually accepted.
 
-### 6. HOME asset cleanup
+### 7. HOME asset cleanup
 
 - [ ] Remove obsolete P1 / P2 experimental HOME CSS files only after the current Art Director HOME pass is accepted and no rollback is needed.
 - [ ] Retire the failed html2canvas render probe from the product path; keep only if useful as an archived experiment.
