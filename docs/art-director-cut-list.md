@@ -38,7 +38,7 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [x] Avoid adding decorative HUD labels; the hardware form itself must carry the late-1990s machine character.
 - [ ] iPhone acceptance: confirm the two HOME entrance keys finally feel like enlarged controls from the same machine rather than separate retro tiles.
 
-## Current cut: Settlement stage takeover
+## Settlement stage takeover
 
 - [x] Remove the generic floating-card reading from Dice / Choice settlement.
 - [x] Make the parent instrument enter explicit RESULT / REJECTION states while preserving existing settlement sequencing and data.
@@ -48,29 +48,33 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [x] Preserve rejection visibility and give it a temporary fault-state treatment instead of a separate modal design.
 - [ ] iPhone acceptance: confirm the result now feels like the instrument changing state rather than a card appearing on top.
 
-## Next cuts
+## Current cut: system chassis
 
-### 1. Unify system controls
+- [x] Mount HOME / MUTE / SET on one shared fixed service rail instead of presenting three unrelated web buttons.
+- [x] Reuse hard planes, chamfer logic, standing shadow and physical press travel from the mature control-deck language.
+- [x] Keep HOME as an acid-biased navigation control; keep MUTE neutral until muted, then shift it to the rust fault family.
+- [x] Turn Settings into a service hatch using the same chassis material rather than a generic floating popover.
+- [x] Preserve current system-control behavior, 44px+ touch targets, audio state, clear-mode behavior and reset-session behavior.
+- [ ] iPhone acceptance: confirm the fixed controls now feel bolted to the device rather than overlaid by the website.
 
-- [ ] Make HOME / MUTE / SET feel like fixed chassis hardware rather than a separate web overlay system.
-- [ ] Preserve touch targets and current settings behavior.
+## Remaining cuts / cleanup
 
-### 2. Loading / transition sprite animation
+### 1. Loading / transition sprite art
 
 - [x] Add a prebaked 10-frame low-resolution D20 rotation strip to the repo for true boot loading.
 - [x] Play it as discrete CSS frames so it is available before Three.js or WebGL initializes.
 - [x] Reuse the same loading object for Dice / Choice module-loading transitions.
 - [x] Keep the animation deliberately low-frame and object-focused; no generic spinner or fake percentage progress.
-- [ ] Revisit the exact D20 frame art after the rest of the chassis language is locked; the loading mechanism itself is now in place.
+- [ ] Re-grill the exact D20 frame art against the production D20 geometry / face language now that the chassis is mostly unified.
 
-### 3. Dice Setup acceptance / cleanup
+### 2. Dice Setup acceptance / cleanup
 
-- [ ] Review two-column specimen-window spacing on iPhone after this pass.
+- [ ] Review two-column specimen-window spacing on iPhone.
 - [ ] Check whether the low-frame turntable feels intentional rather than merely flickery.
-- [ ] Remove dead flat-relief CSS after the new 3D specimen-window language is accepted.
+- [ ] Remove dead flat-relief CSS after the 3D specimen-window language is accepted.
 - [ ] Reassess rack-level microcopy only after the object hierarchy is visually accepted.
 
-### 4. HOME asset cleanup
+### 3. HOME asset cleanup
 
 - [ ] Remove obsolete P1 / P2 experimental HOME CSS files only after the current Art Director HOME pass is accepted and no rollback is needed.
 - [ ] Retire the failed html2canvas render probe from the product path; keep only if useful as an archived experiment.
