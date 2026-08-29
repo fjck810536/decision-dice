@@ -108,17 +108,23 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
 
     const rows = PUBLIC_DIE_TYPES.map((type, index) => {
       const count = state.diceCounts[type];
+      const description = type === 'd100' ? 'PERCENTILE / 2 BODY' : 'PHYSICAL DIE / 1 BODY';
       return `
         <div class="die-counter dice-module ${count > 0 ? 'is-loaded' : ''}" data-type="${type}" data-count="${count}">
-          <div class="dice-module-identity">
-            <span class="dice-module-preview" aria-hidden="true">
-              <span class="die-preview-slot" data-die-preview="${type}" data-preview-variant="${index % 3}"></span>
-            </span>
+          <div class="dice-module-head">
             <div class="die-counter-label">
               <strong>${typeLabel(type)}</strong>
-              <span>${type === 'd100' ? 'PERCENTILE / 2 BODY' : 'PHYSICAL / 1 BODY'}</span>
+              <span>${description}</span>
             </div>
+            <span class="dice-module-state" aria-hidden="true">${count > 0 ? 'LOADED' : 'STANDBY'}</span>
           </div>
+
+          <div class="dice-module-window" aria-hidden="true">
+            <span class="dice-module-preview">
+              <span class="die-preview-slot" data-die-preview="${type}" data-preview-variant="${index % 3}" data-preview-cycle="1"></span>
+            </span>
+          </div>
+
           <div class="stepper dice-module-stepper" aria-label="${typeLabel(type)} 數量">
             <button type="button" data-action="minus" aria-label="減少 ${typeLabel(type)}">−</button>
             <output aria-live="polite">${count}</output>
