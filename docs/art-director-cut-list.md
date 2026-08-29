@@ -60,17 +60,22 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 ## Current cut: Dice / Choice interface cleanup
 
 - [x] Add a final subtraction pass after the art-direction layers instead of inventing another decorative system.
-- [x] Dice Setup keeps only die identity / description / 3D specimen / count / BODY constraint as primary information.
-- [x] Visually remove repeated Dice `LOADED / STANDBY`, rack `LOADED / EMPTY`, duplicated LOGICAL count, and repeated D100 explanatory paragraph.
 - [x] Preserve die descriptions and the 3D specimen-window hierarchy requested during review.
+- [x] Split Dice Setup into three work areas: `選骰子 3～20`, `選骰子 100`, and `調整值`.
+- [x] Keep `選骰子 3～20` active by default; isolate D100 into its own larger specimen bay.
+- [x] Add a real Dice modifier to SessionState with a stored system limit of ±9999 while exposing only ±99 in the current UI.
+- [x] Apply the modifier after physical dice settle so settlement / history / details all share `subtotal + modifier = TOTAL`.
+- [x] Fix a viewport-level Dice Setup rail so `加總 +N`, pool/body summary, and `確認` stay visible during all setup scrolling.
 - [x] Choice Setup reduces to count → ARM, with version/help copy removed from the primary surface.
 - [x] Remove the Choice ARMED summary / method-card stack from above the instrument.
 - [x] Embed `OPTIONS` as a compact numeric readout in the active Choice instrument itself.
 - [x] Replace DICE / SLOT tabs with one physical left-right `骰子 / 滾輪` switch mounted inside the instrument.
 - [x] Preserve method recommendation only as a tiny indicator light instead of another text label.
-- [x] Rebuild the optional naming control as a larger physical drawer with a visible pull handle and recessed tray.
+- [x] Rebuild the optional naming control as a larger physical drawer with a visible pull handle / arrow and recessed tray.
+- [x] Rename the naming drawer to `填寫選項` so it reads as optional labeling rather than the act of making the decision.
+- [x] Keep the Choice method switch above RESULT after settlement; only lock it during the temporary INVALID → REROLL fault sequence.
 - [x] History remains available but is visually subordinate and height-limited so it cannot dominate setup.
-- [ ] iPhone acceptance: judge switch size, drawer physicality, OPTIONS placement, and whether a second DOM-deletion cleanup is still useful.
+- [ ] iPhone acceptance: judge Dice tab sizes / fixed rail clearance, Choice switch size, drawer physicality, OPTIONS placement, and whether a second DOM-deletion cleanup is still useful.
 
 ## Remaining cuts / cleanup
 
@@ -86,6 +91,7 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 
 - [ ] Review two-column specimen-window spacing on iPhone.
 - [ ] Check whether the low-frame turntable feels intentional rather than merely flickery.
+- [ ] Verify the fixed bottom Dice rail clears Safari safe-area / browser chrome while scrolling every setup tab.
 - [ ] Remove dead flat-relief CSS after the 3D specimen-window language is accepted.
 - [ ] If the interface-cleanup pass is accepted, remove now-hidden redundant status markup and dead selectors instead of leaving them as permanent overrides.
 
