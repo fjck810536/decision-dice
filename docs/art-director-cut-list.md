@@ -10,7 +10,7 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - Production Dice Art face rules and M6.2A renderer rules remain locked unless explicitly reopened.
 - Dice Roll stays the only place that runs the full physics simulation.
 
-## Current cut: shared low-cost 3D dice language
+## Shared low-cost 3D dice language
 
 - [x] Replace HOME fake polygon icons with textless low-resolution 3D dice sprites.
 - [x] Replace Dice Setup flat relief icons with the same 3D dice sprites.
@@ -22,33 +22,34 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [x] Give D100 a larger full-width two-body specimen window.
 - [x] Fix turntable frame overlap and keep +/- updates local so preview animations are not rebuilt on every count change.
 
+## Current cut: ARMED chassis integration
+
+- [x] Implement a shared chassis pass for Dice ARMED and Choice ARMED.
+- [x] Preserve different organs: Dice = physical chamber; Choice = electronic reel / slot display.
+- [x] Align data-strip treatment, square instrument frame, stage readout language, ROLL hardware, secondary-action hardware, and spacing rhythm.
+- [x] Keep Choice reel typography and reel-guide behavior intact instead of flattening it into Dice styling.
+- [ ] iPhone acceptance: confirm Choice still feels as comfortable as before and Dice now reads as the same machine.
+
 ## Next cuts
 
-### 1. Unify ARMED chassis
-
-- [ ] Make Dice ARMED and Choice ARMED read as two instruments installed in the same machine chassis.
-- [ ] Preserve their different organs: Dice = physical chamber; Choice = electronic reel / slot display.
-- [ ] Align stage frame, summary placement, ROLL zone, secondary-action placement, status readout, and spacing rhythm.
-- [ ] Do not flatten Choice into Dice styling; preserve the slot's current clarity and feel.
-
-### 2. Rebuild HOME mode keys from the mature chassis language
+### 1. Rebuild HOME mode keys from the mature chassis language
 
 - [ ] Stop inventing a separate HOME button material.
 - [ ] Derive `骰子` / `選擇` entrance controls from the finalized ARMED control hardware.
 - [ ] Keep HOME scale exaggerated, but reuse the same highlight plane, dark plane, press travel, color semantics, and edge logic.
 
-### 3. Integrate Settlement into the instrument stage
+### 2. Integrate Settlement into the instrument stage
 
 - [ ] Reduce generic modal/card feeling.
 - [ ] Make Dice TOTAL and Choice final index feel like the machine's result display taking over the active stage.
 - [ ] Preserve existing settlement timing, result semantics, Details flow, and rejection visibility rules.
 
-### 4. Unify system controls
+### 3. Unify system controls
 
 - [ ] Make HOME / MUTE / SET feel like fixed chassis hardware rather than a separate web overlay system.
 - [ ] Preserve touch targets and current settings behavior.
 
-### 5. Loading / transition sprite animation
+### 4. Loading / transition sprite animation
 
 - [x] Add a prebaked 10-frame low-resolution D20 rotation strip to the repo for true boot loading.
 - [x] Play it as discrete CSS frames so it is available before Three.js or WebGL initializes.
@@ -56,14 +57,14 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [x] Keep the animation deliberately low-frame and object-focused; no generic spinner or fake percentage progress.
 - [ ] Revisit the exact D20 frame art after the rest of the chassis language is locked; the loading mechanism itself is now in place.
 
-### 6. Dice Setup acceptance / cleanup
+### 5. Dice Setup acceptance / cleanup
 
 - [ ] Review two-column specimen-window spacing on iPhone after this pass.
 - [ ] Check whether the low-frame turntable feels intentional rather than merely flickery.
 - [ ] Remove dead flat-relief CSS after the new 3D specimen-window language is accepted.
 - [ ] Reassess rack-level microcopy only after the object hierarchy is visually accepted.
 
-### 7. HOME asset cleanup
+### 6. HOME asset cleanup
 
 - [ ] Remove obsolete P1 / P2 experimental HOME CSS files only after the current Art Director HOME pass is accepted and no rollback is needed.
 - [ ] Retire the failed html2canvas render probe from the product path; keep only if useful as an archived experiment.
