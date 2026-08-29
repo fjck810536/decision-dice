@@ -1,9 +1,12 @@
 import { PUBLIC_DIE_TYPES } from '../dice/public-types.js';
 
+const DICE_MODIFIER_LIMIT = 9999;
+
 export class SessionState {
   constructor() {
     this.mode = 'home';
     this.diceCounts = Object.fromEntries(PUBLIC_DIE_TYPES.map((type) => [type, type === 'd6' ? 1 : 0]));
+    this.diceModifier = 0;
     this.choiceCount = 3;
     this.choiceLabels = {};
     this.choiceMethodOverride = null;
@@ -19,6 +22,11 @@ export class SessionState {
     this.diceCounts[type] = Math.max(0, Math.floor(Number(count) || 0));
   }
 
+  setDiceModifier(value) {
+    const next = Math.trunc(Number(value) || 0);
+    this.diceModifier = Math.max(-DICE_MODIFIER_LIMIT, Math.min(DICE_MODIFIER_LIMIT, next));
+  }
+
   getDicePool() {
     return Object.entries(this.diceCounts)
       .filter(([, count]) => count > 0)
@@ -28,6 +36,7 @@ export class SessionState {
   clearDiceMode() {
     Object.keys(this.diceCounts).forEach((type) => { this.diceCounts[type] = 0; });
     this.diceCounts.d6 = 1;
+    this.diceModifier = 0;
   }
 
   setChoiceCount(count) {
