@@ -1,0 +1,361 @@
+/* DICE — Art Director Pass / Setup Rack
+   Goal: same machine as Choice, different instrument.
+   Keep the familiar +/- interaction; replace generic form rows with a physical rack. */
+
+/* The rack is the instrument, not another generic panel. */
+.dice-rack-panel {
+  padding: 10px;
+  border-color: #555c4d;
+  background:
+    linear-gradient(90deg, rgba(211,220,130,.025), transparent 24%),
+    linear-gradient(180deg, #151812 0 9px, #10120e 9px 100%);
+  box-shadow:
+    inset 3px 0 0 rgba(211,220,130,.04),
+    inset -3px 0 0 rgba(152,83,67,.035),
+    0 4px 0 #080907;
+}
+
+.dice-rack-panel::after {
+  display: none;
+}
+
+.dice-rack-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 25px;
+  padding: 1px 2px 8px;
+  border-bottom: 1px solid #33382f;
+}
+
+.dice-rack-heading .section-code {
+  margin: 0;
+}
+
+.dice-rack-state {
+  color: #6f7566;
+  font-size: 7px;
+  line-height: 1;
+  letter-spacing: .18em;
+}
+
+/* Two-column cartridge rack. D100 is deliberately a special full-width module. */
+.dice-rack {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  padding: 8px 0 9px;
+  border: 0;
+}
+
+.dice-rack .dice-module {
+  position: relative;
+  min-width: 0;
+  min-height: 134px;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  align-items: stretch;
+  gap: 8px;
+  padding: 9px 8px 8px;
+  border: 1px solid #454b3f;
+  background:
+    linear-gradient(180deg, rgba(231,228,205,.055) 0 4px, transparent 4px),
+    linear-gradient(90deg, rgba(211,220,130,.018), transparent 55%, rgba(152,83,67,.018)),
+    #0c0e0b;
+  box-shadow:
+    inset 2px 2px 0 rgba(235,229,213,.025),
+    inset -3px -3px 0 rgba(0,0,0,.34);
+}
+
+.dice-rack .dice-module[data-type="d100"] {
+  grid-column: 1 / -1;
+  min-height: 116px;
+  grid-template-columns: minmax(0, 1fr) minmax(140px, .86fr);
+  grid-template-rows: 1fr;
+  align-items: center;
+  gap: 14px;
+  padding-inline: 12px;
+}
+
+/* Loaded modules are not 'selected cards': they look electrically alive. */
+.dice-rack .dice-module.is-loaded {
+  border-color: #737b63;
+  background:
+    linear-gradient(180deg, rgba(222,225,156,.10) 0 4px, transparent 4px),
+    linear-gradient(90deg, rgba(211,220,130,.055), transparent 54%, rgba(152,83,67,.025)),
+    #11140e;
+  box-shadow:
+    inset 3px 0 0 rgba(211,220,130,.11),
+    inset -3px -3px 0 rgba(0,0,0,.38),
+    0 0 0 1px rgba(211,220,130,.025);
+}
+
+.dice-rack .dice-module::after {
+  content: "";
+  position: absolute;
+  right: 7px;
+  top: 7px;
+  width: 5px;
+  height: 5px;
+  border: 1px solid #3d4238;
+  background: #151812;
+  box-shadow: 0 0 0 1px #080907;
+}
+
+.dice-rack .dice-module.is-loaded::after {
+  border-color: #abb573;
+  background: var(--acid);
+  box-shadow:
+    0 0 0 1px #080907,
+    0 0 5px rgba(211,220,130,.25);
+}
+
+.dice-module-identity {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.dice-rack .dice-module[data-type="d100"] .dice-module-identity {
+  grid-template-columns: 54px minmax(0, 1fr);
+}
+
+/* The relief borrows the HOME sprite material, but reads as molded plastic here. */
+.die-module-face {
+  position: relative;
+  display: block;
+  width: 43px;
+  height: 43px;
+  overflow: hidden;
+  background: #898e73;
+  border: 1px solid #656b58;
+  box-shadow:
+    2px 2px 0 #060706,
+    inset 1px 1px 0 rgba(238,233,209,.18);
+  opacity: .68;
+}
+
+.die-module-face::before,
+.die-module-face::after,
+.die-module-face i {
+  content: "";
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+
+.die-module-face::before {
+  inset: 0;
+  background: #c9c5ac;
+  clip-path: polygon(0 0, 100% 0, 51% 52%);
+}
+
+.die-module-face::after {
+  inset: 0;
+  background: #4e5344;
+  clip-path: polygon(100% 0, 100% 100%, 50% 100%, 51% 52%);
+}
+
+.die-module-face i {
+  inset: 0;
+  z-index: 3;
+  opacity: .36;
+  background-image:
+    linear-gradient(rgba(20,22,18,.42) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20,22,18,.36) 1px, transparent 1px);
+  background-size: 5px 5px;
+  mix-blend-mode: multiply;
+}
+
+.dice-module[data-type="d3"] .die-module-face,
+.dice-module[data-type="d6"] .die-module-face {
+  clip-path: polygon(8% 4%, 86% 4%, 98% 16%, 98% 90%, 88% 98%, 12% 98%, 3% 88%, 3% 14%);
+}
+
+.dice-module[data-type="d4"] .die-module-face {
+  clip-path: polygon(50% 0, 100% 92%, 6% 92%);
+}
+
+.dice-module[data-type="d8"] .die-module-face {
+  clip-path: polygon(50% 0, 97% 50%, 50% 100%, 3% 50%);
+}
+
+.dice-module[data-type="d10"] .die-module-face {
+  clip-path: polygon(50% 0, 91% 28%, 75% 91%, 50% 100%, 25% 91%, 9% 28%);
+}
+
+.dice-module[data-type="d20"] .die-module-face {
+  clip-path: polygon(50% 0, 86% 16%, 100% 50%, 84% 86%, 50% 100%, 16% 86%, 0 50%, 14% 16%);
+}
+
+.dice-module[data-type="d100"] .die-module-face {
+  width: 51px;
+  height: 43px;
+  clip-path: polygon(10% 10%, 58% 0, 76% 22%, 100% 16%, 94% 74%, 66% 100%, 48% 78%, 20% 94%, 0 58%);
+}
+
+.dice-module.is-loaded .die-module-face {
+  opacity: 1;
+  border-color: #81876d;
+  box-shadow:
+    2px 2px 0 #060706,
+    inset 1px 1px 0 rgba(238,233,209,.25),
+    -1px 0 0 rgba(211,220,130,.08);
+}
+
+.dice-rack .die-counter-label strong {
+  display: block;
+  margin: 0;
+  color: #d7d2c3;
+  font-size: 21px;
+  line-height: .9;
+  letter-spacing: .06em;
+  text-shadow: 2px 0 0 rgba(152,83,67,.20);
+}
+
+.dice-rack .dice-module.is-loaded .die-counter-label strong {
+  color: #eee7d5;
+}
+
+.dice-rack .die-counter-label span {
+  display: block;
+  margin-top: 5px;
+  color: #646a5d;
+  font-size: 6px;
+  line-height: 1.2;
+  letter-spacing: .11em;
+  white-space: normal;
+}
+
+/* Mechanical number window: count is the strongest local information. */
+.dice-module-stepper {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 38px minmax(42px, 1fr) 38px;
+  align-items: stretch;
+  border: 1px solid #42483c;
+  background: #070806;
+  box-shadow: inset 0 2px 0 rgba(0,0,0,.40);
+}
+
+.dice-module-stepper button {
+  width: 38px;
+  height: 42px;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, #2e3328 0 5px, #1d211a 5px calc(100% - 6px), #0d0f0c calc(100% - 6px));
+  color: #d6d1c1;
+  font-size: 18px;
+  line-height: 1;
+  box-shadow:
+    inset 2px 2px 0 rgba(226,223,200,.075),
+    inset -2px -2px 0 rgba(0,0,0,.42);
+}
+
+.dice-module-stepper button:first-child {
+  border-right: 1px solid #34392f;
+}
+
+.dice-module-stepper button:last-child {
+  border-left: 1px solid #34392f;
+}
+
+.dice-module-stepper button:active {
+  transform: translateY(2px);
+  background: #151812;
+  color: var(--acid);
+  box-shadow: inset 2px 3px 0 rgba(0,0,0,.48);
+}
+
+.dice-module-stepper output {
+  min-width: 0;
+  display: grid;
+  place-items: center;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 3px, rgba(0,0,0,.13) 3px 4px),
+    #0a0c09;
+  color: #8b907d;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -.04em;
+  text-shadow: 2px 0 0 rgba(152,83,67,.22);
+}
+
+.dice-module.is-loaded .dice-module-stepper output {
+  color: var(--acid);
+  text-shadow:
+    2px 0 0 rgba(152,83,67,.26),
+    0 0 4px rgba(211,220,130,.08);
+}
+
+.dice-rack-meter {
+  margin: 0;
+  padding: 8px 2px 0;
+  border-top: 1px solid #34392f;
+  color: #737968;
+}
+
+.dice-rack-meter strong {
+  margin-left: 4px;
+  color: #d6d2c3;
+  font-size: 13px;
+}
+
+.dice-arm-action {
+  min-height: 68px;
+  margin-top: 10px;
+  letter-spacing: .17em;
+}
+
+/* Do not let History compete with the rack during setup. */
+.dice-arm-action + .history-block {
+  margin-top: 11px;
+  opacity: .80;
+}
+
+@media (max-width: 380px) {
+  .dice-rack {
+    gap: 6px;
+  }
+
+  .dice-rack .dice-module {
+    min-height: 128px;
+    padding-inline: 7px;
+  }
+
+  .dice-module-identity {
+    grid-template-columns: 39px minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .die-module-face {
+    width: 37px;
+    height: 37px;
+  }
+
+  .dice-rack .die-counter-label strong {
+    font-size: 18px;
+  }
+
+  .dice-module-stepper {
+    grid-template-columns: 35px minmax(38px, 1fr) 35px;
+  }
+
+  .dice-module-stepper button {
+    width: 35px;
+    height: 40px;
+  }
+
+  .dice-module-stepper output {
+    font-size: 21px;
+  }
+
+  .dice-rack .dice-module[data-type="d100"] {
+    grid-template-columns: minmax(0, 1fr) minmax(130px, .9fr);
+  }
+}
