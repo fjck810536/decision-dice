@@ -7,12 +7,25 @@ import { installDoubleTapZoomGuard } from './ui/mobile-gesture-guard.js';
 installDoubleTapZoomGuard();
 
 const root = document.getElementById('app');
+const bootLoader = document.getElementById('boot-loader');
 const state = new SessionState();
+const bootStartedAt = performance.now();
+const MIN_BOOT_MS = 560;
 
 let navigationToken = 0;
 let diceModulePromise = null;
 let choiceModulePromise = null;
 let systemControls = null;
+
+function dismissBootLoader() {
+  if (!bootLoader || bootLoader.dataset.dismissed === '1') return;
+  bootLoader.dataset.dismissed = '1';
+  const wait = Math.max(0, MIN_BOOT_MS - (performance.now() - bootStartedAt));
+  window.setTimeout(() => {
+    bootLoader.classList.add('is-leaving');
+    window.setTimeout(() => bootLoader.remove(), 170);
+  }, wait);
+}
 
 function showHome() {
   navigationToken += 1;
@@ -24,6 +37,7 @@ function showHome() {
     onDice: showDice,
     onChoice: showChoice,
   });
+  dismissBootLoader();
 }
 
 function renderModeLoading(label, token, note = '正在載入功能模組。首頁本身不等待 3D / physics。') {
@@ -33,9 +47,14 @@ function renderModeLoading(label, token, note = '正在載入功能模組。首�
       <div><span class="eyebrow">MODULE LOAD</span><h1>${label}</h1></div>
       <button type="button" class="text-button" id="loading-home">HOME</button>
     </header>
-    <section class="function-panel" aria-live="polite">
-      <p class="section-code">LOADING FUNCTION MODULE…</p>
-      <p class="microcopy">${note}</p>
+    <section class="module-loader" aria-live="polite">
+      <div class="module-loader-inner">
+        <div class="boot-d20" aria-hidden="true"></div>
+        <div class="module-loader-copy">
+          <strong>LOADING FUNCTION MODULE</strong>
+          <span>${note}</span>
+        </div>
+      </div>
     </section>
   `;
   root.querySelector('#loading-home').addEventListener('click', () => {
@@ -62,7 +81,7 @@ async function showDice() {
   state.setMode('dice');
   systemControls?.closeSettings();
   systemControls?.sync();
-  renderModeLoading('骰子', token, '正在載入 DiceEngine / Three.js / cannon-es。首頁不等待 physics。');
+  renderModeLoading('骰子', token, '正在載入 DiceEngine / Three.js / cannon-es。');
 
   try {
     diceModulePromise ??= import('./views/dice.js');
@@ -85,7 +104,7 @@ async function showChoice() {
   state.setMode('choice');
   systemControls?.closeSettings();
   systemControls?.sync();
-  renderModeLoading('選擇', token, '正在載入 DecisionEngine。若使用 SLOT，不會載入 DiceEngine；選 DICE 並按 ROLL 後才載入 physics。');
+  renderModeLoading('選擇', token, '正在載入 DecisionEngine。SLOT 本身不等待 DiceEngine。');
 
   try {
     choiceModulePromise ??= import('./views/choice.js');
