@@ -16,8 +16,19 @@
   <link rel="stylesheet" href="./src/dice-art-director.css">
   <link rel="stylesheet" href="./src/home-art-director.css">
   <link rel="stylesheet" href="./src/dice-preview.css">
+  <link rel="stylesheet" href="./src/boot-loading.css">
 </head>
 <body>
+  <div class="boot-loader" id="boot-loader" aria-live="polite" aria-label="裝置啟動中">
+    <div class="boot-loader-inner">
+      <div class="boot-d20" aria-hidden="true"></div>
+      <div class="boot-copy">
+        <strong>INITIALIZING DEVICE</strong>
+        <span>DECISION AUXILIARY SYSTEM / BOOT</span>
+      </div>
+      <div class="boot-track" aria-hidden="true"></div>
+    </div>
+  </div>
   <main id="app" class="app-shell home-view"></main>
   <div class="orientation-block">目前僅支援直向使用</div>
   <noscript>此裝置需要 JavaScript 才能運作。</noscript>
