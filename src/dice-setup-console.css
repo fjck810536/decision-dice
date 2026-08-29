@@ -1,0 +1,343 @@
+/* DICE SETUP CONSOLE — Art Director Pass
+   Setup is split into three work areas while one fixed bottom rail always shows
+   the current additive modifier and confirmation action. */
+
+.dice-setup-active {
+  padding-bottom: max(132px, calc(env(safe-area-inset-bottom) + 118px)) !important;
+}
+
+/* -------------------------------------------------------------------------
+   THREE-WAY SETUP SELECTOR
+   ------------------------------------------------------------------------- */
+.dice-setup-tabs {
+  display: grid;
+  grid-template-columns: 1fr .84fr .84fr;
+  gap: 5px;
+  margin: 0 0 8px;
+}
+
+.dice-setup-tabs button {
+  min-height: 52px;
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  padding: 7px 8px;
+  border: 1px solid #3c4237;
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, #2d3228 0 4px, #151812 4px calc(100% - 5px), #0b0d0a calc(100% - 5px));
+  color: #898f7d;
+  text-align: left;
+  box-shadow: 0 3px 0 #050605, inset 1px 1px 0 rgba(235,229,213,.035);
+  touch-action: manipulation;
+}
+
+.dice-setup-tabs button span {
+  font: 7px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .11em;
+}
+
+.dice-setup-tabs button strong {
+  color: #d5d0c1;
+  font: 900 14px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .03em;
+}
+
+.dice-setup-tabs button.active {
+  border-color: #87906f;
+  background:
+    linear-gradient(90deg, rgba(211,220,130,.10), transparent 58%),
+    linear-gradient(180deg, #4a513f 0 4px, #22271d 4px calc(100% - 5px), #0d100b calc(100% - 5px));
+  color: var(--acid);
+  box-shadow: 0 2px 0 #050605, inset 3px 0 0 rgba(211,220,130,.18);
+  transform: translateY(1px);
+}
+
+.dice-setup-tabs button.active strong {
+  color: #f0ead8;
+}
+
+.dice-setup-workspace {
+  position: relative;
+}
+
+.dice-setup-panel[hidden] {
+  display: none !important;
+}
+
+/* Standard dice keep the accepted two-column specimen layout. */
+.dice-setup-panel .dice-rack {
+  margin: 0;
+}
+
+/* D100 is deliberately isolated and larger. */
+.dice-rack-single {
+  display: block;
+}
+
+.dice-rack-single .dice-module,
+.dice-rack-single .dice-module[data-type="d100"] {
+  width: 100%;
+  min-height: 292px;
+}
+
+.dice-rack-single .dice-module-window {
+  min-height: 174px;
+}
+
+.dice-rack-single .dice-module-preview {
+  transform: scale(1.12);
+}
+
+/* -------------------------------------------------------------------------
+   MODIFIER BAY
+   Stored range is ±9999; this UI intentionally exposes only ±99 for now.
+   ------------------------------------------------------------------------- */
+.dice-setup-panel--modifier {
+  min-height: min(47svh, 390px);
+  display: grid;
+  place-items: center;
+}
+
+.dice-modifier-bay {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #505747;
+  background:
+    linear-gradient(rgba(235,229,213,.014) 1px, transparent 1px) 0 0 / 100% 4px,
+    linear-gradient(180deg, rgba(211,220,130,.035), transparent 34%),
+    #0c0f0b;
+  box-shadow:
+    inset 0 0 0 3px #080907,
+    inset 0 0 0 4px #20251d,
+    0 4px 0 #050605;
+}
+
+.dice-modifier-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid #30362d;
+}
+
+.dice-modifier-head span {
+  color: #e5dfcf;
+  font-family: "Songti TC", "Noto Serif TC", PMingLiU, serif;
+  font-size: 21px;
+  font-weight: 900;
+}
+
+.dice-modifier-head small {
+  color: #747a6a;
+  font: 6.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .08em;
+}
+
+.dice-modifier-control {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) 58px;
+  min-height: 84px;
+  border: 1px solid #4f5648;
+  background: #070906;
+}
+
+.dice-modifier-control button {
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, #363c30 0 5px, #20241c 5px calc(100% - 7px), #0d0f0c calc(100% - 7px));
+  color: #d7d2c4;
+  font-size: 28px;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,.34);
+  touch-action: manipulation;
+}
+
+.dice-modifier-control button:first-child {
+  border-right: 1px solid #3a4035;
+}
+
+.dice-modifier-control button:last-child {
+  border-left: 1px solid #3a4035;
+}
+
+.dice-modifier-control button:active {
+  background: #171b14;
+  color: var(--acid);
+  transform: translateY(2px);
+}
+
+.dice-modifier-control input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(211,220,130,.045), transparent 62%),
+    #0a0c09;
+  color: #eee8d8;
+  font: 900 clamp(48px, 16vw, 74px)/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+  box-shadow: inset 0 0 0 3px #050605;
+}
+
+.dice-modifier-control input::-webkit-inner-spin-button,
+.dice-modifier-control input::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.dice-modifier-shortcuts {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.dice-modifier-shortcuts button {
+  min-height: 42px;
+  border: 1px solid #3b4236;
+  border-radius: 0;
+  background: #11140f;
+  color: #aeb2a2;
+  font: 8px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .08em;
+  touch-action: manipulation;
+}
+
+.dice-modifier-shortcuts button:active {
+  color: var(--acid);
+  background: #1b2018;
+}
+
+/* BODY is still visible in the scrollable area, but subordinate to the fixed rail. */
+.dice-setup-active .dice-rack-meter {
+  margin-top: 8px;
+}
+
+/* -------------------------------------------------------------------------
+   FIXED BOTTOM LOCKBAR
+   This is viewport-fixed, not sticky. It survives all setup scrolling.
+   ------------------------------------------------------------------------- */
+.dice-setup-lockbar {
+  position: fixed;
+  z-index: 140;
+  left: 50%;
+  bottom: 0;
+  width: min(100%, 560px);
+  min-height: 92px;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(122px, .72fr);
+  gap: 8px;
+  align-items: stretch;
+  padding: 8px 14px max(9px, env(safe-area-inset-bottom));
+  border-top: 1px solid #737b64;
+  background:
+    linear-gradient(180deg, rgba(235,229,213,.055) 0 3px, transparent 3px),
+    linear-gradient(90deg, rgba(211,220,130,.045), transparent 58%, rgba(152,83,67,.025)),
+    rgba(11,13,10,.985);
+  box-shadow:
+    0 -5px 0 rgba(5,6,5,.82),
+    0 -14px 28px rgba(0,0,0,.34),
+    inset 0 3px 0 #20251d;
+  pointer-events: auto;
+}
+
+.dice-setup-sum {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  gap: 3px 9px;
+  padding: 8px 10px;
+  border: 1px solid #41483b;
+  background: #080a07;
+  box-shadow: inset 0 0 0 2px #050605;
+}
+
+.dice-setup-sum > span {
+  align-self: center;
+  color: #7d8372;
+  font: 7px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .14em;
+}
+
+.dice-setup-sum > strong {
+  justify-self: end;
+  color: var(--acid);
+  font: 900 28px/.9 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.dice-setup-sum > small {
+  grid-column: 1 / -1;
+  min-width: 0;
+  color: #9a9f8f;
+  font: 7px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dice-setup-lockbar #confirm-pool {
+  min-height: 68px;
+  margin: 0;
+  align-self: stretch;
+  font-size: 16px;
+  letter-spacing: .18em;
+}
+
+@media (max-width: 380px) {
+  .dice-setup-tabs {
+    gap: 4px;
+  }
+
+  .dice-setup-tabs button {
+    min-height: 49px;
+    padding-inline: 6px;
+  }
+
+  .dice-setup-tabs button strong {
+    font-size: 12px;
+  }
+
+  .dice-rack-single .dice-module,
+  .dice-rack-single .dice-module[data-type="d100"] {
+    min-height: 260px;
+  }
+
+  .dice-rack-single .dice-module-window {
+    min-height: 154px;
+  }
+
+  .dice-modifier-control {
+    grid-template-columns: 52px minmax(0, 1fr) 52px;
+    min-height: 78px;
+  }
+
+  .dice-setup-lockbar {
+    grid-template-columns: minmax(0, 1fr) 112px;
+    gap: 6px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .dice-setup-sum {
+    padding-inline: 8px;
+  }
+
+  .dice-setup-sum > strong {
+    font-size: 25px;
+  }
+
+  .dice-setup-lockbar #confirm-pool {
+    font-size: 14px;
+  }
+}
