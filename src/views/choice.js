@@ -170,6 +170,20 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
     const selectedMethod = plan.method;
     const duplicates = duplicateLabels(state, state.choiceCount);
     const isDice = selectedMethod === 'dice';
+    const methodConsole = `
+      <div class="choice-stage-console">
+        <div class="choice-options-readout" aria-label="${state.choiceCount} 個選項">
+          <span>OPTIONS</span><strong>${state.choiceCount}</strong>
+        </div>
+        <div class="choice-method-toggle ${isDice ? 'is-dice' : 'is-slot'}" id="method-switch" role="group" aria-label="選擇方式">
+          <button type="button" data-method="dice" aria-pressed="${isDice}" class="${isDice ? 'active' : ''} ${plan.recommended === 'dice' ? 'recommended' : ''}" aria-label="骰子 ${dice.die.toUpperCase()}，效率 ${pct(dice.efficiency)}">
+            <span>骰子</span>
+          </button>
+          <button type="button" data-method="slot" aria-pressed="${!isDice}" class="${!isDice ? 'active' : ''} ${plan.recommended === 'slot' ? 'recommended' : ''}" aria-label="滾輪，1 到 ${state.choiceCount}">
+            <span>滾輪</span>
+          </button>
+        </div>
+      </div>`;
 
     container.innerHTML = `
       <header class="mode-header">
@@ -179,26 +193,10 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
         </div>
       </header>
 
-      <section class="roll-summary choice-plan-summary">
-        <span>OPTIONS</span><strong>${state.choiceCount}</strong>
-        <span>RECOMMEND</span><strong>${planSummary(plan)}</strong>
-      </section>
-
-      <section class="function-panel method-panel">
-        <p class="section-code">METHOD / 可覆寫推薦</p>
-        <div class="method-switch" id="method-switch">
-          <button type="button" data-method="dice" class="${isDice ? 'active' : ''} ${plan.recommended === 'dice' ? 'recommended' : ''}">
-            <strong>DICE</strong><span>${dice.die.toUpperCase()} / ${pct(dice.efficiency)}</span>
-          </button>
-          <button type="button" data-method="slot" class="${!isDice ? 'active' : ''} ${plan.recommended === 'slot' ? 'recommended' : ''}">
-            <strong>SLOT</strong><span>1–${state.choiceCount}</span>
-          </button>
-        </div>
-        <p class="microcopy">骰子方案：每 ${dice.groupSize} 個有效骰面對應一個選項；${dice.rejectedOutcomes.length ? `無效面 ${dice.rejectedOutcomes.join(', ')} 會公開重擲。` : '沒有無效面。'}</p>
-      </section>
-
       <section class="choice-label-drawer ${labelDrawerOpen ? 'is-open' : ''}">
-        <button type="button" class="choice-label-toggle" id="choice-label-toggle">${labelDrawerOpen ? '▼' : '▲'} 選項名稱 / OPTIONAL</button>
+        <button type="button" class="choice-label-toggle" id="choice-label-toggle" aria-expanded="${labelDrawerOpen}">
+          <span>選項名稱</span><small>OPTIONAL</small><i aria-hidden="true"></i>
+        </button>
         <div id="choice-label-body" ${labelDrawerOpen ? '' : 'hidden'}>
           <div class="choice-label-list">${labelsMarkup(state, state.choiceCount)}</div>
           <p class="choice-duplicate-warning" id="duplicate-warning" ${duplicates.length ? '' : 'hidden'}>重複名稱：${escapeSettlementHtml(duplicates.join('、'))}。重複項目仍是不同 index，會形成實質加權。</p>
@@ -206,20 +204,21 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
       </section>
 
       ${isDice ? `
-        <section class="dice-stage" id="choice-dice-stage" aria-label="選擇模式 3D 骰子舞台">
+        <section class="dice-stage choice-instrument-stage" id="choice-dice-stage" aria-label="選擇模式 3D 骰子舞台">
           <canvas id="choice-dice-canvas"></canvas>
           <div class="dither-layer" aria-hidden="true"></div>
           <div class="stage-badge" id="choice-stage-badge">READY / ${dice.die.toUpperCase()}</div>
+          ${methodConsole}
           <div class="projection-ab" aria-label="鏡頭投影比較">
             <button type="button" data-projection="perspective" class="${projectionMode === 'perspective' ? 'active' : ''}">PERSPECTIVE</button>
             <button type="button" data-projection="orthographic" class="${projectionMode === 'orthographic' ? 'active' : ''}">ORTHO</button>
           </div>
           <div id="choice-settlement" class="settlement-overlay" hidden aria-live="polite"></div>
         </section>` : `
-        <section class="slot-stage" id="slot-stage" aria-label="選擇模式拉霸">
+        <section class="slot-stage choice-instrument-stage" id="slot-stage" aria-label="選擇模式滾輪">
           <span class="section-code">VISIBLE REEL</span>
+          ${methodConsole}
           <strong class="slot-number" id="slot-number">${String(1).padStart(2, '0')}</strong>
-          <small>1 — ${state.choiceCount}</small>
           <div id="choice-settlement" class="settlement-overlay" hidden aria-live="polite"></div>
         </section>`}
 
@@ -233,6 +232,7 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
     const switchButton = container.querySelector('#switch-dice');
     const editButton = container.querySelector('#edit-count');
     const methodSwitch = container.querySelector('#method-switch');
+    const drawer = container.querySelector('.choice-label-drawer');
     const toggle = container.querySelector('#choice-label-toggle');
     const body = container.querySelector('#choice-label-body');
     const rollButton = container.querySelector('#choice-roll');
@@ -257,7 +257,8 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
       if (rolling) return;
       labelDrawerOpen = !labelDrawerOpen;
       body.hidden = !labelDrawerOpen;
-      toggle.textContent = `${labelDrawerOpen ? '▼' : '▲'} 選項名稱 / OPTIONAL`;
+      drawer.classList.toggle('is-open', labelDrawerOpen);
+      toggle.setAttribute('aria-expanded', String(labelDrawerOpen));
     });
 
     body.addEventListener('input', (event) => {
@@ -327,7 +328,8 @@ export function renderChoiceMode(container, { state, onHome, onDice }) {
       errorRegion.innerHTML = '';
       labelDrawerOpen = false;
       body.hidden = true;
-      toggle.textContent = '▲ 選項名稱 / OPTIONAL';
+      drawer.classList.remove('is-open');
+      toggle.setAttribute('aria-expanded', 'false');
       rollButton.disabled = true;
       editButton.disabled = true;
       switchButton.disabled = true;
