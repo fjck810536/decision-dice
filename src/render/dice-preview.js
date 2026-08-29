@@ -244,6 +244,16 @@ function ensureSprites() {
   return readyPromise;
 }
 
+function makeImage(src, className = '') {
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = '';
+  img.decoding = 'async';
+  img.draggable = false;
+  if (className) img.className = className;
+  return img;
+}
+
 export async function hydrateDicePreviews(root) {
   if (!root) return;
   await ensureSprites();
@@ -251,15 +261,23 @@ export async function hydrateDicePreviews(root) {
   slots.forEach((slot) => {
     if (!slot.isConnected || slot.dataset.previewReady === '1') return;
     const type = slot.dataset.diePreview;
-    const variant = Number(slot.dataset.previewVariant || 0) % 3;
-    const src = spriteCache.get(`${type}:${variant}`);
-    if (!src) return;
-    const img = document.createElement('img');
-    img.src = src;
-    img.alt = '';
-    img.decoding = 'async';
-    img.draggable = false;
-    slot.replaceChildren(img);
+    const startVariant = Number(slot.dataset.previewVariant || 0) % 3;
+    const cycle = slot.dataset.previewCycle === '1';
+
+    if (cycle) {
+      const frames = VARIANTS.map((_, offset) => {
+        const variant = (startVariant + offset) % 3;
+        const src = spriteCache.get(`${type}:${variant}`);
+        return src ? makeImage(src, `die-preview-frame die-preview-frame-${offset}`) : null;
+      }).filter(Boolean);
+      slot.classList.add('is-turntable');
+      slot.replaceChildren(...frames);
+    } else {
+      const src = spriteCache.get(`${type}:${startVariant}`);
+      if (!src) return;
+      slot.replaceChildren(makeImage(src));
+    }
+
     slot.dataset.previewReady = '1';
   });
 }
