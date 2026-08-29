@@ -106,18 +106,24 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
   const renderSetup = () => {
     disposeEngine();
 
-    const rows = PUBLIC_DIE_TYPES.map((type) => `
-      <div class="die-counter" data-type="${type}">
-        <div class="die-counter-label">
-          <strong>${typeLabel(type)}</strong>
-          <span>${type === 'd100' ? 'PERCENTILE / 2 BODY' : 'PHYSICAL DIE / 1 BODY'}</span>
-        </div>
-        <div class="stepper">
-          <button type="button" data-action="minus" aria-label="減少 ${typeLabel(type)}">−</button>
-          <output>${state.diceCounts[type]}</output>
-          <button type="button" data-action="plus" aria-label="增加 ${typeLabel(type)}">＋</button>
-        </div>
-      </div>`).join('');
+    const rows = PUBLIC_DIE_TYPES.map((type) => {
+      const count = state.diceCounts[type];
+      return `
+        <div class="die-counter dice-module ${count > 0 ? 'is-loaded' : ''}" data-type="${type}" data-count="${count}">
+          <div class="dice-module-identity">
+            <span class="die-module-face" aria-hidden="true"><i></i></span>
+            <div class="die-counter-label">
+              <strong>${typeLabel(type)}</strong>
+              <span>${type === 'd100' ? 'PERCENTILE / 2 BODY' : 'PHYSICAL / 1 BODY'}</span>
+            </div>
+          </div>
+          <div class="stepper dice-module-stepper" aria-label="${typeLabel(type)} 數量">
+            <button type="button" data-action="minus" aria-label="減少 ${typeLabel(type)}">−</button>
+            <output aria-live="polite">${count}</output>
+            <button type="button" data-action="plus" aria-label="增加 ${typeLabel(type)}">＋</button>
+          </div>
+        </div>`;
+    }).join('');
 
     const physicalCount = physicalCountForCounts(state.diceCounts);
     const logicalCount = Object.values(state.diceCounts).reduce((a, b) => a + b, 0);
@@ -131,17 +137,20 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
         </div>
       </header>
 
-      <section class="function-panel">
-        <p class="section-code">DICE POOL</p>
-        <div class="die-counter-list" id="die-counter-list">${rows}</div>
-        <div class="pool-meter">
-          <span>DICE ${logicalCount}</span>
-          <span>BODY ${physicalCount} / ${PHYSICAL_LIMIT}</span>
+      <section class="function-panel dice-rack-panel">
+        <div class="dice-rack-heading">
+          <p class="section-code">DICE RACK / LOADOUT</p>
+          <span class="dice-rack-state">${logicalCount ? 'LOADED' : 'EMPTY'}</span>
         </div>
-        <p class="microcopy">D100 由兩顆 D10 組成。單次最多 50 個物理骰體。</p>
+        <div class="die-counter-list dice-rack" id="die-counter-list">${rows}</div>
+        <div class="pool-meter dice-rack-meter">
+          <span>LOGICAL <strong>${logicalCount}</strong></span>
+          <span>BODY <strong>${physicalCount}</strong> / ${PHYSICAL_LIMIT}</span>
+        </div>
+        <p class="microcopy">選擇要裝進物理運算室的骰子。D100 會佔用兩個實體骰體。</p>
       </section>
 
-      <button type="button" class="primary-action" id="confirm-pool" ${physicalCount === 0 ? 'disabled' : ''}>確認骰池 / ARM</button>
+      <button type="button" class="primary-action dice-arm-action" id="confirm-pool" ${physicalCount === 0 ? 'disabled' : ''}>ARM DICE CHAMBER</button>
 
       <section class="history-block">
         <p class="section-code">HISTORY / ${diceHistory.length} OF 20</p>
