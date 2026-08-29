@@ -8,6 +8,7 @@ import {
 
 const registry = new GeometryRegistry();
 const PHYSICAL_LIMIT = 50;
+const DICE_MODIFIER_UI_LIMIT = 99;
 
 function typeLabel(type) {
   return type.toUpperCase();
@@ -15,6 +16,11 @@ function typeLabel(type) {
 
 function poolText(pool) {
   return pool.map((item) => `${item.count}${item.type}`).join(' + ');
+}
+
+function formatModifier(value) {
+  const number = Math.trunc(Number(value) || 0);
+  return `${number >= 0 ? '+' : ''}${number}`;
 }
 
 function physicalCountForCounts(counts) {
@@ -35,9 +41,11 @@ function renderHistory(history) {
   if (!entries.length) return '<p class="history-empty">本次 session 尚無骰子紀錄。</p>';
   return entries.map((entry, index) => {
     const values = entry.result.dice.map((die) => `${die.type}:${die.value}`).join(' / ');
+    const modifier = Number(entry.result?.modifier) || 0;
+    const modifierText = modifier ? ` / MOD ${formatModifier(modifier)}` : '';
     return `
       <details class="history-item" ${index === 0 ? 'open' : ''}>
-        <summary><span>${entry.poolLabel}</span><strong>TOTAL ${entry.result.total}</strong></summary>
+        <summary><span>${entry.poolLabel}${modifierText}</span><strong>TOTAL ${entry.result.total}</strong></summary>
         <div class="history-detail">${values}</div>
       </details>`;
   }).join('');
@@ -78,10 +86,10 @@ function diceDetailMarkup(result) {
       <div class="result-dice-list">${resultRows(result)}</div>
       <div class="choice-provenance">
         <span>骰子</span><strong>${subtotal}</strong>
-        <span>修正</span><strong>${modifier >= 0 ? '+' : ''}${modifier}</strong>
+        <span>調整值</span><strong>${formatModifier(modifier)}</strong>
       </div>
       <div class="total-line"><span>TOTAL</span><strong>${total}</strong></div>
-      <p class="microcopy">最終值只由落定後的實體骰面讀取。詳細資料不會改變已完成的結算。</p>
+      <p class="microcopy">骰面先落定，再套用調整值；詳細資料不會改變已完成的結算。</p>
     </section>`;
 }
 
@@ -89,6 +97,7 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
   let engine = null;
   let rolling = false;
   let projectionMode = 'perspective';
+  let setupPanel = 'standard';
 
   const disposeEngine = () => {
     if (engine) {
@@ -105,8 +114,9 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
 
   const renderSetup = () => {
     disposeEngine();
+    container.classList.add('dice-setup-active');
 
-    const rows = PUBLIC_DIE_TYPES.map((type, index) => {
+    const moduleMarkup = (type, index) => {
       const count = state.diceCounts[type];
       const description = type === 'd100' ? 'PERCENTILE / 2 BODY' : 'PHYSICAL DIE / 1 BODY';
       return `
@@ -116,7 +126,6 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
               <strong>${typeLabel(type)}</strong>
               <span>${description}</span>
             </div>
-            <span class="dice-module-state" aria-hidden="true">${count > 0 ? 'LOADED' : 'STANDBY'}</span>
           </div>
 
           <div class="dice-module-window" aria-hidden="true">
@@ -131,10 +140,13 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
             <button type="button" data-action="plus" aria-label="增加 ${typeLabel(type)}">＋</button>
           </div>
         </div>`;
-    }).join('');
+    };
 
+    const standardTypes = PUBLIC_DIE_TYPES.filter((type) => type !== 'd100');
+    const standardRows = standardTypes.map((type, index) => moduleMarkup(type, index)).join('');
+    const d100Index = Math.max(0, PUBLIC_DIE_TYPES.indexOf('d100'));
+    const d100Row = moduleMarkup('d100', d100Index);
     const physicalCount = physicalCountForCounts(state.diceCounts);
-    const logicalCount = Object.values(state.diceCounts).reduce((a, b) => a + b, 0);
     const diceHistory = state.history.filter((entry) => entry.kind === 'dice');
 
     container.innerHTML = `
@@ -145,42 +157,114 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
         </div>
       </header>
 
-      <section class="function-panel dice-rack-panel">
-        <div class="dice-rack-heading">
-          <p class="section-code">DICE RACK / LOADOUT</p>
-          <span class="dice-rack-state">${logicalCount ? 'LOADED' : 'EMPTY'}</span>
-        </div>
-        <div class="die-counter-list dice-rack" id="die-counter-list">${rows}</div>
-        <div class="pool-meter dice-rack-meter">
-          <span>LOGICAL <strong id="dice-rack-logical">${logicalCount}</strong></span>
-          <span>BODY <strong id="dice-rack-physical">${physicalCount}</strong> / ${PHYSICAL_LIMIT}</span>
-        </div>
-        <p class="microcopy">選擇要裝進物理運算室的骰子。D100 會佔用兩個實體骰體。</p>
+      <nav class="dice-setup-tabs" aria-label="骰子設定區">
+        <button type="button" data-setup-panel="standard" class="${setupPanel === 'standard' ? 'active' : ''}" aria-selected="${setupPanel === 'standard'}">
+          <span>選骰子</span><strong>3～20</strong>
+        </button>
+        <button type="button" data-setup-panel="percentile" class="${setupPanel === 'percentile' ? 'active' : ''}" aria-selected="${setupPanel === 'percentile'}">
+          <span>選骰子</span><strong>100</strong>
+        </button>
+        <button type="button" data-setup-panel="modifier" class="${setupPanel === 'modifier' ? 'active' : ''}" aria-selected="${setupPanel === 'modifier'}">
+          <span>調整值</span><strong id="modifier-tab-value">${formatModifier(state.diceModifier)}</strong>
+        </button>
+      </nav>
+
+      <section class="dice-setup-workspace">
+        <section class="dice-setup-panel" data-panel="standard" ${setupPanel === 'standard' ? '' : 'hidden'}>
+          <div class="die-counter-list dice-rack" data-dice-rack>${standardRows}</div>
+        </section>
+
+        <section class="dice-setup-panel dice-setup-panel--percentile" data-panel="percentile" ${setupPanel === 'percentile' ? '' : 'hidden'}>
+          <div class="die-counter-list dice-rack dice-rack-single" data-dice-rack>${d100Row}</div>
+        </section>
+
+        <section class="dice-setup-panel dice-setup-panel--modifier" data-panel="modifier" ${setupPanel === 'modifier' ? '' : 'hidden'}>
+          <div class="dice-modifier-bay">
+            <div class="dice-modifier-head">
+              <span>調整值</span>
+              <small>目前 ±${DICE_MODIFIER_UI_LIMIT} / SYSTEM ±9999</small>
+            </div>
+            <div class="dice-modifier-control">
+              <button type="button" data-modifier-delta="-1" aria-label="調整值減一">−</button>
+              <input id="dice-modifier-input" type="number" inputmode="numeric" min="-${DICE_MODIFIER_UI_LIMIT}" max="${DICE_MODIFIER_UI_LIMIT}" value="${state.diceModifier}" aria-label="骰子調整值">
+              <button type="button" data-modifier-delta="1" aria-label="調整值加一">＋</button>
+            </div>
+            <div class="dice-modifier-shortcuts" aria-label="快速調整">
+              <button type="button" data-modifier-delta="-10">−10</button>
+              <button type="button" data-modifier-value="0">RESET</button>
+              <button type="button" data-modifier-delta="10">＋10</button>
+            </div>
+          </div>
+        </section>
       </section>
 
-      <button type="button" class="primary-action dice-arm-action" id="confirm-pool" ${physicalCount === 0 ? 'disabled' : ''}>ARM DICE CHAMBER</button>
+      <div class="pool-meter dice-rack-meter">
+        <span>BODY <strong id="dice-rack-physical">${physicalCount}</strong> / ${PHYSICAL_LIMIT}</span>
+      </div>
 
       <section class="history-block">
         <p class="section-code">HISTORY / ${diceHistory.length} OF 20</p>
         ${renderHistory(state.history)}
       </section>
+
+      <div class="dice-setup-lockbar" aria-label="骰子設定確認列">
+        <div class="dice-setup-sum">
+          <span>加總</span>
+          <strong id="dice-setup-modifier-summary">${formatModifier(state.diceModifier)}</strong>
+          <small id="dice-setup-pool-summary">${poolText(state.getDicePool()).toUpperCase() || 'NO DICE'} · ${physicalCount} BODY</small>
+        </div>
+        <button type="button" class="primary-action" id="confirm-pool" ${physicalCount === 0 ? 'disabled' : ''}>確認</button>
+      </div>
     `;
 
-    const rack = container.querySelector('.dice-rack');
+    const tabs = [...container.querySelectorAll('.dice-setup-tabs button[data-setup-panel]')];
+    const panels = [...container.querySelectorAll('.dice-setup-panel[data-panel]')];
+    const confirm = container.querySelector('#confirm-pool');
+    const physicalMeter = container.querySelector('#dice-rack-physical');
+    const modifierTabValue = container.querySelector('#modifier-tab-value');
+    const modifierSummary = container.querySelector('#dice-setup-modifier-summary');
+    const poolSummary = container.querySelector('#dice-setup-pool-summary');
+    const modifierInput = container.querySelector('#dice-modifier-input');
+
     void import('../render/dice-preview.js')
-      .then(({ hydrateDicePreviews }) => hydrateDicePreviews(rack))
+      .then(({ hydrateDicePreviews }) => {
+        container.querySelectorAll('[data-dice-rack]').forEach((rack) => hydrateDicePreviews(rack));
+      })
       .catch(() => {});
 
     container.querySelector('#switch-choice').addEventListener('click', switchChoice);
-    const confirm = container.querySelector('#confirm-pool');
-    const rackState = container.querySelector('.dice-rack-state');
-    const logicalMeter = container.querySelector('#dice-rack-logical');
-    const physicalMeter = container.querySelector('#dice-rack-physical');
 
-    container.querySelector('#die-counter-list').addEventListener('click', (event) => {
-      const button = event.target.closest('button');
+    const activatePanel = (name) => {
+      setupPanel = name;
+      tabs.forEach((tab) => {
+        const active = tab.dataset.setupPanel === name;
+        tab.classList.toggle('active', active);
+        tab.setAttribute('aria-selected', String(active));
+      });
+      panels.forEach((panel) => {
+        panel.hidden = panel.dataset.panel !== name;
+      });
+    };
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => activatePanel(tab.dataset.setupPanel));
+    });
+
+    const syncSetupSummary = () => {
+      const nextPhysicalCount = physicalCountForCounts(state.diceCounts);
+      const pool = state.getDicePool();
+      physicalMeter.textContent = String(nextPhysicalCount);
+      modifierTabValue.textContent = formatModifier(state.diceModifier);
+      modifierSummary.textContent = formatModifier(state.diceModifier);
+      poolSummary.textContent = `${poolText(pool).toUpperCase() || 'NO DICE'} · ${nextPhysicalCount} BODY`;
+      confirm.disabled = nextPhysicalCount === 0;
+    };
+
+    container.querySelector('.dice-setup-workspace').addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-action]');
       if (!button) return;
       const row = button.closest('.die-counter');
+      if (!row) return;
       const type = row.dataset.type;
       const current = state.diceCounts[type];
       let next = current + (button.dataset.action === 'plus' ? 1 : -1);
@@ -191,18 +275,31 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
       if (nextPhysicalCount > PHYSICAL_LIMIT) return;
 
       state.setDieCount(type, next);
-
       row.dataset.count = String(next);
       row.classList.toggle('is-loaded', next > 0);
       row.querySelector('output').textContent = String(next);
-      row.querySelector('.dice-module-state').textContent = next > 0 ? 'LOADED' : 'STANDBY';
-
-      const nextLogicalCount = Object.values(state.diceCounts).reduce((a, b) => a + b, 0);
-      logicalMeter.textContent = String(nextLogicalCount);
-      physicalMeter.textContent = String(nextPhysicalCount);
-      rackState.textContent = nextLogicalCount ? 'LOADED' : 'EMPTY';
-      confirm.disabled = nextPhysicalCount === 0;
+      syncSetupSummary();
     });
+
+    const setUiModifier = (value) => {
+      const next = Math.max(-DICE_MODIFIER_UI_LIMIT, Math.min(DICE_MODIFIER_UI_LIMIT, Math.trunc(Number(value) || 0)));
+      state.setDiceModifier(next);
+      modifierInput.value = String(next);
+      syncSetupSummary();
+    };
+
+    container.querySelector('.dice-modifier-bay').addEventListener('click', (event) => {
+      const deltaButton = event.target.closest('button[data-modifier-delta]');
+      const valueButton = event.target.closest('button[data-modifier-value]');
+      if (deltaButton) {
+        setUiModifier(state.diceModifier + Number(deltaButton.dataset.modifierDelta));
+      } else if (valueButton) {
+        setUiModifier(Number(valueButton.dataset.modifierValue));
+      }
+    });
+
+    modifierInput.addEventListener('change', () => setUiModifier(modifierInput.value));
+    modifierInput.addEventListener('blur', () => setUiModifier(modifierInput.value));
 
     confirm.addEventListener('click', () => {
       const pool = state.getDicePool();
@@ -212,7 +309,9 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
   };
 
   const renderRollStage = (pool) => {
+    container.classList.remove('dice-setup-active');
     const physicalCount = registry.getPhysicalCount(pool);
+    const modifier = Number(state.diceModifier) || 0;
     container.innerHTML = `
       <header class="mode-header">
         <div><span class="eyebrow">MODE 01 / ARMED</span><h1>骰子</h1></div>
@@ -222,7 +321,7 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
       </header>
 
       <section class="roll-summary">
-        <span>POOL</span><strong>${poolText(pool)}</strong><small>${physicalCount} PHYSICAL BODY</small>
+        <span>POOL</span><strong>${poolText(pool)}</strong><small>${physicalCount} PHYSICAL BODY · MOD ${formatModifier(modifier)}</small>
       </section>
 
       <section class="dice-stage" id="dice-stage" aria-label="3D 骰子物理舞台">
@@ -286,12 +385,19 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
       badge.textContent = `ROLL / 0 OF ${physicalCount}`;
 
       try {
-        const result = await engine.roll({
+        const physicsResult = await engine.roll({
           pool,
           onProgress(progress) {
             badge.textContent = stageProgress(progress);
           },
         });
+        const subtotal = Number(physicsResult.total) || 0;
+        const result = {
+          ...physicsResult,
+          subtotal,
+          modifier,
+          total: subtotal + modifier,
+        };
 
         badge.textContent = 'LOCKED';
         state.pushHistory({
