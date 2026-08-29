@@ -39,11 +39,19 @@
   touch-action: manipulation;
 }
 
+/* User-facing copy: clearer than "選項名稱" and does not imply a decision has
+   already been made. Keep the DOM text for compatibility, replace only the
+   visible label in this art-direction layer. */
 .choice-label-toggle > span {
+  font-size: 0;
   font-family: "Songti TC", "Noto Serif TC", PMingLiU, MingLiU, serif;
-  font-size: 19px;
   font-weight: 900;
   letter-spacing: .04em;
+}
+
+.choice-label-toggle > span::before {
+  content: "填寫選項";
+  font-size: 19px;
 }
 
 .choice-label-toggle > small {
@@ -52,16 +60,27 @@
   letter-spacing: .16em;
 }
 
-/* Real little pull handle. */
+/* Real little pull handle, now with an explicit open/close arrow. */
 .choice-label-toggle > i {
   position: relative;
-  display: block;
+  display: grid;
+  place-items: center;
   width: 34px;
-  height: 12px;
+  height: 22px;
   justify-self: end;
   border: 1px solid #707764;
   background: linear-gradient(180deg, #565c4c 0 3px, #272b23 3px 100%);
   box-shadow: inset 1px 1px 0 rgba(238,233,211,.08), 0 2px 0 #080907;
+}
+
+.choice-label-toggle > i::before {
+  content: "▼";
+  position: relative;
+  z-index: 2;
+  color: #d9d7c7;
+  font: 900 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-shadow: 0 1px 0 #080907;
+  transition: transform 100ms steps(2, end);
 }
 
 .choice-label-toggle > i::after {
@@ -69,10 +88,14 @@
   position: absolute;
   left: 7px;
   right: 7px;
-  top: 4px;
-  height: 2px;
+  bottom: 3px;
+  height: 1px;
   background: #0c0e0b;
   box-shadow: 0 1px 0 rgba(235,229,213,.08);
+}
+
+.choice-label-drawer.is-open .choice-label-toggle > i::before {
+  transform: rotate(180deg);
 }
 
 .choice-label-toggle:active > i {
@@ -242,8 +265,23 @@
   transform: translateY(1px);
 }
 
-/* During result/fault takeover, these controls become background hardware. */
-.choice-instrument-stage.is-result-state .choice-stage-console,
+/* RESULT is a stable machine state: method and OPTIONS stay above the result
+   screen so the user can immediately switch the instrument after settlement.
+   REJECTION is transient and remains locked until the automatic reroll ends. */
+.choice-instrument-stage.is-result-state .choice-stage-console {
+  z-index: 60;
+  opacity: .94;
+  pointer-events: auto;
+}
+
+.choice-instrument-stage.is-result-state .choice-options-readout,
+.choice-instrument-stage.is-result-state .choice-method-toggle {
+  box-shadow:
+    inset 1px 1px 0 rgba(235,229,213,.05),
+    0 2px 0 #050605,
+    0 0 0 1px rgba(8,9,7,.88);
+}
+
 .choice-instrument-stage.is-rejection-state .choice-stage-console {
   opacity: .12;
   pointer-events: none;
@@ -304,12 +342,13 @@
     padding-inline: 11px;
   }
 
-  .choice-label-toggle > span {
+  .choice-label-toggle > span::before {
     font-size: 18px;
   }
 
   .choice-label-toggle > i {
     width: 31px;
+    height: 21px;
   }
 
   .dice-stage .settlement-card,
@@ -327,7 +366,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .choice-method-toggle::before {
+  .choice-method-toggle::before,
+  .choice-label-toggle > i::before {
     transition: none;
   }
 }
