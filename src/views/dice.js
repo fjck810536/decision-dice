@@ -106,12 +106,14 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
   const renderSetup = () => {
     disposeEngine();
 
-    const rows = PUBLIC_DIE_TYPES.map((type) => {
+    const rows = PUBLIC_DIE_TYPES.map((type, index) => {
       const count = state.diceCounts[type];
       return `
         <div class="die-counter dice-module ${count > 0 ? 'is-loaded' : ''}" data-type="${type}" data-count="${count}">
           <div class="dice-module-identity">
-            <span class="die-module-face" aria-hidden="true"><i></i></span>
+            <span class="dice-module-preview" aria-hidden="true">
+              <span class="die-preview-slot" data-die-preview="${type}" data-preview-variant="${index % 3}"></span>
+            </span>
             <div class="die-counter-label">
               <strong>${typeLabel(type)}</strong>
               <span>${type === 'd100' ? 'PERCENTILE / 2 BODY' : 'PHYSICAL / 1 BODY'}</span>
@@ -157,6 +159,11 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
         ${renderHistory(state.history)}
       </section>
     `;
+
+    const rack = container.querySelector('.dice-rack');
+    void import('../render/dice-preview.js')
+      .then(({ hydrateDicePreviews }) => hydrateDicePreviews(rack))
+      .catch(() => {});
 
     container.querySelector('#switch-choice').addEventListener('click', switchChoice);
     const confirm = container.querySelector('#confirm-pool');
