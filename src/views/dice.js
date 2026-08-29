@@ -152,8 +152,8 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
         </div>
         <div class="die-counter-list dice-rack" id="die-counter-list">${rows}</div>
         <div class="pool-meter dice-rack-meter">
-          <span>LOGICAL <strong>${logicalCount}</strong></span>
-          <span>BODY <strong>${physicalCount}</strong> / ${PHYSICAL_LIMIT}</span>
+          <span>LOGICAL <strong id="dice-rack-logical">${logicalCount}</strong></span>
+          <span>BODY <strong id="dice-rack-physical">${physicalCount}</strong> / ${PHYSICAL_LIMIT}</span>
         </div>
         <p class="microcopy">選擇要裝進物理運算室的骰子。D100 會佔用兩個實體骰體。</p>
       </section>
@@ -173,6 +173,9 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
 
     container.querySelector('#switch-choice').addEventListener('click', switchChoice);
     const confirm = container.querySelector('#confirm-pool');
+    const rackState = container.querySelector('.dice-rack-state');
+    const logicalMeter = container.querySelector('#dice-rack-logical');
+    const physicalMeter = container.querySelector('#dice-rack-physical');
 
     container.querySelector('#die-counter-list').addEventListener('click', (event) => {
       const button = event.target.closest('button');
@@ -184,9 +187,21 @@ export function renderDiceMode(container, { state, onHome, onChoice }) {
       next = Math.max(0, next);
 
       const candidate = { ...state.diceCounts, [type]: next };
-      if (physicalCountForCounts(candidate) > PHYSICAL_LIMIT) return;
+      const nextPhysicalCount = physicalCountForCounts(candidate);
+      if (nextPhysicalCount > PHYSICAL_LIMIT) return;
+
       state.setDieCount(type, next);
-      renderSetup();
+
+      row.dataset.count = String(next);
+      row.classList.toggle('is-loaded', next > 0);
+      row.querySelector('output').textContent = String(next);
+      row.querySelector('.dice-module-state').textContent = next > 0 ? 'LOADED' : 'STANDBY';
+
+      const nextLogicalCount = Object.values(state.diceCounts).reduce((a, b) => a + b, 0);
+      logicalMeter.textContent = String(nextLogicalCount);
+      physicalMeter.textContent = String(nextPhysicalCount);
+      rackState.textContent = nextLogicalCount ? 'LOADED' : 'EMPTY';
+      confirm.disabled = nextPhysicalCount === 0;
     });
 
     confirm.addEventListener('click', () => {
