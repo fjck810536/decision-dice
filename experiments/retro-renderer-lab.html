@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0f110e">
+  <title>Retro Renderer Lab</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:#0f110e;
+      --panel:#171a15;
+      --line:#565c50;
+      --text:#e4e0c9;
+      --muted:#9da08f;
+      --hot:#d8d079;
+    }
+    * { box-sizing:border-box; }
+    html,body { margin:0; background:var(--bg); color:var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    body { min-height:100%; padding:max(16px, env(safe-area-inset-top)) 14px max(22px, env(safe-area-inset-bottom)); }
+    main { width:min(760px,100%); margin:0 auto; }
+    h1 { margin:0 0 4px; font-size:20px; letter-spacing:.08em; }
+    .lead { margin:0 0 14px; color:var(--muted); font-size:12px; line-height:1.55; }
+    .modebar { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:10px; }
+    button { min-height:46px; border:1px solid var(--line); border-radius:0; background:var(--panel); color:var(--text); font:inherit; font-weight:700; letter-spacing:.04em; }
+    button[aria-pressed="true"] { background:var(--text); color:var(--bg); border-color:var(--text); }
+    button:focus-visible { outline:3px solid var(--hot); outline-offset:2px; }
+    .stage-shell { position:relative; overflow:hidden; border:1px solid var(--line); background:#11130f; aspect-ratio:3/4; max-height:66vh; }
+    canvas { display:block; width:100%; height:100%; touch-action:none; }
+    .stage-shell.deep canvas { image-rendering:pixelated; image-rendering:crisp-edges; }
+    .dither { position:absolute; inset:0; pointer-events:none; opacity:0; background-image:radial-gradient(rgba(0,0,0,.28) .55px, transparent .7px); background-size:3px 3px; mix-blend-mode:multiply; }
+    .stage-shell.deep .dither { opacity:.5; }
+    .badge { position:absolute; top:8px; left:8px; padding:4px 6px; border:1px solid rgba(228,224,201,.45); background:rgba(15,17,14,.7); font-size:10px; letter-spacing:.09em; }
+    .meter { display:grid; grid-template-columns:1fr 1fr; gap:1px; margin-top:10px; border:1px solid var(--line); background:var(--line); }
+    .meter div { background:var(--panel); padding:8px; min-width:0; }
+    .meter b { display:block; color:var(--muted); font-size:9px; margin-bottom:3px; font-weight:500; }
+    .meter span { font-size:12px; overflow-wrap:anywhere; }
+    .motion-lab { margin-top:10px; border:1px solid var(--line); padding:10px; background:var(--panel); overflow:hidden; }
+    .motion-title { display:flex; justify-content:space-between; gap:8px; color:var(--muted); font-size:10px; margin-bottom:9px; }
+    .track { position:relative; height:28px; border-top:1px solid #3b4037; border-bottom:1px solid #3b4037; overflow:hidden; }
+    .signal { position:absolute; top:5px; left:0; white-space:nowrap; font-size:12px; font-weight:800; letter-spacing:.12em; }
+    .actions { display:flex; gap:8px; margin-top:10px; }
+    .actions button { flex:1; }
+    .note { min-height:46px; margin:10px 0 0; color:var(--muted); font-size:11px; line-height:1.55; }
+    .orientation { display:none; position:fixed; inset:0; z-index:99; background:#0f110e; color:#e4e0c9; align-items:center; justify-content:center; text-align:center; padding:30px; font-weight:800; letter-spacing:.08em; }
+    @media (orientation:landscape) and (max-height:600px) { .orientation { display:flex; } }
+    @media (min-width:620px) { .meter { grid-template-columns:repeat(4,1fr); } .stage-shell { max-height:none; aspect-ratio:4/3; } }
+  </style>
+</head>
+<body>
+  <div class="orientation">RETRO RENDERER LAB<br><br>請轉回直向測試</div>
+  <main>
+    <h1>RETRO RENDERER LAB</h1>
+    <p class="lead">同一個 D6 + D20 場景，只改「畫面怎麼被生成」。先看感覺，不是在選最漂亮的成品。</p>
+
+    <div class="modebar" role="group" aria-label="渲染模式">
+      <button type="button" data-mode="A" aria-pressed="true">A 現代</button>
+      <button type="button" data-mode="B" aria-pressed="false">B 1d3系</button>
+      <button type="button" data-mode="C" aria-pressed="false">C 深PS1</button>
+    </div>
+
+    <section class="stage-shell" id="stageShell">
+      <canvas id="stage" aria-label="D6 與 D20 的渲染比較場景"></canvas>
+      <div class="dither" aria-hidden="true"></div>
+      <div class="badge" id="badge">MODE A / MODERN</div>
+    </section>
+
+    <section class="meter" aria-label="目前技術參數">
+      <div><b>INTERNAL BUFFER</b><span id="bufferReadout">—</span></div>
+      <div><b>3D PRESENTATION</b><span id="fpsReadout">—</span></div>
+      <div><b>ANTIALIAS</b><span id="aaReadout">—</span></div>
+      <div><b>TEXTURE FILTER</b><span id="filterReadout">—</span></div>
+      <div><b>SHADING</b><span id="shadeReadout">—</span></div>
+      <div><b>TRANSFORM SNAP</b><span id="snapReadout">—</span></div>
+      <div><b>DITHER OVERLAY</b><span id="ditherReadout">—</span></div>
+      <div><b>UI MOTION</b><span id="uiReadout">—</span></div>
+    </section>
+
+    <section class="motion-lab">
+      <div class="motion-title"><span>UI MOTION SAMPLE</span><span id="motionLabel">SMOOTH</span></div>
+      <div class="track" id="track"><div class="signal" id="signal">◆ TEST SIGNAL ◆</div></div>
+    </section>
+
+    <div class="actions">
+      <button type="button" id="pauseBtn">PAUSE</button>
+      <button type="button" id="resetBtn">RESET ANGLE</button>
+    </div>
+    <p class="note" id="note">A：故意做成一般現代 WebGL，作為對照組。高解析、60fps、抗鋸齒、平滑材質。</p>
+  </main>
+
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js';
+
+    const canvas = document.querySelector('#stage');
+    const shell = document.querySelector('#stageShell');
+    const badge = document.querySelector('#badge');
+    const signal = document.querySelector('#signal');
+    const track = document.querySelector('#track');
+    const pauseBtn = document.querySelector('#pauseBtn');
+    const resetBtn = document.querySelector('#resetBtn');
+    const note = document.querySelector('#note');
+    const buttons = [...document.querySelectorAll('[data-mode]')];
+
+    const out = {
+      buffer: document.querySelector('#bufferReadout'),
+      fps: document.querySelector('#fpsReadout'),
+      aa: document.querySelector('#aaReadout'),
+      filter: document.querySelector('#filterReadout'),
+      shade: document.querySelector('#shadeReadout'),
+      snap: document.querySelector('#snapReadout'),
+      dither: document.querySelector('#ditherReadout'),
+      ui: document.querySelector('#uiReadout'),
+      motion: document.querySelector('#motionLabel')
+    };
+
+    const MODES = {
+      A: {
+        name:'MODERN', fps:60, antialias:true, pixelRatio:Math.min(devicePixelRatio || 1, 2),
+        fixedWidth:null, nearest:false, flat:false, snap:false, dither:false, steppedUI:false,
+        note:'A：一般現代 WebGL 對照組。高解析、60fps、抗鋸齒、較平滑的 D20 表面。'
+      },
+      B: {
+        name:'1D3-ISH', fps:12, antialias:false, pixelRatio:1,
+        fixedWidth:null, nearest:true, flat:true, snap:false, dither:false, steppedUI:false,
+        note:'B：接近目前 1d3 的時間感。物件呈現 12fps、無 AA、Nearest、Flat；但畫布不是刻意超低解析。'
+      },
+      C: {
+        name:'DEEP PS1', fps:12, antialias:false, pixelRatio:1,
+        fixedWidth:240, nearest:true, flat:true, snap:true, dither:true, steppedUI:true,
+        note:'C：更深入的 PS1 實驗。240px 寬內部 buffer 放大、12fps、Flat/Nearest，加上 transform snap 與簡單 dithering；它是方向測試，不是最終規格。'
+      }
+    };
+
+    let modeKey = 'A';
+    let mode = MODES.A;
+    let renderer = null;
+    let scene = null;
+    let camera = null;
+    let rig = null;
+    let d6 = null;
+    let d20 = null;
+    let d6Texture = null;
+    let paused = false;
+    let lastRender = 0;
+    let startTime = performance.now();
+    let resetOffset = 0;
+
+    function pipTexture() {
+      const c = document.createElement('canvas');
+      c.width = c.height = 64;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#d9d5bd'; ctx.fillRect(0,0,64,64);
+      ctx.strokeStyle = '#747262'; ctx.lineWidth = 2; ctx.strokeRect(1,1,62,62);
+      ctx.fillStyle = '#151711';
+      for (const [x,y] of [[17,17],[47,17],[32,32],[17,47],[47,47]]) {
+        ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fill();
+      }
+      return new THREE.CanvasTexture(c);
+    }
+
+    function makeScene() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x11130f);
+      camera = new THREE.PerspectiveCamera(37, 1, .1, 60);
+      camera.position.set(4.9, 3.8, 6.2);
+      camera.lookAt(0, .65, 0);
+
+      scene.add(new THREE.AmbientLight(0xd7d2bb, 1.25));
+      const sun = new THREE.DirectionalLight(0xffffff, 1.55);
+      sun.position.set(4,8,5); scene.add(sun);
+
+      const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(12,12,12,12),
+        new THREE.MeshLambertMaterial({color:0x41463d, wireframe:true, transparent:true, opacity:.42})
+      );
+      floor.rotation.x = -Math.PI/2; floor.position.y = -1.25; scene.add(floor);
+
+      rig = new THREE.Group(); scene.add(rig);
+      d6Texture = pipTexture();
+      rebuildObjects();
+    }
+
+    function rebuildObjects() {
+      if (d6) rig.remove(d6);
+      if (d20) rig.remove(d20);
+      d6Texture.magFilter = mode.nearest ? THREE.NearestFilter : THREE.LinearFilter;
+      d6Texture.minFilter = mode.nearest ? THREE.NearestFilter : THREE.LinearMipmapLinearFilter;
+      d6Texture.needsUpdate = true;
+
+      const cubeMat = new THREE.MeshLambertMaterial({map:d6Texture, flatShading:true});
+      d6 = new THREE.Mesh(new THREE.BoxGeometry(1.55,1.55,1.55), cubeMat);
+      d6.position.x = -1.25;
+      rig.add(d6);
+
+      const icoMat = new THREE.MeshLambertMaterial({color:0xb9b48f, flatShading:mode.flat});
+      d20 = new THREE.Mesh(new THREE.IcosahedronGeometry(1.08,0), icoMat);
+      d20.position.x = 1.25;
+      rig.add(d20);
+
+      const edges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(1.085,0)),
+        new THREE.LineBasicMaterial({color:0x24271f, transparent:true, opacity:.72})
+      );
+      d20.add(edges);
+    }
+
+    function makeRenderer() {
+      if (renderer) renderer.dispose();
+      renderer = new THREE.WebGLRenderer({canvas, antialias:mode.antialias, powerPreference:'default'});
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.setPixelRatio(mode.pixelRatio);
+      resize();
+    }
+
+    function resize() {
+      if (!renderer || !camera) return;
+      const rect = shell.getBoundingClientRect();
+      const cssW = Math.max(1, rect.width);
+      const cssH = Math.max(1, rect.height);
+      camera.aspect = cssW/cssH; camera.updateProjectionMatrix();
+
+      if (mode.fixedWidth) {
+        const w = mode.fixedWidth;
+        const h = Math.max(1, Math.round(w * cssH/cssW));
+        renderer.setPixelRatio(1);
+        renderer.setSize(w,h,false);
+        canvas.style.width = '100%'; canvas.style.height = '100%';
+      } else {
+        renderer.setPixelRatio(mode.pixelRatio);
+        renderer.setSize(cssW,cssH,false);
+        canvas.style.width = '100%'; canvas.style.height = '100%';
+      }
+      updateReadout();
+    }
+
+    function updateReadout() {
+      if (!renderer) return;
+      const v = new THREE.Vector2(); renderer.getDrawingBufferSize(v);
+      out.buffer.textContent = `${Math.round(v.x)} × ${Math.round(v.y)}`;
+      out.fps.textContent = `${mode.fps} fps target`;
+      out.aa.textContent = mode.antialias ? 'ON' : 'OFF';
+      out.filter.textContent = mode.nearest ? 'NEAREST' : 'LINEAR';
+      out.shade.textContent = mode.flat ? 'FLAT' : 'SMOOTH-ish';
+      out.snap.textContent = mode.snap ? 'ON / prototype' : 'OFF';
+      out.dither.textContent = mode.dither ? 'ON / CSS test' : 'OFF';
+      out.ui.textContent = mode.steppedUI ? 'STEPPED' : 'SMOOTH';
+      out.motion.textContent = mode.steppedUI ? 'STEPPED' : 'SMOOTH';
+      badge.textContent = `MODE ${modeKey} / ${mode.name}`;
+      note.textContent = mode.note;
+      shell.classList.toggle('deep', modeKey === 'C');
+    }
+
+    function setMode(key) {
+      modeKey = key; mode = MODES[key];
+      buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === key)));
+      makeRenderer();
+      rebuildObjects();
+      lastRender = 0;
+      updateReadout();
+    }
+
+    buttons.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+    pauseBtn.addEventListener('click', () => {
+      paused = !paused; pauseBtn.textContent = paused ? 'RESUME' : 'PAUSE';
+    });
+    resetBtn.addEventListener('click', () => {
+      resetOffset = (performance.now() - startTime)/1000;
+      if (rig) rig.rotation.set(0,0,0);
+      if (d6) d6.rotation.set(.2,.25,.05);
+      if (d20) d20.rotation.set(-.15,.2,.08);
+    });
+    addEventListener('resize', resize, {passive:true});
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+      if (paused || !renderer || !scene) return;
+
+      const interval = 1000/mode.fps;
+      if (now-lastRender < interval) return;
+      lastRender = now - ((now-lastRender) % interval);
+
+      let t = (now-startTime)/1000 - resetOffset;
+      if (mode.snap) t = Math.round(t*12)/12;
+
+      const xRot = t*.62;
+      const yRot = t*.91;
+      const bobRaw = Math.sin(t*1.7)*.19;
+      const bob = mode.snap ? Math.round(bobRaw*16)/16 : bobRaw;
+
+      rig.position.y = bob;
+      rig.rotation.y = mode.snap ? Math.round(yRot*16)/16 : yRot;
+      d6.rotation.x = mode.snap ? Math.round(xRot*14)/14 : xRot;
+      d6.rotation.z = mode.snap ? Math.round((t*.33)*14)/14 : t*.33;
+      d20.rotation.x = mode.snap ? Math.round((t*.74)*14)/14 : t*.74;
+      d20.rotation.z = mode.snap ? Math.round((t*.41)*14)/14 : t*.41;
+
+      renderer.render(scene,camera);
+    }
+
+    let uiStart = performance.now();
+    function animateUI(now) {
+      requestAnimationFrame(animateUI);
+      const max = Math.max(0, track.clientWidth - signal.offsetWidth);
+      if (!max) return;
+      let phase = ((now-uiStart)/2600)%2;
+      if (phase>1) phase=2-phase;
+      if (mode.steppedUI) phase = Math.round(phase*18)/18;
+      signal.style.transform = `translateX(${Math.round(max*phase)}px)`;
+    }
+
+    makeScene();
+    setMode('A');
+    requestAnimationFrame(animate);
+    requestAnimationFrame(animateUI);
+  </script>
+</body>
+</html>
