@@ -1,0 +1,379 @@
+/* INTERFACE CLEANUP — Art Director Pass
+   Setup is a short route into ARMED, not a second control room.
+   This layer removes repeated visual state and panel chrome without changing
+   interaction semantics, fairness, history data, or renderer behavior. */
+
+/* -------------------------------------------------------------------------
+   SHARED SETUP RHYTHM
+   ------------------------------------------------------------------------- */
+.function-view .mode-header {
+  min-height: 70px;
+  margin-bottom: 10px;
+  padding-top: 5px;
+  padding-bottom: 8px;
+}
+
+.function-view .mode-header h1 {
+  font-size: clamp(38px, 10.8vw, 50px);
+}
+
+.function-view .mode-header .eyebrow {
+  font-size: 7px;
+  letter-spacing: .16em;
+}
+
+.function-view .mode-actions .text-button {
+  min-height: 40px;
+  padding: 7px 9px;
+  border-color: #373d33;
+  background: rgba(8,9,7,.60);
+  color: #999d8e;
+}
+
+/* History remains available but cannot compete with the current task. */
+.function-view .history-block {
+  max-height: 126px;
+  overflow-y: auto;
+  margin-top: 12px;
+  padding: 8px 9px;
+  border-color: #292e27;
+  background: rgba(8,9,7,.42);
+  box-shadow: none;
+  opacity: .72;
+}
+
+.function-view .history-block > .section-code {
+  margin-bottom: 5px;
+  color: #686e60;
+  font-size: 7px;
+}
+
+.function-view .history-item summary {
+  min-height: 32px;
+  padding: 5px 0;
+}
+
+.function-view .history-item:not(:first-of-type) {
+  opacity: .62;
+}
+
+/* -------------------------------------------------------------------------
+   DICE SETUP
+   Keep exactly: die identity / description / 3D specimen / count / body total.
+   ------------------------------------------------------------------------- */
+.dice-rack-panel {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.dice-rack-panel::after {
+  display: none;
+}
+
+.dice-rack-heading {
+  min-height: 27px;
+  margin: 0 0 6px;
+  padding: 0 1px 5px;
+  border-bottom: 1px solid #2e332b;
+}
+
+.dice-rack-heading .section-code {
+  color: #8e9382;
+  font-size: 7px;
+  letter-spacing: .15em;
+}
+
+/* LOADED / EMPTY is redundant with counts and ARM state. */
+.dice-rack-state,
+.dice-module-state {
+  display: none !important;
+}
+
+.dice-rack {
+  gap: 6px;
+  border-top: 0;
+}
+
+.dice-rack .dice-module,
+.dice-rack .dice-module[data-type="d100"] {
+  min-height: 194px;
+  gap: 5px;
+  padding: 7px;
+  border-color: #353b31;
+  background: #0b0d0a;
+  box-shadow: inset 0 -2px 0 rgba(0,0,0,.34);
+}
+
+.dice-rack .dice-module.is-loaded {
+  border-color: #5e6654;
+  background:
+    linear-gradient(90deg, rgba(211,220,130,.045), transparent 54%),
+    #0e110d;
+  box-shadow: inset 2px 0 0 rgba(211,220,130,.10), inset 0 -2px 0 rgba(0,0,0,.35);
+}
+
+.dice-module-head {
+  min-height: 29px;
+  padding: 0 1px 3px;
+  border-bottom: 0;
+}
+
+.dice-rack .die-counter-label strong {
+  font-size: 18px;
+  letter-spacing: .04em;
+}
+
+/* Description stays: user explicitly wants die description retained. */
+.dice-rack .die-counter-label span {
+  margin-top: 3px;
+  color: #707667;
+  font-size: 5.8px;
+  letter-spacing: .08em;
+}
+
+.dice-module-window {
+  min-height: 100px;
+  border-color: #292f27;
+  background:
+    radial-gradient(circle at 50% 47%, #161914 0 15%, #0a0c09 65%, #070806 100%);
+  box-shadow: inset 0 0 0 2px #080907, inset 0 0 0 3px #1d211a;
+}
+
+/* Decorative corner brackets were useful during art-direction, but are now noise. */
+.dice-module-window::before,
+.dice-module-window::after {
+  display: none;
+}
+
+.dice-module-preview {
+  opacity: .78;
+}
+
+.dice-module-stepper {
+  width: min(100%, 132px);
+  grid-template-columns: 39px minmax(44px, 1fr) 39px;
+  border-color: #393f35;
+}
+
+.dice-module-stepper button {
+  width: 39px;
+  height: 40px;
+  font-size: 18px;
+}
+
+.dice-module-stepper output {
+  font-size: 22px;
+}
+
+/* LOGICAL count repeats the visible quantities; BODY is the only system constraint. */
+.dice-rack-meter {
+  min-height: 28px;
+  justify-content: flex-end;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #2e332b;
+}
+
+.dice-rack-meter > span:first-child {
+  display: none;
+}
+
+.dice-rack-meter > span:last-child {
+  color: #8b917d;
+  font-size: 7px;
+  letter-spacing: .13em;
+}
+
+.dice-rack-meter strong {
+  color: #d8dcc0;
+}
+
+/* D100 already says 2 BODY in its nameplate; no repeated paragraph needed. */
+.dice-rack-panel > .microcopy {
+  display: none;
+}
+
+.dice-arm-action {
+  min-height: 58px;
+  margin-top: 7px;
+  font-size: 11px;
+}
+
+/* -------------------------------------------------------------------------
+   CHOICE SETUP
+   One number, one ARM action. Version notes and secondary framing recede.
+   ------------------------------------------------------------------------- */
+.choice-count-panel {
+  margin: 0;
+  padding: 4px 0 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.choice-count-panel::after,
+.choice-count-panel > .section-code,
+.choice-count-panel > .microcopy {
+  display: none;
+}
+
+.choice-count-label {
+  margin: 0 0 7px;
+  color: #969b8a;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: .12em;
+}
+
+.choice-count-input {
+  height: 76px;
+  border-color: #4d5446;
+  background: #0b0d0a;
+  font-size: clamp(44px, 13vw, 60px);
+  box-shadow: inset 0 0 0 3px #080907, inset 0 -3px 0 #161a14;
+}
+
+#confirm-choice-count {
+  min-height: 58px;
+  margin-top: 7px;
+  font-size: 11px;
+}
+
+/* -------------------------------------------------------------------------
+   CHOICE ARMED PRE-STAGE TOOLS
+   Summary -> compact method strip -> optional naming strip -> instrument.
+   ------------------------------------------------------------------------- */
+.choice-plan-summary {
+  min-height: 50px;
+  margin-bottom: 6px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+.choice-plan-summary span,
+.choice-plan-summary strong {
+  font-size: 7px;
+}
+
+.choice-plan-summary strong {
+  font-size: 9px;
+}
+
+.choice-plan-summary + .method-panel {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.choice-plan-summary + .method-panel::after,
+.method-panel > .section-code,
+.method-panel > .microcopy {
+  display: none;
+}
+
+.method-switch {
+  gap: 5px;
+}
+
+.method-switch button {
+  min-height: 47px;
+  padding: 7px 8px;
+  border-color: #343a30;
+  background: #0b0d0a;
+  box-shadow: inset 0 -2px 0 rgba(0,0,0,.30);
+}
+
+.method-switch button strong {
+  font-size: 12px;
+  letter-spacing: .10em;
+}
+
+.method-switch button span {
+  margin-top: 3px;
+  font-size: 6.5px;
+}
+
+.method-switch button.recommended::after {
+  right: 5px;
+  bottom: 5px;
+  font-size: 5.5px;
+}
+
+.method-switch button.active {
+  border-color: #747b62;
+  background:
+    linear-gradient(90deg, rgba(211,220,130,.08), transparent 62%),
+    #10130e;
+  box-shadow: inset 2px 0 0 rgba(211,220,130,.20);
+}
+
+.choice-label-drawer {
+  margin: 5px 0 7px;
+  border: 0;
+  border-top: 1px solid #2d322a;
+  border-bottom: 1px solid #2d322a;
+  background: transparent;
+}
+
+.choice-label-toggle {
+  min-height: 37px;
+  padding: 6px 2px;
+  color: #858b79;
+  font-size: 7px;
+  letter-spacing: .11em;
+}
+
+#choice-label-body {
+  padding: 7px 0 8px;
+  border-top-color: #252a23;
+}
+
+.choice-label-list {
+  gap: 4px;
+  max-height: 34svh;
+}
+
+.choice-label-row {
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 5px;
+}
+
+.choice-label-row input {
+  min-height: 36px;
+  padding: 6px 7px;
+  border-color: #30362d;
+  background: #0a0c09;
+  font-size: 10px;
+}
+
+@media (max-width: 380px) {
+  .dice-rack .dice-module,
+  .dice-rack .dice-module[data-type="d100"] {
+    min-height: 184px;
+    padding: 6px;
+  }
+
+  .dice-module-window {
+    min-height: 94px;
+  }
+
+  .dice-module-stepper {
+    width: min(100%, 122px);
+    grid-template-columns: 36px minmax(42px, 1fr) 36px;
+  }
+
+  .dice-module-stepper button {
+    width: 36px;
+    height: 39px;
+  }
+
+  .function-view .history-block {
+    max-height: 110px;
+  }
+}
