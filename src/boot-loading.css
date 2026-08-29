@@ -1,0 +1,130 @@
+/* Boot / module loading indicator.
+   Uses a prebaked 10-frame D20 strip so it can animate before Three.js exists. */
+
+.boot-loader,
+.module-loader {
+  display: grid;
+  place-items: center;
+}
+
+.boot-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background:
+    linear-gradient(rgba(235,229,213,.012) 1px, transparent 1px) 0 0 / 100% 4px,
+    #080907;
+  color: #ebe5d5;
+  transition: opacity 140ms steps(2, end), visibility 140ms steps(2, end);
+}
+
+.boot-loader.is-leaving {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.boot-loader-inner {
+  width: min(78vw, 300px);
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+}
+
+.boot-d20 {
+  width: 112px;
+  height: 112px;
+  background-image: url('./boot-d20-strip.svg');
+  background-repeat: no-repeat;
+  background-size: 1000% 100%;
+  image-rendering: pixelated;
+  animation: boot-d20-frames 1.05s steps(1, end) infinite;
+  filter: contrast(1.08) saturate(.82);
+}
+
+.boot-copy {
+  width: 100%;
+  text-align: center;
+}
+
+.boot-copy strong,
+.module-loader-copy strong {
+  display: block;
+  color: #d3dc82;
+  font: 800 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .22em;
+}
+
+.boot-copy span,
+.module-loader-copy span {
+  display: block;
+  margin-top: 7px;
+  color: #777d6d;
+  font: 8px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .10em;
+}
+
+.boot-track {
+  position: relative;
+  width: 100%;
+  height: 2px;
+  background: #2c3129;
+  overflow: hidden;
+}
+
+.boot-track::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 34%;
+  background: #d3dc82;
+  animation: boot-track-scan 1.15s steps(8, end) infinite;
+}
+
+.module-loader {
+  min-height: min(46svh, 360px);
+  border: 1px solid #3e4439;
+  background:
+    linear-gradient(rgba(235,229,213,.012) 1px, transparent 1px) 0 0 / 100% 4px,
+    rgba(15,17,13,.92);
+}
+
+.module-loader-inner {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+
+.module-loader .boot-d20 {
+  width: 82px;
+  height: 82px;
+}
+
+.module-loader-copy {
+  text-align: center;
+}
+
+@keyframes boot-d20-frames {
+  0%, 9.99% { background-position: 0% 0; }
+  10%, 19.99% { background-position: 11.111% 0; }
+  20%, 29.99% { background-position: 22.222% 0; }
+  30%, 39.99% { background-position: 33.333% 0; }
+  40%, 49.99% { background-position: 44.444% 0; }
+  50%, 59.99% { background-position: 55.555% 0; }
+  60%, 69.99% { background-position: 66.666% 0; }
+  70%, 79.99% { background-position: 77.777% 0; }
+  80%, 89.99% { background-position: 88.888% 0; }
+  90%, 100% { background-position: 100% 0; }
+}
+
+@keyframes boot-track-scan {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(390%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boot-d20,
+  .boot-track::after {
+    animation: none;
+  }
+  .boot-d20 { background-position: 33.333% 0; }
+}
