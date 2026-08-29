@@ -6,22 +6,17 @@ const rows = {
   e: ['D100', 'D3', 'D8', 'D6', 'D20', 'D10', 'D4'],
 };
 
-function dieSprite(label) {
+function dieSprite(label, index = 0) {
   const type = label.toLowerCase();
   return `
     <span class="die-chip die-${type}" aria-hidden="true">
-      <span class="die-sprite">
-        <i class="facet facet-a"></i>
-        <i class="facet facet-b"></i>
-        <i class="facet facet-c"></i>
-        <i class="facet-mesh"></i>
-      </span>
+      <span class="die-preview-slot" data-die-preview="${type}" data-preview-variant="${index % 3}"></span>
     </span>
   `;
 }
 
 function dieChips(items) {
-  const oneRow = items.map(dieSprite).join('');
+  const oneRow = items.map((label, index) => dieSprite(label, index)).join('');
   return `<div class="marquee-row">${oneRow}</div><div class="marquee-row" aria-hidden="true">${oneRow}</div>`;
 }
 
@@ -80,4 +75,9 @@ export function renderHome(container, { onDice, onChoice }) {
 
   container.querySelector('#home-dice').addEventListener('click', onDice);
   container.querySelector('#home-choice').addEventListener('click', onChoice);
+
+  const scene = container.querySelector('.home-scene');
+  void import('../render/dice-preview.js')
+    .then(({ hydrateDicePreviews }) => hydrateDicePreviews(scene))
+    .catch(() => {});
 }
