@@ -31,7 +31,7 @@ function marqueeRow(items, classes = '') {
 
 export function renderHome(container, { onDice, onChoice }) {
   container.innerHTML = `
-    <section class="home-p2-scene">
+    <section class="home-scene">
       <div class="top-code" aria-hidden="true">
         <span>DECISION AUXILIARY DEVICE</span>
         <span>SYS:01</span>
@@ -43,26 +43,19 @@ export function renderHome(container, { onDice, onChoice }) {
 
       <div class="home-marquee-field home-marquee-field-back" aria-label="骰子類型背景跑馬燈">
         ${marqueeRow(rows.a, 'back-row back-row-a')}
-        ${marqueeRow(rows.b, 'reverse back-row back-row-b')}
-        ${marqueeRow(rows.c, 'back-row back-row-c')}
-        ${marqueeRow(rows.d, 'reverse back-row back-row-d')}
-        ${marqueeRow(rows.e, 'back-row back-row-e')}
+        ${marqueeRow(rows.d, 'reverse back-row back-row-b')}
+        ${marqueeRow(rows.e, 'back-row back-row-c')}
       </div>
 
-      <div class="home-marquee-field home-marquee-field-front" aria-label="骰子類型前景跑馬燈">
+      <div class="home-marquee-field home-marquee-field-front" aria-label="骰子類型主跑馬燈">
         ${marqueeRow(rows.c, 'front-row front-row-a')}
         ${marqueeRow(rows.a, 'reverse front-row front-row-b')}
-        ${marqueeRow(rows.d, 'front-row front-row-c')}
       </div>
 
-      <div class="home-marquee-base" aria-label="骰子類型底部跑馬燈">
-        ${marqueeRow(rows.e, 'reverse bottom-strip-row')}
-      </div>
-
-      <section class="hero home-p2-hero" aria-labelledby="main-title">
-        <div class="logo-wrap home-p2-logo-wrap">
+      <section class="hero home-hero" aria-labelledby="main-title">
+        <div class="logo-wrap home-logo-wrap">
           <p class="logo-kicker">DICE / CHOICE ASSIST SYSTEM</p>
-          <h1 id="main-title" class="logo home-p2-logo">
+          <h1 id="main-title" class="logo home-logo">
             <span class="title-line title-line-a">擲骰與</span>
             <span class="title-line title-line-b">選擇障礙</span>
             <span class="title-line title-line-c">輔助裝置</span>
@@ -74,7 +67,7 @@ export function renderHome(container, { onDice, onChoice }) {
         </div>
       </section>
 
-      <nav class="home-controls home-controls-paired home-p2-controls" aria-label="主要模式">
+      <nav class="home-controls home-mode-controls" aria-label="主要模式">
         <button class="mode-button" id="home-dice" type="button">
           <span class="mode-title">骰子</span>
         </button>
