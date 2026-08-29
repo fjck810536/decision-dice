@@ -22,7 +22,6 @@
     #080907;
 }
 
-/* Tiny machine label: present, but never part of the main hierarchy. */
 .home-scene .top-code {
   position: absolute;
   z-index: 70;
@@ -40,10 +39,7 @@
   pointer-events: none;
 }
 
-/* -------------------------------------------------------------------------
-   ONE SPRITE LANGUAGE
-   Crude hard planes + mesh. No text, no glossy gradients, no fake bloom.
-   ------------------------------------------------------------------------- */
+/* ONE SPRITE LANGUAGE ------------------------------------------------------ */
 .home-scene .marquee {
   display: flex;
   align-items: center;
@@ -153,10 +149,7 @@
 .home-scene .die-d20 .facet-mesh { background-size: 3px 4px; }
 .home-scene .die-d100 .facet-mesh { background-size: 3px 5px; }
 
-/* -------------------------------------------------------------------------
-   TOP STRIP — the original entry cue.
-   Thin, recognisable, and intentionally on the original -1.5deg axis.
-   ------------------------------------------------------------------------- */
+/* TOP STRIP --------------------------------------------------------------- */
 .home-marquee-strip {
   position: absolute;
   z-index: 12;
@@ -191,10 +184,7 @@
 .home-marquee-strip .die-d100 .die-sprite { width: 39px; }
 .home-marquee-strip .marquee-track { animation-duration: 22s; }
 
-/* -------------------------------------------------------------------------
-   BACK FIELD — atmosphere, not content.
-   Three rows only. It must be felt before it is consciously read.
-   ------------------------------------------------------------------------- */
+/* BACK FIELD -------------------------------------------------------------- */
 .home-marquee-field {
   position: absolute;
   overflow: hidden;
@@ -211,7 +201,7 @@
   grid-template-rows: repeat(3, minmax(0, 1fr));
   opacity: .17;
   filter: saturate(.58) contrast(.92) brightness(.72);
-  transform: rotate(-1.0deg) scale(1.025);
+  transform: rotate(-1deg) scale(1.025);
   transform-origin: 50% 50%;
 }
 
@@ -224,10 +214,7 @@
 .home-marquee-field-back .back-row-b .marquee-track { animation-duration: 37s; }
 .home-marquee-field-back .back-row-c .marquee-track { animation-duration: 28s; }
 
-/* -------------------------------------------------------------------------
-   MAIN Z BAND — one deliberate diagonal gesture, not another wallpaper.
-   It crosses under the lower part of the logo and leads toward the controls.
-   ------------------------------------------------------------------------- */
+/* MAIN Z BAND ------------------------------------------------------------- */
 .home-marquee-field-front {
   z-index: 24;
   top: 39svh;
@@ -266,11 +253,7 @@
 .home-marquee-field-front .front-row-a .marquee-track { animation-duration: 19s; }
 .home-marquee-field-front .front-row-b .marquee-track { animation-duration: 23s; }
 
-/* -------------------------------------------------------------------------
-   LOGO — the page is named by this object.
-   No grain overlays. Low-resolution character comes from hard integer-pixel
-   separation, narrow type, and stepped movement while preserving good glyphs.
-   ------------------------------------------------------------------------- */
+/* LOGO -------------------------------------------------------------------- */
 .home-hero {
   position: absolute;
   z-index: 50 !important;
@@ -344,10 +327,7 @@
   text-shadow: 1px 1px 0 #080907;
 }
 
-/* -------------------------------------------------------------------------
-   MODE CONTROLS — low-poly physical slabs.
-   Visual: 1998 CG menu button, not desktop GUI, not glass, not flat web card.
-   ------------------------------------------------------------------------- */
+/* MODE CONTROLS ----------------------------------------------------------- */
 .home-mode-controls {
   position: absolute;
   z-index: 62;
@@ -403,11 +383,16 @@
   content: "";
   position: absolute;
   z-index: 1;
+  display: block;
   top: 9px;
   left: 10px;
   width: 34%;
   height: 5px;
+  transform: none;
+  border: 0;
   background: rgba(237,233,207,.18);
+  color: transparent;
+  font-size: 0;
   clip-path: polygon(0 0, 100% 0, calc(100% - 5px) 100%, 5px 100%);
   pointer-events: none;
 }
@@ -416,7 +401,10 @@
   content: "";
   position: absolute;
   z-index: 1;
+  display: block;
   inset: 8px 9px 10px 8px;
+  transform: none;
+  color: transparent;
   border-top: 1px solid rgba(210,216,170,.24);
   border-left: 1px solid rgba(210,216,170,.12);
   border-right: 2px solid rgba(0,0,0,.42);
