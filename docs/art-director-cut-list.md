@@ -50,10 +50,11 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 
 ### 5. Loading / transition sprite animation
 
-- [ ] Bake an 8–12 frame low-resolution dice rotation sprite sheet into the repo for true boot loading.
-- [ ] Play it with CSS `steps()` / frame positioning so it is available before Three.js or WebGL initializes.
-- [ ] Reuse cached runtime preview frames only for post-boot transitions where the sprite cache already exists.
-- [ ] Keep the animation deliberately low-frame and object-focused; no generic spinner or progress-ring styling.
+- [x] Add a prebaked 10-frame low-resolution D20 rotation strip to the repo for true boot loading.
+- [x] Play it as discrete CSS frames so it is available before Three.js or WebGL initializes.
+- [x] Reuse the same loading object for Dice / Choice module-loading transitions.
+- [x] Keep the animation deliberately low-frame and object-focused; no generic spinner or fake percentage progress.
+- [ ] Revisit the exact D20 frame art after the rest of the chassis language is locked; the loading mechanism itself is now in place.
 
 ### 6. Dice Setup acceptance / cleanup
 
