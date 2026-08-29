@@ -30,7 +30,7 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [x] Keep Choice reel typography and reel-guide behavior intact instead of flattening it into Dice styling.
 - [ ] iPhone acceptance: confirm Choice still feels as comfortable as before and Dice now reads as the same machine.
 
-## Current cut: HOME mode hardware
+## HOME mode hardware
 
 - [x] Stop inventing a separate HOME button material.
 - [x] Derive `骰子` / `選擇` entrance controls from the ARMED control-deck hardware language.
@@ -38,20 +38,24 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [x] Avoid adding decorative HUD labels; the hardware form itself must carry the late-1990s machine character.
 - [ ] iPhone acceptance: confirm the two HOME entrance keys finally feel like enlarged controls from the same machine rather than separate retro tiles.
 
+## Current cut: Settlement stage takeover
+
+- [x] Remove the generic floating-card reading from Dice / Choice settlement.
+- [x] Make the parent instrument enter explicit RESULT / REJECTION states while preserving existing settlement sequencing and data.
+- [x] Dim the physical chamber / reel underneath rather than visually stacking another unrelated card above it.
+- [x] Make Dice TOTAL and Choice final index / label occupy the square instrument aperture itself.
+- [x] Keep Details available as small chassis hardware at the stage edge.
+- [x] Preserve rejection visibility and give it a temporary fault-state treatment instead of a separate modal design.
+- [ ] iPhone acceptance: confirm the result now feels like the instrument changing state rather than a card appearing on top.
+
 ## Next cuts
 
-### 1. Integrate Settlement into the instrument stage
-
-- [ ] Reduce generic modal/card feeling.
-- [ ] Make Dice TOTAL and Choice final index feel like the machine's result display taking over the active stage.
-- [ ] Preserve existing settlement timing, result semantics, Details flow, and rejection visibility rules.
-
-### 2. Unify system controls
+### 1. Unify system controls
 
 - [ ] Make HOME / MUTE / SET feel like fixed chassis hardware rather than a separate web overlay system.
 - [ ] Preserve touch targets and current settings behavior.
 
-### 3. Loading / transition sprite animation
+### 2. Loading / transition sprite animation
 
 - [x] Add a prebaked 10-frame low-resolution D20 rotation strip to the repo for true boot loading.
 - [x] Play it as discrete CSS frames so it is available before Three.js or WebGL initializes.
@@ -59,14 +63,14 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [x] Keep the animation deliberately low-frame and object-focused; no generic spinner or fake percentage progress.
 - [ ] Revisit the exact D20 frame art after the rest of the chassis language is locked; the loading mechanism itself is now in place.
 
-### 4. Dice Setup acceptance / cleanup
+### 3. Dice Setup acceptance / cleanup
 
 - [ ] Review two-column specimen-window spacing on iPhone after this pass.
 - [ ] Check whether the low-frame turntable feels intentional rather than merely flickery.
 - [ ] Remove dead flat-relief CSS after the new 3D specimen-window language is accepted.
 - [ ] Reassess rack-level microcopy only after the object hierarchy is visually accepted.
 
-### 5. HOME asset cleanup
+### 4. HOME asset cleanup
 
 - [ ] Remove obsolete P1 / P2 experimental HOME CSS files only after the current Art Director HOME pass is accepted and no rollback is needed.
 - [ ] Retire the failed html2canvas render probe from the product path; keep only if useful as an archived experiment.
