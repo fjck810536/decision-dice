@@ -9,6 +9,7 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - Choice slot interaction timing and basic stage rhythm. It is currently the strongest interaction reference.
 - Production Dice Art face rules and M6.2A renderer rules remain locked unless explicitly reopened.
 - Dice Roll stays the only place that runs the full physics simulation.
+- HOME logo typography / line-break problems remain intentionally open; do not fold them into panel / chassis cleanup.
 
 ## Shared low-cost 3D dice language
 
@@ -43,13 +44,15 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [x] Introduce a macro-level HOME cabinet instead of treating the page background as the final visual world.
 - [x] Add one recessed `home-main-stage` aperture behind the locked HOME marquee / logo composition so those elements read as display content.
 - [x] Keep marquee count, cadence and major composition locked while changing their physical context from page content to screen content.
-- [x] Shrink the HOME Dice / Choice controls and mount them at the lower display-bezel / control-lip boundary instead of leaving them as large floating cards.
+- [x] Recompose HOME toward a large display + thick lower control bay while leaving logo-specific typography issues for a later dedicated pass.
 - [x] Separate Display World (marquee / logo / dice imagery) from Hardware World (mode keys / cabinet / service key).
 - [x] Remove the full HOME system dock from the primary surface: HOME and MUTE are hidden there; SET remains as one small service-hatch key and sound remains available inside Settings.
-- [ ] iPhone acceptance: confirm the HOME now reads as one physical machine with a screen opening rather than a styled full-screen webpage.
-- [ ] Extend the same outer-cabinet grammar to Dice / Choice screens without flattening their different instruments.
-- [ ] Move Dice ARMED POOL / BODY / MOD into the chamber display so both Dice and Choice keep operational readouts inside their instrument aperture.
-- [ ] Re-evaluate whether Dice / Choice need any persistent external system rail once the shared cabinet is installed.
+- [x] Extend the same outer-cabinet side rails, crown plate, display aperture depth and lower control-bay grammar to Dice / Choice function screens.
+- [x] Visually mount Dice ARMED `POOL / BODY / MOD` into the chamber display instead of letting it read as an independent card above the instrument; defer the literal DOM move until cleanup after visual acceptance.
+- [x] Mount Choice `填寫選項`, Dice Setup selector/workspace, ROLL controls and the fixed Dice confirmation rail as auxiliary / lower bays of the same cabinet rather than unrelated panels.
+- [x] Keep function-mode service keys available but mount their rail into the cabinet crown instead of treating it as a separate website toolbar.
+- [ ] iPhone acceptance: confirm HOME, Dice and Choice now read as one cabinet family; verify embedded Dice readout clearance, Choice drawer-to-stage joint, and lower control-bay proportions.
+- [ ] Re-evaluate whether Dice / Choice need any persistent external system rail after real-device acceptance.
 
 ## Settlement stage takeover
 
@@ -106,6 +109,7 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [ ] Check whether the low-frame turntable feels intentional rather than merely flickery.
 - [ ] Verify the fixed bottom Dice rail clears Safari safe-area / browser chrome while scrolling every setup tab.
 - [ ] Remove dead flat-relief CSS after the 3D specimen-window language is accepted.
+- [ ] Move the visually embedded Dice ARMED data strip into the stage DOM after its composition is accepted.
 - [ ] If the interface-cleanup pass is accepted, remove now-hidden redundant status markup and dead selectors instead of leaving them as permanent overrides.
 
 ### 3. HOME asset cleanup
