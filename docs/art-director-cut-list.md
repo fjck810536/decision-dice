@@ -38,6 +38,19 @@ It exists so visual decisions do not get lost across iterative HOME / DICE / CHO
 - [x] Avoid adding decorative HUD labels; the hardware form itself must carry the late-1990s machine character.
 - [ ] iPhone acceptance: confirm the two HOME entrance keys finally feel like enlarged controls from the same machine rather than separate retro tiles.
 
+## Macro Chassis v1
+
+- [x] Introduce a macro-level HOME cabinet instead of treating the page background as the final visual world.
+- [x] Add one recessed `home-main-stage` aperture behind the locked HOME marquee / logo composition so those elements read as display content.
+- [x] Keep marquee count, cadence and major composition locked while changing their physical context from page content to screen content.
+- [x] Shrink the HOME Dice / Choice controls and mount them at the lower display-bezel / control-lip boundary instead of leaving them as large floating cards.
+- [x] Separate Display World (marquee / logo / dice imagery) from Hardware World (mode keys / cabinet / service key).
+- [x] Remove the full HOME system dock from the primary surface: HOME and MUTE are hidden there; SET remains as one small service-hatch key and sound remains available inside Settings.
+- [ ] iPhone acceptance: confirm the HOME now reads as one physical machine with a screen opening rather than a styled full-screen webpage.
+- [ ] Extend the same outer-cabinet grammar to Dice / Choice screens without flattening their different instruments.
+- [ ] Move Dice ARMED POOL / BODY / MOD into the chamber display so both Dice and Choice keep operational readouts inside their instrument aperture.
+- [ ] Re-evaluate whether Dice / Choice need any persistent external system rail once the shared cabinet is installed.
+
 ## Settlement stage takeover
 
 - [x] Remove the generic floating-card reading from Dice / Choice settlement.
@@ -106,6 +119,7 @@ Treat the product as a late-1990s dedicated decision-assistance machine:
 
 - object-level age: low-poly dice, hard bevels, limited colors, physical controls;
 - display-level age: hard pixel separation, low-resolution 3D, stepped motion where appropriate;
+- macro-level age: one physical cabinet must contain screens and controls instead of allowing every interface layer to occupy the same flat world;
 - avoid decorative retro noise: no gratuitous glitch, scanline, HUD text, black-grain overlays, or REC/SYS clutter unless it has a machine function.
 
 Shared color semantics:
