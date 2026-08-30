@@ -1,0 +1,275 @@
+/* MACRO CHASSIS / HOME — Art Director Pass v1
+   HOME is no longer a page composition floating in one visual world.
+   It is a physical cabinet containing one recessed display aperture and a
+   smaller pair of mode keys mounted into the lower bezel / control lip. */
+
+.home-view {
+  width: min(100%, 680px);
+  min-height: 100svh;
+  background: #11140f;
+}
+
+.home-scene.home-cabinet {
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(90deg,
+      #252a21 0 8px,
+      #3c4235 8px 11px,
+      #181b15 11px 18px,
+      transparent 18px calc(100% - 18px),
+      #181b15 calc(100% - 18px) calc(100% - 11px),
+      #3c4235 calc(100% - 11px) calc(100% - 8px),
+      #252a21 calc(100% - 8px)),
+    linear-gradient(180deg,
+      #454c3d 0 5px,
+      #2b3026 5px 16px,
+      #171a14 16px calc(100% - 18px),
+      #0b0d0a calc(100% - 18px) 100%);
+  box-shadow:
+    inset 1px 0 0 rgba(235,229,213,.045),
+    inset -1px 0 0 rgba(0,0,0,.40);
+}
+
+/* The cabinet carries the status engraving; display texture starts below it. */
+.home-scene .top-code {
+  top: max(9px, env(safe-area-inset-top));
+  left: 12px;
+  right: 58px;
+  padding: 0;
+  color: #858b79;
+  font-size: 7px;
+  letter-spacing: .14em;
+  text-shadow: 0 1px 0 #070806;
+}
+
+/* -------------------------------------------------------------------------
+   MAIN DISPLAY APERTURE
+   This is the missing macro-level object: all marquee / logo material is read
+   as screen content because it sits visually above this recessed aperture.
+   Existing marquee positions and animation durations are intentionally not
+   changed by this pass. */
+.home-main-stage {
+  position: absolute;
+  z-index: 2;
+  top: max(27px, calc(env(safe-area-inset-top) + 17px));
+  left: 11px;
+  right: 11px;
+  bottom: max(102px, calc(env(safe-area-inset-bottom) + 78px));
+  pointer-events: none;
+  overflow: hidden;
+  border: 7px solid #2a2f25;
+  outline: 1px solid #59604f;
+  outline-offset: -3px;
+  clip-path: polygon(
+    7px 0,
+    calc(100% - 5px) 0,
+    100% 5px,
+    100% calc(100% - 9px),
+    calc(100% - 9px) 100%,
+    5px 100%,
+    0 calc(100% - 6px),
+    0 7px
+  );
+  background:
+    linear-gradient(rgba(235,229,213,.014) 1px, transparent 1px) 0 0 / 100% 4px,
+    linear-gradient(90deg, rgba(211,220,130,.018), transparent 46%, rgba(152,83,67,.014)),
+    #070806;
+  box-shadow:
+    inset 0 0 0 2px #050605,
+    inset 0 0 0 5px #141812,
+    inset 5px 5px 0 rgba(0,0,0,.44),
+    0 5px 0 #050605,
+    0 10px 22px rgba(0,0,0,.25);
+}
+
+.home-main-stage::before,
+.home-main-stage::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.home-main-stage::before {
+  inset: 11px;
+  border: 1px solid rgba(111,120,96,.32);
+  box-shadow:
+    inset 2px 2px 0 rgba(0,0,0,.50),
+    inset -1px -1px 0 rgba(235,229,213,.025);
+}
+
+/* Thick bottom bezel / control lip. */
+.home-main-stage::after {
+  left: 7px;
+  right: 7px;
+  bottom: 5px;
+  height: 18px;
+  border-top: 1px solid #3d4437;
+  background:
+    linear-gradient(180deg, #20241c 0 5px, #10120e 5px 100%);
+  box-shadow: inset 0 2px 0 rgba(235,229,213,.025);
+}
+
+/* Existing screen objects remain at their locked coordinates, but the stage now
+   gives them a physical containing world. */
+.home-marquee-strip,
+.home-marquee-field,
+.home-hero {
+  pointer-events: none;
+}
+
+/* Keep display content visually inside the aperture by slightly softening only
+   the extreme page edges; do not alter animation, count, tilt or cadence. */
+.home-marquee-strip {
+  left: 0;
+  width: 100%;
+}
+
+.home-marquee-field-back {
+  left: -5%;
+  width: 110%;
+}
+
+/* -------------------------------------------------------------------------
+   MODE KEYS / LOWER CONTROL LIP
+   Smaller than the old HOME hero buttons. Their top edge slightly overlaps the
+   display bezel so they read as physical keys mounted into the cabinet, not as
+   cards floating below a screen. */
+.home-mode-controls.home-control-deck {
+  z-index: 68;
+  left: 34px;
+  right: 34px;
+  bottom: max(40px, calc(env(safe-area-inset-bottom) + 18px));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0;
+}
+
+.home-mode-controls .mode-button,
+.home-mode-controls .mode-button + .mode-button {
+  height: 66px;
+  min-height: 66px;
+  aspect-ratio: auto;
+  border-color: #656d59;
+  box-shadow:
+    inset 2px 2px 0 rgba(237,232,210,.075),
+    inset -3px -4px 0 rgba(0,0,0,.40),
+    inset 0 0 0 1px #747b65,
+    0 4px 0 #050605;
+}
+
+.home-mode-controls .mode-button::before {
+  inset: 6px 7px 9px;
+}
+
+.home-mode-controls .mode-button::after {
+  left: 15px;
+  right: 15px;
+  bottom: 12px;
+  height: 2px;
+}
+
+.home-mode-controls .mode-title {
+  font-size: clamp(27px, 7.8vw, 38px);
+  line-height: 1;
+  transform: translateY(-2px) scaleX(.94);
+  text-shadow:
+    2px 0 0 rgba(152,83,67,.45),
+    -1px 0 0 rgba(211,220,130,.24),
+    0 3px 0 rgba(0,0,0,.58);
+}
+
+/* Cabinet foot: keeps the page from reading as a screen that simply ends. */
+.home-cabinet::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  left: 12px;
+  right: 12px;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  height: 24px;
+  border-top: 1px solid #33392f;
+  background:
+    linear-gradient(180deg, rgba(235,229,213,.025), transparent 4px),
+    #0c0e0b;
+  box-shadow: inset 0 -4px 0 #050605;
+  pointer-events: none;
+}
+
+/* -------------------------------------------------------------------------
+   HOME SERVICE HARDWARE
+   The old three-button floating toolbar is intentionally absent on HOME.
+   HOME is already home; sound remains available inside SET, so only the single
+   service-hatch key is exposed on the cabinet surface. Dice / Choice keep the
+   existing service rail until the shared cabinet pass. */
+body:has(.home-view) #global-home,
+body:has(.home-view) #global-mute {
+  display: none !important;
+}
+
+body:has(.home-view) .system-dock {
+  top: max(5px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
+  padding: 0;
+  gap: 0;
+  border: 0;
+  background: transparent;
+  clip-path: none;
+  box-shadow: none;
+}
+
+body:has(.home-view) .system-dock::before {
+  display: none;
+}
+
+body:has(.home-view) #global-settings {
+  min-width: 44px;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-color: #5c6352;
+  background:
+    linear-gradient(180deg, #414737 0 4px, #24281f 4px calc(100% - 6px), #0e100c calc(100% - 6px));
+  color: #b9b7a9;
+  box-shadow:
+    inset 1px 1px 0 rgba(238,233,211,.06),
+    inset -2px -3px 0 rgba(0,0,0,.34),
+    0 3px 0 #050605;
+}
+
+body:has(.home-view) .system-settings {
+  top: calc(max(5px, env(safe-area-inset-top)) + 51px);
+  right: max(10px, env(safe-area-inset-right));
+}
+
+@media (max-width: 390px) {
+  .home-mode-controls.home-control-deck {
+    left: 25px;
+    right: 25px;
+    gap: 7px;
+  }
+
+  .home-mode-controls .mode-button,
+  .home-mode-controls .mode-button + .mode-button {
+    height: 62px;
+    min-height: 62px;
+  }
+
+  .home-mode-controls .mode-title {
+    font-size: clamp(25px, 7.4vw, 33px);
+  }
+}
+
+@media (max-width: 350px) {
+  .home-main-stage {
+    left: 8px;
+    right: 8px;
+  }
+
+  .home-mode-controls.home-control-deck {
+    left: 19px;
+    right: 19px;
+  }
+}
