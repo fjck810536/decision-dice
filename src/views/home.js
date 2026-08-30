@@ -26,11 +26,13 @@ function marqueeRow(items, classes = '') {
 
 export function renderHome(container, { onDice, onChoice }) {
   container.innerHTML = `
-    <section class="home-scene">
+    <section class="home-scene home-cabinet">
       <div class="top-code" aria-hidden="true">
         <span>DECISION AUXILIARY DEVICE</span>
         <span>SYS:01</span>
       </div>
+
+      <div class="home-main-stage" aria-hidden="true"></div>
 
       <div class="home-marquee-strip" aria-label="骰子類型頂端跑馬燈">
         ${marqueeRow(rows.b, 'top-strip-row')}
@@ -62,7 +64,7 @@ export function renderHome(container, { onDice, onChoice }) {
         </div>
       </section>
 
-      <nav class="home-controls home-mode-controls" aria-label="主要模式">
+      <nav class="home-controls home-mode-controls home-control-deck" aria-label="主要模式">
         <button class="mode-button" id="home-dice" type="button">
           <span class="mode-title">骰子</span>
         </button>
