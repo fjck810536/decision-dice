@@ -1,0 +1,127 @@
+/* SETUP COMMIT HARDWARE — shared Dice / Choice primary confirmation key
+   Setup confirmation is machine hardware, not a generic web CTA.
+   Dice keeps its fixed lockbar; Choice keeps its current flow position.
+   Both now use the same mounted key face / standing shadow / press travel. */
+
+/* -------------------------------------------------------------------------
+   SHARED COMMIT KEY
+   ------------------------------------------------------------------------- */
+.function-view .dice-setup-lockbar #confirm-pool,
+.function-view #confirm-choice-count {
+  position: relative;
+  min-height: 70px;
+  margin: 0;
+  border: 1px solid #aeb66f;
+  border-radius: 0;
+  clip-path: polygon(5px 0, calc(100% - 3px) 0, 100% 4px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 3px 100%, 0 calc(100% - 4px), 0 5px);
+  background:
+    linear-gradient(180deg,
+      rgba(251,247,215,.30) 0 5px,
+      transparent 5px calc(100% - 9px),
+      rgba(52,57,31,.30) calc(100% - 9px)),
+    linear-gradient(90deg,
+      #d3dc82 0 7px,
+      #bec775 7px calc(100% - 8px),
+      #878e57 calc(100% - 8px));
+  color: #090a07;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: .13em;
+  text-shadow: 1px 1px 0 rgba(255,255,226,.20);
+  box-shadow:
+    inset 2px 2px 0 rgba(255,255,232,.20),
+    inset -4px -5px 0 rgba(67,72,42,.34),
+    0 5px 0 #050605;
+  touch-action: manipulation;
+}
+
+.function-view .dice-setup-lockbar #confirm-pool:not(:disabled):active,
+.function-view #confirm-choice-count:not(:disabled):active {
+  transform: translate(2px, 4px);
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.15) 0 6px, transparent 6px),
+    #aab268;
+  box-shadow:
+    inset 3px 4px 0 rgba(0,0,0,.25),
+    0 1px 0 #050605;
+}
+
+.function-view .dice-setup-lockbar #confirm-pool:disabled,
+.function-view #confirm-choice-count:disabled {
+  opacity: .30;
+  filter: saturate(.28);
+}
+
+/* -------------------------------------------------------------------------
+   CHOICE SETUP MOUNTING BAY
+   The Choice key used to sit naked between the input card and history.
+   Give it the same control-deck mounting depth as the fixed Dice lockbar,
+   without changing its interaction or making it viewport-fixed. */
+.function-view #confirm-choice-count {
+  width: calc(100% - 32px);
+  margin: 17px 16px 18px;
+  /* Outer rings behave like a small mounting plate around the physical key. */
+  box-shadow:
+    inset 2px 2px 0 rgba(255,255,232,.20),
+    inset -4px -5px 0 rgba(67,72,42,.34),
+    0 5px 0 #050605,
+    0 0 0 7px #1b1f18,
+    0 0 0 8px #59604f,
+    0 7px 0 8px #060706;
+}
+
+.function-view #confirm-choice-count:not(:disabled):active {
+  box-shadow:
+    inset 3px 4px 0 rgba(0,0,0,.25),
+    0 1px 0 #050605,
+    0 0 0 7px #171a14,
+    0 0 0 8px #4e5546,
+    0 3px 0 8px #060706;
+}
+
+/* -------------------------------------------------------------------------
+   DICE FIXED LOCKBAR
+   The key is already mounted in a physical lower bay; only equalise its face
+   proportions with the Choice commit key and stop it reading as a thin CTA. */
+.function-view.dice-setup-active .dice-setup-lockbar #confirm-pool {
+  align-self: stretch;
+  min-height: 72px;
+  font-size: 15px;
+}
+
+/* The information readout and key should feel like two components installed
+   in one lower console, not one card plus one unrelated bright rectangle. */
+.function-view.dice-setup-active .dice-setup-lockbar {
+  align-items: stretch;
+  gap: 10px;
+}
+
+.function-view.dice-setup-active .dice-setup-sum {
+  border-color: #4d5545;
+  background:
+    linear-gradient(180deg, rgba(235,229,213,.025) 0 3px, transparent 3px),
+    #080a07;
+  box-shadow:
+    inset 0 0 0 2px #050605,
+    inset 3px 0 0 rgba(211,220,130,.025);
+}
+
+@media (max-width: 380px) {
+  .function-view .dice-setup-lockbar #confirm-pool,
+  .function-view #confirm-choice-count {
+    min-height: 66px;
+    font-size: 13px;
+  }
+
+  .function-view #confirm-choice-count {
+    width: calc(100% - 28px);
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+
+  .function-view.dice-setup-active .dice-setup-lockbar {
+    gap: 7px;
+  }
+}
