@@ -3,6 +3,7 @@ import { renderHome } from './views/home.js';
 import { audioEngine } from './audio/audio-engine.js';
 import { mountSystemControls } from './ui/system-controls.js';
 import { installDoubleTapZoomGuard } from './ui/mobile-gesture-guard.js';
+import { installDiceStageReadout } from './ui/dice-stage-readout.js';
 
 installDoubleTapZoomGuard();
 
@@ -11,6 +12,8 @@ const bootLoader = document.getElementById('boot-loader');
 const state = new SessionState();
 const bootStartedAt = performance.now();
 const MIN_BOOT_MS = 560;
+
+installDiceStageReadout(root);
 
 let navigationToken = 0;
 let diceModulePromise = null;
