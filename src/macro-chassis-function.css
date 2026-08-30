@@ -1,0 +1,348 @@
+/* MACRO CHASSIS / FUNCTION MODES — Art Director Pass v1
+   Dice / Choice are no longer pages that happen to contain instrument panels.
+   They are two modules mounted in the same cabinet family established by HOME.
+   This pass changes composition and hardware hierarchy only; interaction and
+   simulation semantics stay untouched. */
+
+/* -------------------------------------------------------------------------
+   OUTER CABINET
+   ------------------------------------------------------------------------- */
+.function-view {
+  width: min(100%, 680px);
+  min-height: 100svh;
+  padding:
+    max(70px, calc(env(safe-area-inset-top) + 58px))
+    18px
+    max(34px, env(safe-area-inset-bottom));
+  background:
+    linear-gradient(90deg,
+      #252a21 0 8px,
+      #3c4235 8px 11px,
+      #181b15 11px 18px,
+      transparent 18px calc(100% - 18px),
+      #181b15 calc(100% - 18px) calc(100% - 11px),
+      #3c4235 calc(100% - 11px) calc(100% - 8px),
+      #252a21 calc(100% - 8px)),
+    linear-gradient(180deg,
+      #454c3d 0 5px,
+      #2b3026 5px 19px,
+      #151812 19px calc(100% - 20px),
+      #0b0d0a calc(100% - 20px));
+  box-shadow:
+    inset 1px 0 0 rgba(235,229,213,.045),
+    inset -1px 0 0 rgba(0,0,0,.42);
+}
+
+/* The old whole-page vignette belonged to the screen world. The cabinet itself
+   should stay materially legible. Individual displays keep their own texture. */
+.function-view::after {
+  background: none;
+}
+
+/* Cabinet crown: an engraved mode plate, not another floating content panel. */
+.function-view .mode-header {
+  min-height: 62px;
+  margin: 0 0 10px;
+  padding: 8px 11px 9px;
+  align-items: center;
+  border-top: 1px solid #626a56;
+  border-bottom: 1px solid #252a22;
+  background:
+    linear-gradient(180deg, rgba(235,229,213,.045) 0 3px, transparent 3px),
+    linear-gradient(90deg, rgba(211,220,130,.025), transparent 58%),
+    #20241c;
+  box-shadow:
+    inset 3px 0 0 #30362b,
+    inset -3px 0 0 #11140f,
+    0 4px 0 #060706;
+  clip-path: polygon(5px 0, calc(100% - 3px) 0, 100% 3px, 100% calc(100% - 5px), calc(100% - 5px) 100%, 3px 100%, 0 calc(100% - 3px), 0 5px);
+}
+
+.function-view .mode-header h1 {
+  font-size: clamp(34px, 9vw, 44px);
+  letter-spacing: .10em;
+}
+
+.function-view .mode-header .eyebrow {
+  color: #8a907d;
+}
+
+/* Mode switching belongs to the cabinet crown. */
+.function-view .mode-actions .text-button {
+  min-height: 44px;
+  margin: 0;
+  border-color: #555d4c;
+  background:
+    linear-gradient(180deg, #363c30 0 4px, #20241c 4px calc(100% - 6px), #0e100c calc(100% - 6px));
+  color: #c8c5b6;
+  box-shadow:
+    inset 1px 1px 0 rgba(238,233,211,.055),
+    inset -2px -3px 0 rgba(0,0,0,.34),
+    0 2px 0 #070806;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+
+/* -------------------------------------------------------------------------
+   MAIN DISPLAY APERTURE
+   Dice chamber and Choice reel are different displays inserted in one shell.
+   ------------------------------------------------------------------------- */
+.function-view .dice-stage,
+.function-view .slot-stage {
+  border: 7px solid #292e24;
+  outline: 1px solid #626a56;
+  outline-offset: -3px;
+  clip-path: polygon(7px 0, calc(100% - 5px) 0, 100% 5px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 5px 100%, 0 calc(100% - 6px), 0 7px);
+  box-shadow:
+    inset 0 0 0 2px #050605,
+    inset 0 0 0 5px #141812,
+    inset 5px 5px 0 rgba(0,0,0,.34),
+    0 5px 0 #050605;
+}
+
+/* Dice information is no longer allowed to read as a separate card above the
+   display. For this composition pass it is physically overlaid into the upper
+   display bezel; the DOM can be moved during dead-code cleanup after approval. */
+.function-view .roll-summary {
+  position: relative;
+  z-index: 18;
+  width: calc(100% - 24px);
+  min-height: 46px;
+  margin: 0 12px -54px;
+  padding: 7px 9px 8px;
+  transform: translateY(9px);
+  grid-template-columns: 50px minmax(0, 1fr);
+  gap: 2px 8px;
+  border: 1px solid #535b4a;
+  background:
+    linear-gradient(180deg, rgba(235,229,213,.04) 0 3px, transparent 3px),
+    rgba(8,10,7,.93);
+  box-shadow:
+    inset 0 0 0 2px #050605,
+    0 2px 0 #050605;
+  pointer-events: none;
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+}
+
+.function-view .roll-summary span,
+.function-view .roll-summary small {
+  font-size: 6px;
+  letter-spacing: .10em;
+  color: #777d6c;
+}
+
+.function-view .roll-summary strong {
+  font-size: 9px;
+  color: #e4dfcf;
+}
+
+.function-view .roll-summary small {
+  grid-column: 2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Give Dice display content a little breathing room beneath the embedded readout. */
+.function-view .roll-summary + .dice-stage canvas {
+  padding-top: 35px;
+}
+
+/* Choice's embedded OPTIONS / method console uses the same mounting depth. */
+.function-view .choice-stage-console {
+  top: 12px;
+  right: 12px;
+}
+
+.function-view .choice-options-readout,
+.function-view .choice-method-toggle {
+  border-color: #535b4a;
+  box-shadow:
+    inset 0 0 0 1px #090a08,
+    0 2px 0 #050605;
+}
+
+/* -------------------------------------------------------------------------
+   AUXILIARY BAYS
+   Drawers / setup selectors attach to the cabinet instead of looking like
+   independent cards laid above it.
+   ------------------------------------------------------------------------- */
+.function-view .choice-label-drawer {
+  z-index: 12;
+  margin: 0 8px -1px;
+  border-color: #606853;
+  border-bottom-color: #30352b;
+  box-shadow:
+    inset 2px 2px 0 rgba(235,229,213,.05),
+    inset -3px -4px 0 rgba(0,0,0,.31),
+    0 3px 0 #050605;
+}
+
+.function-view .choice-label-drawer + .choice-instrument-stage {
+  position: relative;
+  z-index: 11;
+}
+
+/* Dice Setup top selector becomes a selector rail installed in the same shell. */
+.function-view .dice-setup-tabs {
+  gap: 3px;
+  margin: 0 7px -1px;
+  padding: 5px;
+  border: 1px solid #59604f;
+  border-bottom-color: #343a30;
+  background:
+    linear-gradient(180deg, #343a2e 0 4px, #1d2119 4px 100%);
+  box-shadow:
+    inset 1px 1px 0 rgba(235,229,213,.05),
+    0 3px 0 #050605;
+  clip-path: polygon(5px 0, calc(100% - 3px) 0, 100% 3px, 100% 100%, 0 100%, 0 5px);
+}
+
+.function-view .dice-setup-tabs button {
+  min-height: 50px;
+  border-color: #444b3e;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,.30);
+}
+
+.function-view .dice-setup-workspace {
+  padding: 8px 7px 9px;
+  border: 1px solid #59604f;
+  background:
+    linear-gradient(rgba(235,229,213,.012) 1px, transparent 1px) 0 0 / 100% 4px,
+    #0a0c09;
+  box-shadow:
+    inset 0 0 0 3px #060706,
+    inset 4px 4px 0 rgba(0,0,0,.24),
+    0 5px 0 #050605;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 5px 100%, 0 calc(100% - 5px));
+}
+
+.function-view .dice-modifier-bay {
+  border-color: #444b3e;
+  box-shadow:
+    inset 0 0 0 3px #070806,
+    inset 0 0 0 4px #1d211a;
+}
+
+/* Choice initial count setup is the same kind of input bay, not a bare form. */
+.function-view .choice-count-panel {
+  margin: 0 7px;
+  padding: 11px;
+  border: 1px solid #59604f;
+  background: #0b0d0a;
+  box-shadow:
+    inset 0 0 0 3px #060706,
+    inset 4px 4px 0 rgba(0,0,0,.24),
+    0 5px 0 #050605;
+  clip-path: polygon(5px 0, calc(100% - 3px) 0, 100% 3px, 100% calc(100% - 7px), calc(100% - 7px) 100%, 5px 100%, 0 calc(100% - 5px), 0 5px);
+}
+
+/* -------------------------------------------------------------------------
+   LOWER CONTROL BAY
+   ROLL / edit controls are mounted into one thick lower console, matching the
+   visual role of HOME's control bay rather than floating below the display. */
+.function-view .roll-control-row,
+.function-view .choice-roll-control-row {
+  position: relative;
+  margin: 0;
+  padding: 12px 9px 13px;
+  gap: 7px;
+  border-top: 1px solid #68705a;
+  border-left: 1px solid #3e4438;
+  border-right: 1px solid #3e4438;
+  border-bottom: 1px solid #181b16;
+  background:
+    linear-gradient(180deg, rgba(235,229,213,.045) 0 4px, transparent 4px),
+    linear-gradient(180deg, #30352a 0 9px, #1d2119 9px calc(100% - 9px), #0c0e0b calc(100% - 9px));
+  box-shadow:
+    inset 4px 0 0 #24291f,
+    inset -4px 0 0 #11140f,
+    0 6px 0 #050605;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 7px 100%, 0 calc(100% - 7px));
+}
+
+.function-view .roll-control-row .primary-action,
+.function-view .choice-roll-control-row .primary-action,
+.function-view .roll-control-row .secondary-action,
+.function-view .choice-roll-control-row .secondary-action {
+  min-height: 72px;
+}
+
+/* Dice Setup fixed rail is the same lower console family. */
+.function-view.dice-setup-active .dice-setup-lockbar {
+  border-top-color: #68705a;
+  background:
+    linear-gradient(180deg, rgba(235,229,213,.055) 0 4px, transparent 4px),
+    linear-gradient(180deg, #30352a 0 9px, #1a1e17 9px calc(100% - 9px), #0b0d0a calc(100% - 9px));
+  box-shadow:
+    0 -5px 0 rgba(5,6,5,.82),
+    0 -14px 28px rgba(0,0,0,.34),
+    inset 4px 0 0 #24291f,
+    inset -4px 0 0 #11140f;
+}
+
+/* History is a service log mounted lower in the hierarchy. */
+.function-view .history-block {
+  margin-top: 14px;
+  border-color: #32382f;
+  background: rgba(8,10,7,.62);
+  box-shadow: inset 3px 0 0 #11140f;
+}
+
+/* -------------------------------------------------------------------------
+   SERVICE KEYS ON FUNCTION CABINET
+   Still available, but visually mounted to the cabinet crown rather than
+   floating as a separate website toolbar. */
+body:has(.function-view) .system-dock {
+  top: max(7px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  padding: 3px;
+  border-color: #555d4c;
+  background:
+    linear-gradient(180deg, #414737 0 3px, #24281f 3px 100%);
+  box-shadow:
+    inset 1px 1px 0 rgba(235,229,213,.055),
+    0 3px 0 #050605;
+}
+
+body:has(.function-view) .system-dock-button {
+  min-width: 45px;
+  min-height: 42px;
+}
+
+@media (max-width: 390px) {
+  .function-view {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+
+  .function-view .mode-header {
+    min-height: 58px;
+    padding-inline: 9px;
+  }
+
+  .function-view .roll-summary {
+    width: calc(100% - 20px);
+    margin-inline: 10px;
+  }
+
+  .function-view .dice-setup-tabs {
+    margin-inline: 4px;
+  }
+
+  .function-view .dice-setup-workspace,
+  .function-view .choice-count-panel {
+    margin-inline: 4px;
+  }
+
+  .function-view .roll-control-row,
+  .function-view .choice-roll-control-row {
+    padding: 10px 7px 11px;
+  }
+
+  .function-view .roll-control-row .primary-action,
+  .function-view .choice-roll-control-row .primary-action,
+  .function-view .roll-control-row .secondary-action,
+  .function-view .choice-roll-control-row .secondary-action {
+    min-height: 68px;
+  }
+}
