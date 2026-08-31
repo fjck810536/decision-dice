@@ -3,17 +3,46 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#10110f">
+  <meta name="theme-color" content="#0c0d0b">
   <title>擲骰與選擇障礙輔助裝置</title>
   <link rel="stylesheet" href="./src/styles.css">
   <link rel="stylesheet" href="./src/choice.css">
   <link rel="stylesheet" href="./src/result/result-sequencer.css">
+  <link rel="stylesheet" href="./src/result/settlement-presenter.css">
   <link rel="stylesheet" href="./src/system-controls.css">
   <link rel="stylesheet" href="./src/mobile-interaction.css">
+  <link rel="stylesheet" href="./src/formal-ui.css">
+  <link rel="stylesheet" href="./src/p0-roll-stage.css">
+  <link rel="stylesheet" href="./src/dice-art-director.css">
+  <link rel="stylesheet" href="./src/home-art-director.css">
+  <link rel="stylesheet" href="./src/dice-preview.css">
+  <link rel="stylesheet" href="./src/boot-loading.css">
+  <link rel="stylesheet" href="./src/armed-chassis.css">
+  <link rel="stylesheet" href="./src/home-mode-hardware.css">
+  <link rel="stylesheet" href="./src/settlement-stage.css">
+  <link rel="stylesheet" href="./src/system-chassis.css">
+  <link rel="stylesheet" href="./src/interface-cleanup.css">
+  <link rel="stylesheet" href="./src/choice-instrument-console.css">
+  <link rel="stylesheet" href="./src/dice-setup-console.css">
+  <link rel="stylesheet" href="./src/macro-chassis-home.css">
+  <link rel="stylesheet" href="./src/home-cabinet-composition-v2.css">
+  <link rel="stylesheet" href="./src/macro-chassis-function.css">
+  <link rel="stylesheet" href="./src/setup-commit-hardware.css">
+  <link rel="stylesheet" href="./src/dice-stage-readout.css">
 </head>
 <body>
+  <div class="boot-loader" id="boot-loader" aria-live="polite" aria-label="裝置啟動中">
+    <div class="boot-loader-inner">
+      <div class="boot-d20" aria-hidden="true"></div>
+      <div class="boot-copy">
+        <strong>INITIALIZING DEVICE</strong>
+        <span>DECISION AUXILIARY SYSTEM / BOOT</span>
+      </div>
+      <div class="boot-track" aria-hidden="true"></div>
+    </div>
+  </div>
   <main id="app" class="app-shell home-view"></main>
-  <div class="orientation-block">目前僅直向使用</div>
+  <div class="orientation-block">目前僅支援直向使用</div>
   <noscript>此裝置需要 JavaScript 才能運作。</noscript>
   <script type="module" src="./src/app.js"></script>
 </body>

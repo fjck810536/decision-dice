@@ -7,6 +7,23 @@ import { assembleRollResult } from './result.js';
 import { RetroRenderer } from '../render/retro-renderer.js';
 import { audioEngine } from '../audio/audio-engine.js';
 
+const PRODUCT_RENDERER_PROFILE = Object.freeze({
+  enabled: true,
+  dither: 'ordered',
+  shadow: 'real',
+  floor: 'cuttingA',
+  wobble: 'low',
+  popIn: 'off',
+  fog: 'low',
+});
+
+const PRODUCT_LIGHTING = Object.freeze({
+  ambientColor: 0xc8cbbb,
+  ambientIntensity: 0.78,
+  keyColor: 0xfff1d8,
+  keyIntensity: 1.62,
+});
+
 function expandPool(pool) {
   const logicalDice = [];
   const units = [];
@@ -55,8 +72,38 @@ export class DiceEngine {
     this.faceResolver = new FaceResolver();
     this.feeder = new DiceFeeder({ physicsWorld: this.physicsWorld, registry: this.registry });
     this.settling = new SettlingController({ physicsWorld: this.physicsWorld, faceResolver: this.faceResolver });
-    this.renderer = new RetroRenderer({ canvas, stage, ...rendererOptions });
+
+    // Product default = the M6.2A renderer profile confirmed on iPhone.
+    // Experiments can still supply an explicit labOptions object to override it.
+    const hasExplicitLabOptions = Object.prototype.hasOwnProperty.call(rendererOptions, 'labOptions');
+    const resolvedRendererOptions = hasExplicitLabOptions
+      ? rendererOptions
+      : {
+          ...rendererOptions,
+          labOptions: { ...PRODUCT_RENDERER_PROFILE },
+        };
+
+    this.renderer = new RetroRenderer({ canvas, stage, ...resolvedRendererOptions });
+
+    if (!hasExplicitLabOptions) {
+      // ORDERED+ v2.1: same 4x4 ordered screen as ORDERED BASE, with only a
+      // restrained warm-key / cool-neutral-fill separation.
+      this.renderer.ambient.color.set(PRODUCT_LIGHTING.ambientColor);
+      this.renderer.ambient.intensity = PRODUCT_LIGHTING.ambientIntensity;
+      this.renderer.sun.color.set(PRODUCT_LIGHTING.keyColor);
+      this.renderer.sun.intensity = PRODUCT_LIGHTING.keyIntensity;
+      this.renderer.lastRenderAt = 0;
+    }
+
     this.running = false;
+  }
+
+  setProjectionMode(mode) {
+    return this.renderer.setProjectionMode(mode);
+  }
+
+  getProjectionMode() {
+    return this.renderer.getProjectionMode();
   }
 
   validatePool(pool) {

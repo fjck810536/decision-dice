@@ -1,0 +1,82 @@
+/* DICE STAGE READOUT — Macro Chassis cleanup
+   The Dice POOL / BODY / MOD readout is a real child of the chamber at runtime,
+   matching Choice's embedded OPTIONS / method console instead of relying on a
+   negative-margin card above the display. */
+
+.function-view .dice-stage > .dice-stage-readout {
+  position: absolute;
+  z-index: 14;
+  top: 11px;
+  right: 11px;
+  width: min(58%, 270px);
+  min-height: 44px;
+  margin: 0;
+  padding: 6px 8px 7px;
+  transform: none;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 2px 7px;
+  border: 1px solid #535b4a;
+  background:
+    linear-gradient(180deg, rgba(235,229,213,.04) 0 3px, transparent 3px),
+    rgba(8,10,7,.92);
+  box-shadow:
+    inset 0 0 0 2px #050605,
+    0 2px 0 #050605;
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+  pointer-events: none;
+}
+
+.function-view .dice-stage > .dice-stage-readout span {
+  color: #777d6c;
+  font: 6px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .11em;
+}
+
+.function-view .dice-stage > .dice-stage-readout strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #e4dfcf;
+  font: 800 9px/1.15 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .03em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.function-view .dice-stage > .dice-stage-readout small {
+  grid-column: 1 / -1;
+  min-width: 0;
+  overflow: hidden;
+  color: #858b79;
+  font: 6px/1.1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .07em;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The result screen owns the aperture once settlement starts. */
+.function-view .dice-stage.is-result-state > .dice-stage-readout,
+.function-view .dice-stage.is-rejection-state > .dice-stage-readout {
+  opacity: .22;
+  filter: saturate(.35) brightness(.60);
+}
+
+/* Remove the composition shim that was needed while roll-summary lived outside. */
+.function-view .roll-summary + .dice-stage canvas {
+  padding-top: 0;
+}
+
+@media (max-width: 390px) {
+  .function-view .dice-stage > .dice-stage-readout {
+    top: 9px;
+    right: 9px;
+    width: min(59%, 220px);
+    padding-inline: 7px;
+  }
+
+  .function-view .dice-stage > .dice-stage-readout strong {
+    font-size: 8px;
+  }
+}

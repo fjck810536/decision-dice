@@ -1,0 +1,204 @@
+/* HOME P2.5 — restore the good composition, keep hierarchy correct,
+   add low-resolution text treatment, and move controls toward late-90s faux-real 3D. */
+
+/* -------------------------------------------------------------------------
+   LOGO — restore the earlier central composition without surrendering z-order.
+   ------------------------------------------------------------------------- */
+.home-p2-hero {
+  z-index: 120 !important;
+  top: 11.5svh;
+  left: 0;
+  right: 0;
+  isolation: isolate;
+}
+
+.home-p2-logo-wrap {
+  left: 0;
+  width: min(100%, 560px);
+  margin-inline: auto;
+  z-index: 121;
+}
+
+.home-p2-logo {
+  width: 116%;
+  margin-left: -8%;
+  margin-right: -8%;
+  font-size: clamp(78px, 25.7vw, 132px);
+  transform: scaleX(.82);
+  transform-origin: 50% 50%;
+  color: #f1ead7;
+  text-rendering: optimizeSpeed;
+  text-shadow:
+    3px 0 0 rgba(151,78,65,.54),
+    -2px 0 0 rgba(207,217,127,.22),
+    0 4px 0 rgba(0,0,0,.55),
+    1px 1px 0 rgba(240,235,215,.18);
+  filter: contrast(1.08);
+}
+
+/* Preserve P2.3's asymmetrical line rhythm around one optical centre. */
+.home-p2-logo .title-line-a { transform: translateX(0) !important; }
+.home-p2-logo .title-line-b { transform: translateX(.15em) !important; }
+.home-p2-logo .title-line-c { transform: translateX(-.09em) !important; }
+
+/* A coarse raster/print texture inside the title rather than a new font. */
+.home-p2-logo > span {
+  position: relative;
+  isolation: isolate;
+  -webkit-font-smoothing: antialiased;
+}
+
+.home-p2-logo > span::after {
+  content: "";
+  position: absolute;
+  inset: 7% -1% 5%;
+  z-index: 2;
+  pointer-events: none;
+  opacity: .20;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(8,9,7,.80) 0 1px, transparent 1.2px) 0 0 / 4px 4px,
+    repeating-linear-gradient(0deg, transparent 0 4px, rgba(8,9,7,.28) 4px 5px);
+  mix-blend-mode: multiply;
+  clip-path: inset(0);
+}
+
+.home-p2-logo-wrap .logo-kicker,
+.home-p2-logo-wrap .serial {
+  position: relative;
+  z-index: 123;
+  text-rendering: optimizeSpeed;
+  text-shadow: 1px 0 0 rgba(152,83,67,.30);
+}
+
+/* -------------------------------------------------------------------------
+   BUTTONS — move upward and shrink slightly so the bottom conveyor can breathe.
+   Visual target: arcade/machine mode selector whose maker tried to render a
+   believable physical control with very few colours and pixels.
+   ------------------------------------------------------------------------- */
+.home-p2-controls {
+  z-index: 140;
+  left: 28px;
+  right: 28px;
+  bottom: max(78px, calc(env(safe-area-inset-bottom) + 68px));
+  gap: 16px;
+}
+
+.home-p2-controls .mode-button {
+  aspect-ratio: 1 / .94;
+  clip-path: polygon(6px 0, calc(100% - 2px) 0, 100% 5px, 100% calc(100% - 7px), calc(100% - 8px) 100%, 4px 100%, 0 calc(100% - 4px), 0 7px);
+  background:
+    linear-gradient(180deg,
+      rgba(230,229,203,.18) 0 7%,
+      rgba(175,183,119,.09) 7% 18%,
+      rgba(62,68,52,.04) 18% 48%,
+      rgba(24,27,21,.17) 48% 74%,
+      rgba(5,7,5,.43) 74% 100%),
+    linear-gradient(132deg,
+      rgba(198,207,126,.13) 0 28%,
+      rgba(81,87,66,.025) 43% 67%,
+      rgba(101,56,47,.10) 82% 100%),
+    repeating-linear-gradient(0deg, transparent 0 5px, rgba(0,0,0,.075) 5px 6px),
+    #181b15;
+  box-shadow:
+    inset 3px 3px 0 rgba(239,236,214,.15),
+    inset 0 0 0 2px rgba(112,119,94,.62),
+    inset -4px -5px 0 rgba(0,0,0,.40),
+    4px 5px 0 #030403;
+}
+
+.home-p2-controls .mode-button + .mode-button {
+  background:
+    linear-gradient(180deg,
+      rgba(231,220,204,.17) 0 7%,
+      rgba(154,91,73,.08) 7% 18%,
+      rgba(62,68,52,.04) 18% 48%,
+      rgba(24,27,21,.17) 48% 74%,
+      rgba(5,7,5,.43) 74% 100%),
+    linear-gradient(228deg,
+      rgba(154,83,67,.14) 0 28%,
+      rgba(81,87,66,.025) 43% 67%,
+      rgba(198,207,126,.075) 82% 100%),
+    repeating-linear-gradient(0deg, transparent 0 5px, rgba(0,0,0,.075) 5px 6px),
+    #181b15;
+}
+
+/* Less glossy than P2.4: broken low-res edge and one hard highlight plane. */
+.home-p2-controls .mode-button::before {
+  inset: 6px 8px 9px 6px;
+  background:
+    linear-gradient(#b2b793,#b2b793) left top / calc(100% - 18px) 1px no-repeat,
+    linear-gradient(#b2b793,#b2b793) left top / 1px calc(100% - 18px) no-repeat,
+    linear-gradient(rgba(47,51,40,.96),rgba(47,51,40,.96)) right bottom / calc(100% - 12px) 2px no-repeat,
+    linear-gradient(rgba(47,51,40,.96),rgba(47,51,40,.96)) right bottom / 2px calc(100% - 14px) no-repeat;
+  opacity: .72;
+}
+
+.home-p2-controls .mode-button::after {
+  left: 11px;
+  right: 16px;
+  bottom: 11px;
+  height: 4px;
+  border-top: 2px solid rgba(206,215,128,.26);
+  border-bottom: 1px solid rgba(0,0,0,.62);
+}
+
+.home-p2-controls .mode-title {
+  width: 112%;
+  margin-left: -6%;
+  font-size: clamp(58px, 17.2vw, 84px);
+  line-height: .76;
+  letter-spacing: -.045em;
+  transform: scaleX(.95);
+  color: #eee6d2;
+  text-rendering: optimizeSpeed;
+  text-shadow:
+    3px 0 0 rgba(148,74,62,.44),
+    -2px 0 0 rgba(202,212,126,.16),
+    0 3px 0 rgba(0,0,0,.48);
+  filter: contrast(1.07);
+}
+
+.home-p2-controls .mode-title::after {
+  content: "";
+  position: absolute;
+  inset: -5% 6%;
+  pointer-events: none;
+  opacity: .13;
+  background: radial-gradient(circle at 1px 1px, #060705 0 1px, transparent 1.15px) 0 0 / 4px 4px;
+  mix-blend-mode: multiply;
+}
+
+.home-p2-controls .mode-button:active {
+  transform: translate(3px, 5px);
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.32), rgba(222,220,196,.025) 34%, rgba(0,0,0,.19) 100%),
+    #131510;
+  box-shadow:
+    inset 4px 5px 0 rgba(0,0,0,.40),
+    inset -1px -1px 0 rgba(231,227,203,.045),
+    inset 0 0 0 2px rgba(104,111,88,.57),
+    1px 1px 0 #030403;
+}
+
+/* Bottom conveyor stays visible enough to feel like a base, not a buried footer. */
+.home-marquee-base {
+  height: 72px;
+  z-index: 58;
+  opacity: .92;
+}
+
+@media (max-width: 360px) {
+  .home-p2-hero { top: 11svh; }
+  .home-p2-logo { font-size: clamp(70px, 25.4vw, 100px); }
+
+  .home-p2-controls {
+    left: 23px;
+    right: 23px;
+    gap: 12px;
+    bottom: max(72px, calc(env(safe-area-inset-bottom) + 62px));
+  }
+
+  .home-p2-controls .mode-title {
+    font-size: clamp(50px, 16.2vw, 64px);
+  }
+}

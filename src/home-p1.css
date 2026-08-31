@@ -1,0 +1,468 @@
+/* HOME P2 — layered marquee field + oversized logo.
+   HOME only. Dice / Choice function screens remain frozen. */
+
+.home-view {
+  width: min(100%, 680px);
+  padding: 0;
+  background: #080907;
+  border: 0;
+  isolation: isolate;
+}
+
+.home-p2-scene {
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(211,220,130,.018) 1px, transparent 1px) 0 0 / 31px 100%,
+    #080907;
+}
+
+/* A coarse display layer sits above moving art and the logo, but below the
+   actual controls. This gives the large title the same printed / old-screen
+   surface instead of turning the whole interface into a fake HUD. */
+.home-p2-scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  opacity: .24;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(0,0,0,.62) 0 1px, transparent 1.15px),
+    repeating-linear-gradient(0deg, transparent 0 3px, rgba(0,0,0,.11) 3px 4px);
+  background-size: 4px 4px, 100% 4px;
+  mix-blend-mode: multiply;
+}
+
+.top-code {
+  position: absolute;
+  z-index: 50;
+  top: max(10px, env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  color: #737867;
+  font-size: 8px;
+  line-height: 1;
+  letter-spacing: .17em;
+  pointer-events: none;
+}
+
+/* -------------------------------------------------------------------------
+   Shared fake-3D dice sprites. The same vocabulary appears in both fields;
+   depth is created by scale, contrast and opacity rather than new decoration.
+   ------------------------------------------------------------------------- */
+.home-p2-scene .marquee {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  white-space: nowrap;
+}
+
+.home-p2-scene .marquee-track {
+  display: flex;
+  width: max-content;
+  flex-shrink: 0;
+  animation-timing-function: linear;
+}
+
+.home-p2-scene .marquee-row {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.home-p2-scene .die-chip {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  border: 1px solid #454a3f;
+  background: #11130f;
+  color: #d3d1c0;
+  box-shadow: inset 2px 0 0 rgba(211,220,130,.035);
+}
+
+.home-p2-scene .die-sprite {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  background: #c8c4ad;
+  color: #1b1c17;
+  border: 1px solid #727665;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.35);
+}
+
+.home-p2-scene .die-sprite::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-top: 1px solid rgba(255,255,255,.28);
+  border-left: 1px solid rgba(255,255,255,.14);
+  pointer-events: none;
+}
+
+.home-p2-scene .die-sprite b {
+  position: relative;
+  z-index: 2;
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1;
+}
+
+.home-p2-scene .die-d3 .die-sprite,
+.home-p2-scene .die-d6 .die-sprite {
+  clip-path: polygon(8% 4%, 86% 4%, 98% 16%, 98% 90%, 88% 98%, 12% 98%, 3% 88%, 3% 14%);
+}
+
+.home-p2-scene .die-d4 .die-sprite {
+  clip-path: polygon(50% 0, 100% 92%, 6% 92%);
+}
+
+.home-p2-scene .die-d8 .die-sprite {
+  clip-path: polygon(50% 0, 97% 50%, 50% 100%, 3% 50%);
+}
+
+.home-p2-scene .die-d10 .die-sprite {
+  clip-path: polygon(50% 0, 91% 28%, 75% 91%, 50% 100%, 25% 91%, 9% 28%);
+}
+
+.home-p2-scene .die-d20 .die-sprite {
+  clip-path: polygon(50% 0, 86% 16%, 100% 50%, 84% 86%, 50% 100%, 16% 86%, 0 50%, 14% 16%);
+}
+
+.home-p2-scene .die-d100 .die-sprite {
+  clip-path: polygon(10% 10%, 58% 0, 76% 22%, 100% 16%, 94% 74%, 66% 100%, 48% 78%, 20% 94%, 0 58%);
+}
+
+/* -------------------------------------------------------------------------
+   Layer A — large dim marquee field. Almost half of the upper screen is moving
+   material, but its low contrast keeps it behind the title.
+   ------------------------------------------------------------------------- */
+.home-marquee-field {
+  position: absolute;
+  left: -5%;
+  width: 110%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.home-marquee-field-back {
+  z-index: 5;
+  top: max(30px, calc(env(safe-area-inset-top) + 18px));
+  height: 47svh;
+  display: grid;
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  opacity: .27;
+  filter: saturate(.52) contrast(.88) brightness(.72);
+  transform: rotate(-1.15deg) scale(1.025);
+  transform-origin: 50% 50%;
+}
+
+.home-marquee-field-back .marquee:nth-child(odd) {
+  background: rgba(18,20,15,.34);
+}
+
+.home-marquee-field-back .marquee:nth-child(even) {
+  background: rgba(8,9,7,.20);
+}
+
+.home-marquee-field-back .marquee-row {
+  gap: 13px;
+  padding: 5px 7px;
+}
+
+.home-marquee-field-back .die-chip {
+  grid-template-columns: 40px auto;
+  gap: 8px;
+  min-width: 93px;
+  padding: 6px 9px 6px 6px;
+  border-color: #555b4c;
+  background: #151711;
+}
+
+.home-marquee-field-back .die-sprite {
+  width: 40px;
+  height: 40px;
+}
+
+.home-marquee-field-back .die-d100 .die-sprite {
+  width: 44px;
+}
+
+.home-marquee-field-back .die-sprite b {
+  font-size: 15px;
+}
+
+.home-marquee-field-back .die-label {
+  font-size: 12px;
+  letter-spacing: .08em;
+}
+
+.home-marquee-field-back .back-row-a .marquee-track { animation-duration: 28s; }
+.home-marquee-field-back .back-row-b .marquee-track { animation-duration: 34s; }
+.home-marquee-field-back .back-row-c .marquee-track { animation-duration: 24s; }
+.home-marquee-field-back .back-row-d .marquee-track { animation-duration: 31s; }
+.home-marquee-field-back .back-row-e .marquee-track { animation-duration: 26s; }
+
+/* -------------------------------------------------------------------------
+   Layer B — enormous original-proportion logo. It deliberately overlaps the
+   dim moving field rather than living in its own clean section.
+   ------------------------------------------------------------------------- */
+.home-p2-hero {
+  position: absolute;
+  z-index: 30;
+  top: 15svh;
+  left: 0;
+  right: 0;
+  min-height: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.home-p2-logo-wrap {
+  position: relative;
+  left: -9%;
+  width: 118%;
+  animation: stepped-float 2.4s steps(11, end) infinite;
+}
+
+.home-p2-logo-wrap .logo-kicker {
+  margin: 0 0 7px;
+  color: var(--acid);
+  font-size: 9px;
+  letter-spacing: .40em;
+  text-align: center;
+}
+
+.home-p2-logo {
+  margin: 0;
+  color: #f0ead9;
+  font-size: clamp(72px, 25vw, 128px);
+  line-height: .87;
+  text-shadow:
+    3px 0 0 rgba(152,83,67,.46),
+    -2px 0 0 rgba(211,220,130,.18),
+    0 5px 0 rgba(0,0,0,.38);
+}
+
+.home-p2-logo-wrap .serial {
+  margin-top: 11px;
+  color: #898e7a;
+  font-size: 9px;
+}
+
+/* -------------------------------------------------------------------------
+   Layer C — brighter lower field. It fills the lower half rather than becoming
+   a single banner, then runs behind the highest-priority controls.
+   ------------------------------------------------------------------------- */
+.home-marquee-field-front {
+  z-index: 20;
+  bottom: 7svh;
+  height: 25svh;
+  display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  opacity: .82;
+  filter: saturate(.78) contrast(1.03) brightness(.94);
+  transform: rotate(.7deg) scale(1.02);
+  transform-origin: 50% 50%;
+}
+
+.home-marquee-field-front .marquee {
+  border-top: 1px solid rgba(211,220,130,.12);
+  border-bottom: 1px solid rgba(0,0,0,.36);
+  background: rgba(18,20,15,.76);
+}
+
+.home-marquee-field-front .marquee-row {
+  gap: 9px;
+  padding: 5px 5px;
+}
+
+.home-marquee-field-front .die-chip {
+  grid-template-columns: 31px auto;
+  gap: 6px;
+  min-width: 71px;
+  padding: 4px 7px 4px 5px;
+  border-color: #5b614f;
+  background: #171912;
+}
+
+.home-marquee-field-front .die-sprite {
+  width: 31px;
+  height: 31px;
+  background: #d0cbb1;
+  border-color: #818672;
+}
+
+.home-marquee-field-front .die-d100 .die-sprite {
+  width: 34px;
+}
+
+.home-marquee-field-front .die-sprite b {
+  font-size: 12px;
+}
+
+.home-marquee-field-front .die-label {
+  font-size: 10px;
+  letter-spacing: .08em;
+}
+
+.home-marquee-field-front .front-row-a .marquee-track { animation-duration: 20s; }
+.home-marquee-field-front .front-row-b .marquee-track { animation-duration: 24s; }
+.home-marquee-field-front .front-row-c .marquee-track { animation-duration: 18s; }
+
+.home-lower-readout {
+  position: absolute;
+  z-index: 50;
+  left: 16px;
+  right: 16px;
+  bottom: calc(max(18px, env(safe-area-inset-bottom)) + 121px);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: rgba(220,220,201,.72);
+  font-size: 7px;
+  letter-spacing: .13em;
+  line-height: 1;
+  text-shadow: 1px 1px 0 #080907;
+  pointer-events: none;
+}
+
+.home-lower-readout span:last-child {
+  color: var(--acid);
+}
+
+/* -------------------------------------------------------------------------
+   Layer D — actual interaction. Highest z-index, highest contrast, one paired
+   controller. Nothing decorative may sit above or intercept it.
+   ------------------------------------------------------------------------- */
+.home-p2-controls {
+  position: absolute;
+  z-index: 60;
+  left: 14px;
+  right: 14px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  padding: 1px;
+  border: 1px solid #8b9275;
+  background: #3e4438;
+  box-shadow:
+    0 4px 0 #050604,
+    0 0 0 1px rgba(0,0,0,.52);
+}
+
+.home-p2-controls .mode-button {
+  min-width: 0;
+  min-height: 108px;
+  padding: 39px 11px 12px;
+  border: 0;
+  background:
+    linear-gradient(90deg, rgba(211,220,130,.07), transparent 58%),
+    #181b14;
+  color: #f0ead9;
+  box-shadow:
+    inset 3px 0 0 rgba(211,220,130,.08),
+    inset -2px 0 0 rgba(152,83,67,.055);
+  text-align: left;
+}
+
+.home-p2-controls .mode-button + .mode-button {
+  background:
+    linear-gradient(270deg, rgba(152,83,67,.08), transparent 58%),
+    #181b14;
+}
+
+.home-p2-controls .mode-button::before {
+  left: 10px;
+  top: 9px;
+  transform: none;
+  width: 28px;
+  height: 28px;
+  border-color: #777e68;
+  background: #0e100c;
+  color: var(--acid);
+  font-size: 10px;
+}
+
+.home-p2-controls .mode-button::after {
+  right: 10px;
+  top: auto;
+  bottom: 10px;
+  transform: none;
+  color: var(--acid);
+  font-size: 11px;
+}
+
+.home-p2-controls .mode-button:active {
+  transform: translate(1px, 2px);
+  background: #22251c;
+  box-shadow: inset 0 0 0 1px var(--acid);
+}
+
+.home-p2-controls .mode-title {
+  display: block;
+  font-size: clamp(28px, 8.5vw, 38px);
+  line-height: 1;
+  letter-spacing: .16em;
+  white-space: nowrap;
+}
+
+.home-p2-controls .mode-subtitle {
+  display: block;
+  margin-top: 8px;
+  color: #9da28d;
+  font-size: 8px;
+  letter-spacing: .11em;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+@media (max-width: 360px) {
+  .home-p2-logo {
+    font-size: clamp(68px, 25vw, 94px);
+  }
+
+  .home-p2-controls {
+    left: 10px;
+    right: 10px;
+  }
+
+  .home-p2-controls .mode-button {
+    min-height: 101px;
+    padding-left: 9px;
+    padding-right: 8px;
+  }
+
+  .home-p2-controls .mode-title {
+    font-size: 26px;
+    letter-spacing: .11em;
+  }
+
+  .home-p2-controls .mode-subtitle {
+    font-size: 7px;
+  }
+
+  .home-lower-readout {
+    left: 12px;
+    right: 12px;
+    bottom: calc(max(15px, env(safe-area-inset-bottom)) + 113px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-p2-logo-wrap,
+  .home-p2-scene .marquee-track {
+    animation: none !important;
+  }
+}

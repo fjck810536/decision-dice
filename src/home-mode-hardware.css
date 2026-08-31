@@ -1,0 +1,154 @@
+/* HOME MODE HARDWARE — Art Director Pass
+   The HOME keys are enlarged descendants of the ARMED control deck.
+   Same hard planes, chamfer logic and physical travel; no separate retro style. */
+
+.home-mode-controls {
+  gap: 11px;
+}
+
+.home-mode-controls .mode-button,
+.home-mode-controls .mode-button + .mode-button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid #626957;
+  border-radius: 0;
+  clip-path: polygon(6px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 7px), calc(100% - 7px) 100%, 4px 100%, 0 calc(100% - 5px), 0 6px);
+  background:
+    linear-gradient(180deg,
+      #555c4a 0 5px,
+      #30352a 5px 13px,
+      #24281f 13px calc(100% - 11px),
+      #11130f calc(100% - 11px) 100%);
+  box-shadow:
+    inset 2px 2px 0 rgba(237,232,210,.09),
+    inset -4px -5px 0 rgba(0,0,0,.42),
+    inset 0 0 0 1px #767d67,
+    0 5px 0 #050605;
+}
+
+/* Two modules share the same hardware family. Their tint is only a material bias,
+   not a separate UI language. */
+#home-dice {
+  background:
+    linear-gradient(90deg, rgba(211,220,130,.10) 0 6px, transparent 6px 100%),
+    linear-gradient(180deg,
+      #59604c 0 5px,
+      #32372b 5px 13px,
+      #24281f 13px calc(100% - 11px),
+      #11130f calc(100% - 11px) 100%);
+}
+
+#home-choice {
+  background:
+    linear-gradient(90deg, rgba(152,83,67,.11) 0 6px, transparent 6px 100%),
+    linear-gradient(180deg,
+      #5b5548 0 5px,
+      #353029 5px 13px,
+      #26221d 13px calc(100% - 11px),
+      #12100e calc(100% - 11px) 100%);
+}
+
+/* Inner face: a real recessed plate rather than decorative gloss. */
+.home-mode-controls .mode-button::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 9px 9px 12px 9px;
+  width: auto;
+  height: auto;
+  transform: none;
+  border: 1px solid #43493c;
+  background:
+    linear-gradient(180deg, rgba(236,231,209,.07) 0 4px, transparent 4px),
+    linear-gradient(90deg, #282c22 0 calc(100% - 7px), #181b15 calc(100% - 7px));
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 4px);
+  box-shadow:
+    inset 2px 2px 0 rgba(237,232,210,.035),
+    inset -3px -4px 0 rgba(0,0,0,.30);
+  pointer-events: none;
+}
+
+#home-choice::before {
+  border-color: #4a433b;
+  background:
+    linear-gradient(180deg, rgba(236,231,209,.06) 0 4px, transparent 4px),
+    linear-gradient(90deg, #2a2620 0 calc(100% - 7px), #191612 calc(100% - 7px));
+}
+
+/* A tiny hardware status rail. No labels, no fake HUD text. */
+.home-mode-controls .mode-button::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  left: 19px;
+  right: 19px;
+  top: auto;
+  bottom: 20px;
+  height: 3px;
+  inset-inline: 19px;
+  transform: none;
+  border: 0;
+  background:
+    linear-gradient(90deg,
+      #aeb66f 0 31%,
+      #31362d 31% 67%,
+      #75483d 67% 100%);
+  box-shadow: 0 1px 0 #070806;
+  opacity: .72;
+  pointer-events: none;
+}
+
+.home-mode-controls .mode-title {
+  z-index: 3;
+  color: #eee8d8;
+  transform: translateY(-1px) scaleX(.94);
+  text-shadow:
+    2px 0 0 rgba(152,83,67,.58),
+    -1px 0 0 rgba(211,220,130,.30),
+    0 4px 0 rgba(0,0,0,.58);
+}
+
+/* Same physical travel as the ARMED deck: the whole key drops, the face darkens,
+   and the standing shadow nearly collapses. */
+.home-mode-controls .mode-button:active {
+  transform: translate(2px, 4px);
+  background:
+    linear-gradient(180deg, #171a14 0 8px, #20241b 8px 100%);
+  box-shadow:
+    inset 3px 4px 0 rgba(0,0,0,.34),
+    inset -2px -2px 0 rgba(236,231,209,.035),
+    inset 0 0 0 1px #535a4a,
+    0 1px 0 #050605;
+}
+
+.home-mode-controls .mode-button:active::before {
+  transform: translate(1px, 2px);
+  background: #1a1d17;
+  box-shadow: inset 2px 3px 0 rgba(0,0,0,.32);
+}
+
+.home-mode-controls .mode-button:active::after {
+  opacity: .42;
+}
+
+.home-mode-controls .mode-button:focus-visible {
+  outline: 2px solid var(--acid);
+  outline-offset: 3px;
+}
+
+@media (max-width: 360px) {
+  .home-mode-controls {
+    gap: 9px;
+  }
+
+  .home-mode-controls .mode-button::before {
+    inset: 8px 8px 11px 8px;
+  }
+
+  .home-mode-controls .mode-button::after {
+    left: 16px;
+    right: 16px;
+    bottom: 18px;
+  }
+}

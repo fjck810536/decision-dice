@@ -1,5 +1,33 @@
-.stepper button {
+/*
+  Mobile interaction contract:
+  - rapid repeated taps must not trigger Safari's double-tap zoom
+  - ordinary scrolling and two-finger pinch zoom remain available
+  - do not use user-scalable=no or maximum-scale=1
+*/
+html,
+body,
+#app,
+.system-controls-host,
+.details-sheet-backdrop {
   touch-action: manipulation;
+}
+
+button,
+a,
+input,
+textarea,
+select,
+summary,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+button,
+.mode-button,
+.stepper button,
+.system-dock-button,
+.system-setting-row,
+.settlement-details {
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;

@@ -1,0 +1,375 @@
+/* Shared low-resolution 3D dice previews.
+   HOME scrolls cached still sprites. Dice Setup uses the same cached angles as a
+   deliberately choppy turntable: no live WebGL after hydration, no physics. */
+
+.die-preview-slot {
+  display: block;
+  flex: none;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.die-preview-slot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  filter: contrast(1.06) saturate(.82);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* HOME — textless bad-3D dice imagery. Keep motion in the conveyor itself;
+   HOME dice do not also rotate, so the composition stays readable. */
+.home-scene .die-chip {
+  display: block;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.home-marquee-strip .die-preview-slot {
+  width: 40px;
+  height: 40px;
+}
+.home-marquee-strip .die-d100 .die-preview-slot { width: 55px; }
+
+.home-marquee-field-back .die-preview-slot {
+  width: 58px;
+  height: 58px;
+}
+.home-marquee-field-back .die-d100 .die-preview-slot { width: 78px; }
+
+.home-marquee-field-front .die-preview-slot {
+  width: 68px;
+  height: 68px;
+}
+.home-marquee-field-front .die-d100 .die-preview-slot { width: 92px; }
+
+.home-marquee-field-back .die-preview-slot img {
+  filter: contrast(1.01) saturate(.58) brightness(.78);
+}
+
+.home-marquee-field-front .die-preview-slot img {
+  filter: contrast(1.10) saturate(.82) brightness(.98);
+}
+
+/* -------------------------------------------------------------------------
+   DICE SETUP — SPECIMEN WINDOWS
+   Art-direction rule: the die is not an icon inside a control. The die is the
+   object being presented; title/description are a nameplate, +/- is a control
+   deck below the display.
+   ------------------------------------------------------------------------- */
+.dice-rack {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dice-rack .dice-module,
+.dice-rack .dice-module[data-type="d100"] {
+  min-width: 0;
+  min-height: 218px;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto minmax(112px, 1fr) auto;
+  align-items: stretch;
+  gap: 7px;
+  padding: 9px;
+  border: 1px solid #474d41;
+  background:
+    linear-gradient(180deg, rgba(233,229,207,.05) 0 3px, transparent 3px),
+    #0c0e0b;
+  box-shadow:
+    inset 2px 2px 0 rgba(235,229,213,.025),
+    inset -3px -3px 0 rgba(0,0,0,.34);
+}
+
+.dice-rack .dice-module[data-type="d100"] {
+  grid-column: 1 / -1;
+  min-height: 205px;
+}
+
+.dice-rack .dice-module.is-loaded {
+  border-color: #737b63;
+  background:
+    linear-gradient(180deg, rgba(222,225,156,.09) 0 3px, transparent 3px),
+    linear-gradient(90deg, rgba(211,220,130,.025), transparent 55%, rgba(152,83,67,.018)),
+    #10130e;
+  box-shadow:
+    inset 3px 0 0 rgba(211,220,130,.09),
+    inset -3px -3px 0 rgba(0,0,0,.38);
+}
+
+/* Kill the old cartridge status LED. The header now owns state. */
+.dice-rack .dice-module::after {
+  display: none;
+}
+
+.dice-module-head {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 1px 1px 6px;
+  border-bottom: 1px solid #2f342b;
+}
+
+.dice-module-head .die-counter-label {
+  min-width: 0;
+}
+
+.dice-rack .die-counter-label strong {
+  display: block;
+  margin: 0;
+  color: #e0dbcc;
+  font-size: 20px;
+  line-height: .9;
+  letter-spacing: .05em;
+  text-shadow: 2px 0 0 rgba(152,83,67,.18);
+}
+
+.dice-rack .die-counter-label span {
+  display: block;
+  margin-top: 5px;
+  color: #777d6d;
+  font-size: 6px;
+  line-height: 1.2;
+  letter-spacing: .10em;
+  white-space: normal;
+}
+
+.dice-module-state {
+  flex: none;
+  margin-top: 1px;
+  color: #555b4f;
+  font-size: 6px;
+  line-height: 1;
+  letter-spacing: .12em;
+}
+
+.dice-module.is-loaded .dice-module-state {
+  color: var(--acid);
+}
+
+/* The recessed viewport is the largest object inside each module. */
+.dice-module-window {
+  position: relative;
+  min-height: 112px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #353b31;
+  background:
+    linear-gradient(rgba(255,255,255,.014) 1px, transparent 1px) 0 0 / 100% 4px,
+    radial-gradient(circle at 50% 46%, #191c16 0 18%, #0b0d0a 66%, #070806 100%);
+  box-shadow:
+    inset 0 0 0 3px #080a07,
+    inset 0 0 0 4px #20251d,
+    inset 0 9px 18px rgba(0,0,0,.34);
+}
+
+.dice-module-window::before,
+.dice-module-window::after {
+  content: "";
+  position: absolute;
+  z-index: 4;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+  opacity: .58;
+}
+
+.dice-module-window::before {
+  left: 6px;
+  bottom: 6px;
+  border-left: 1px solid #7d846c;
+  border-bottom: 1px solid #7d846c;
+}
+
+.dice-module-window::after {
+  right: 6px;
+  top: 6px;
+  border-right: 1px solid #74463d;
+  border-top: 1px solid #74463d;
+}
+
+.dice-module-preview {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 104px;
+  opacity: .72;
+  transform: translateZ(0);
+}
+
+.dice-module[data-type="d100"] .dice-module-preview {
+  width: 150px;
+  height: 104px;
+}
+
+.dice-module-preview::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: 12%;
+  right: 12%;
+  bottom: 10px;
+  height: 7px;
+  background: rgba(0,0,0,.38);
+  filter: blur(3px);
+  transform: scaleX(.70);
+  pointer-events: none;
+}
+
+.dice-module-preview .die-preview-slot {
+  position: relative;
+  z-index: 2;
+  width: 102px;
+  height: 102px;
+}
+
+.dice-module[data-type="d100"] .dice-module-preview .die-preview-slot {
+  width: 148px;
+  height: 100px;
+}
+
+.dice-module.is-loaded .dice-module-preview {
+  opacity: 1;
+}
+
+.dice-module.is-loaded .dice-module-preview img {
+  filter: contrast(1.10) saturate(.90) brightness(1.03);
+}
+
+.dice-module:not(.is-loaded) .dice-module-preview img {
+  filter: grayscale(.18) contrast(.96) saturate(.56) brightness(.78);
+}
+
+/* Cached three-angle turntable. Deliberately choppy: three hard poses, no
+   interpolation and no live renderer.
+   Important: do NOT use backwards fill-mode here. Setup re-renders after +/-;
+   backwards would expose the 0% keyframe of delayed frames and stack all poses. */
+.die-preview-slot.is-turntable {
+  position: relative;
+}
+
+.die-preview-slot.is-turntable .die-preview-frame {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  animation: dice-preview-turntable 1.8s steps(1, end) infinite;
+}
+
+.die-preview-slot.is-turntable .die-preview-frame-0 { animation-delay: 0s; }
+.die-preview-slot.is-turntable .die-preview-frame-1 { animation-delay: .6s; }
+.die-preview-slot.is-turntable .die-preview-frame-2 { animation-delay: 1.2s; }
+
+@keyframes dice-preview-turntable {
+  0%, 33.2% { opacity: 1; }
+  33.3%, 100% { opacity: 0; }
+}
+
+/* Controls sit under the object like a small hardware deck. */
+.dice-module-stepper {
+  width: min(100%, 142px);
+  justify-self: center;
+  grid-template-columns: 42px minmax(48px, 1fr) 42px;
+  border-color: #454b3f;
+  background: #070806;
+}
+
+.dice-module-stepper button {
+  width: 42px;
+  height: 43px;
+}
+
+.dice-module-stepper output {
+  min-width: 0;
+  font-size: 25px;
+}
+
+.dice-module[data-type="d100"] .dice-module-stepper {
+  width: min(100%, 174px);
+  grid-template-columns: 48px minmax(58px, 1fr) 48px;
+}
+
+.dice-module[data-type="d100"] .dice-module-stepper button {
+  width: 48px;
+}
+
+@media (max-width: 380px) {
+  .dice-rack {
+    gap: 6px;
+  }
+
+  .dice-rack .dice-module,
+  .dice-rack .dice-module[data-type="d100"] {
+    min-height: 204px;
+    padding: 8px 7px;
+    grid-template-rows: auto minmax(102px, 1fr) auto;
+  }
+
+  .dice-rack .dice-module[data-type="d100"] {
+    min-height: 192px;
+  }
+
+  .dice-rack .die-counter-label strong {
+    font-size: 18px;
+  }
+
+  .dice-rack .die-counter-label span,
+  .dice-module-state {
+    font-size: 5.5px;
+  }
+
+  .dice-module-window {
+    min-height: 102px;
+  }
+
+  .dice-module-preview,
+  .dice-module-preview .die-preview-slot {
+    width: 90px;
+    height: 90px;
+  }
+
+  .dice-module[data-type="d100"] .dice-module-preview {
+    width: 132px;
+    height: 92px;
+  }
+
+  .dice-module[data-type="d100"] .dice-module-preview .die-preview-slot {
+    width: 130px;
+    height: 90px;
+  }
+
+  .dice-module-stepper {
+    width: min(100%, 130px);
+    grid-template-columns: 38px minmax(44px, 1fr) 38px;
+  }
+
+  .dice-module-stepper button {
+    width: 38px;
+    height: 41px;
+  }
+
+  .dice-module-stepper output {
+    font-size: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .die-preview-slot.is-turntable .die-preview-frame {
+    animation: none;
+    opacity: 0;
+  }
+
+  .die-preview-slot.is-turntable .die-preview-frame-0 {
+    opacity: 1;
+  }
+}

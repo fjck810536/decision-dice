@@ -1,0 +1,248 @@
+/* HOME P2.3 — composition/alignment review pass.
+   Keeps P2 v2 sprite language intact; changes only hierarchy/composition/control character. */
+
+/* --- 1. Original-style thin marquee strip at the very top ---------------- */
+.home-marquee-strip {
+  position: absolute;
+  z-index: 14;
+  top: max(27px, calc(env(safe-area-inset-top) + 17px));
+  left: -4%;
+  width: 108%;
+  height: 56px;
+  overflow: hidden;
+  pointer-events: none;
+  border-top: 1px solid rgba(211,220,130,.18);
+  border-bottom: 1px solid rgba(211,220,130,.14);
+  background: rgba(13,15,11,.90);
+  box-shadow: 0 3px 0 rgba(0,0,0,.25);
+  transform: rotate(-1.5deg) scale(1.015);
+  transform-origin: 50% 50%;
+}
+
+.home-marquee-strip .marquee,
+.home-marquee-strip .marquee-track,
+.home-marquee-strip .marquee-row {
+  height: 100%;
+}
+
+.home-marquee-strip .marquee-row {
+  gap: 8px;
+  padding: 5px 6px;
+}
+
+.home-marquee-strip .die-sprite {
+  width: 32px;
+  height: 32px;
+  border-color: rgba(231,227,202,.46);
+  box-shadow: 2px 2px 0 rgba(0,0,0,.42);
+}
+
+.home-marquee-strip .die-d100 .die-sprite { width: 36px; }
+.home-marquee-strip .facet-a { background: #d5d0b4; }
+.home-marquee-strip .facet-b { background: #969b7e; }
+.home-marquee-strip .facet-c { background: #565b49; }
+.home-marquee-strip .facet-mesh { opacity: .48; }
+.home-marquee-strip .marquee-track { animation-duration: 20s; }
+
+/* --- 2. Dim background remains large, but begins below the thin strip ----- */
+.home-marquee-field-back {
+  top: max(69px, calc(env(safe-area-inset-top) + 58px));
+  height: 44svh;
+  opacity: .24;
+  transform: rotate(-1.25deg) scale(1.035);
+}
+
+/* --- 3. Bright lower marquee: still a Z stroke, but less dominant -------- */
+.home-marquee-field-front {
+  z-index: 22;
+  top: 54svh;
+  left: -14%;
+  width: 128%;
+  height: 27svh;
+  display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  opacity: .84;
+  overflow: hidden;
+  transform: rotate(4.2deg) scale(1.025);
+  transform-origin: 50% 50%;
+  clip-path: polygon(1% 4%, 100% 0, 98% 96%, 0 100%);
+  background: rgba(12,14,10,.20);
+}
+
+.home-marquee-field-front .marquee:nth-child(2) {
+  background: rgba(211,220,130,.028);
+}
+
+.home-marquee-field-front .marquee-row {
+  gap: 23px;
+  padding-inline: 14px;
+}
+
+.home-marquee-field-front .die-sprite {
+  width: 56px;
+  height: 56px;
+  border-color: rgba(238,233,208,.52);
+  box-shadow: 4px 4px 0 rgba(0,0,0,.44);
+}
+
+.home-marquee-field-front .die-d100 .die-sprite { width: 62px; }
+.home-marquee-field-front .front-row-a .marquee-track { animation-duration: 17s; }
+.home-marquee-field-front .front-row-b .marquee-track { animation-duration: 21s; }
+.home-marquee-field-front .front-row-c .marquee-track { animation-duration: 15s; }
+
+/* --- 4. Logo sits above every marquee, larger, stronger and top-weighted -- */
+.home-p2-hero {
+  z-index: 50;
+  top: 7svh;
+}
+
+.home-p2-logo-wrap {
+  left: 0;
+  width: min(100%, 580px);
+  margin-inline: auto;
+}
+
+.home-p2-logo {
+  width: 124%;
+  margin-left: -12%;
+  margin-right: -12%;
+  color: #fff7e5;
+  font-size: clamp(78px, 27vw, 136px);
+  text-align: center;
+  transform: scaleX(.82);
+  transform-origin: 50% 50%;
+  text-shadow:
+    4px 0 0 rgba(152,83,67,.52),
+    -2px 0 0 rgba(211,220,130,.22),
+    0 5px 0 rgba(0,0,0,.42);
+}
+
+.home-p2-logo > span {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  text-align: center;
+  transform-origin: center center;
+}
+
+/* Keep the accepted asymmetrical three-line rhythm around one optical centre. */
+.home-p2-logo .title-line-a {
+  transform: translateX(0) !important;
+}
+
+.home-p2-logo .title-line-b {
+  transform: translateX(.15em) !important;
+}
+
+.home-p2-logo .title-line-c {
+  transform: translateX(-.09em) !important;
+}
+
+.home-p2-logo-wrap .logo-kicker {
+  width: 100%;
+  color: #dce58f;
+  text-align: center;
+  text-shadow: 1px 0 0 rgba(0,0,0,.48);
+}
+
+.home-p2-logo-wrap .serial {
+  width: 100%;
+  color: #a5aa94;
+  justify-content: center;
+}
+
+/* --- 5. Two large independent blocks: machine frame + directional gradient */
+.home-p2-controls {
+  z-index: 70;
+  left: 10px;
+  right: 10px;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  gap: 12px;
+}
+
+.home-p2-controls .mode-button {
+  overflow: hidden;
+  border: 2px solid #81876f;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 5px, rgba(0,0,0,.075) 5px 6px),
+    linear-gradient(128deg, rgba(211,220,130,.18) 0%, rgba(126,132,101,.065) 32%, rgba(23,25,20,0) 58%),
+    linear-gradient(310deg, rgba(0,0,0,.32) 0%, rgba(0,0,0,0) 48%),
+    #171914;
+  box-shadow:
+    inset 5px 5px 0 rgba(238,234,214,.045),
+    inset -6px -6px 0 rgba(0,0,0,.30),
+    5px 5px 0 #040504;
+}
+
+.home-p2-controls .mode-button + .mode-button {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 5px, rgba(0,0,0,.075) 5px 6px),
+    linear-gradient(232deg, rgba(152,83,67,.19) 0%, rgba(93,69,59,.075) 32%, rgba(23,25,20,0) 58%),
+    linear-gradient(50deg, rgba(0,0,0,.32) 0%, rgba(0,0,0,0) 48%),
+    #171914;
+}
+
+.home-p2-controls .mode-button::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(211,220,130,.15);
+  pointer-events: none;
+}
+
+.home-p2-controls .mode-button::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  left: 9px;
+  right: 9px;
+  bottom: 9px;
+  height: 7px;
+  border-top: 2px solid rgba(211,220,130,.30);
+  border-bottom: 1px solid rgba(0,0,0,.52);
+  pointer-events: none;
+}
+
+.home-p2-controls .mode-title {
+  position: relative;
+  z-index: 2;
+  font-size: clamp(58px, 17vw, 84px);
+  line-height: .80;
+  letter-spacing: -.02em;
+  transform: scaleX(.94);
+  text-shadow:
+    3px 0 0 rgba(152,83,67,.38),
+    -1px 0 0 rgba(211,220,130,.15),
+    0 4px 0 rgba(0,0,0,.35);
+}
+
+.home-p2-controls .mode-button:active {
+  transform: translate(3px, 4px);
+  border-color: var(--acid);
+  box-shadow:
+    inset 4px 4px 0 rgba(0,0,0,.20),
+    1px 1px 0 #040504;
+}
+
+@media (max-width: 360px) {
+  .home-marquee-field-front {
+    top: 55svh;
+    height: 25svh;
+  }
+
+  .home-marquee-field-front .die-sprite {
+    width: 51px;
+    height: 51px;
+  }
+
+  .home-p2-logo {
+    font-size: clamp(72px, 26vw, 112px);
+  }
+
+  .home-p2-controls .mode-title {
+    font-size: clamp(52px, 16vw, 66px);
+  }
+}

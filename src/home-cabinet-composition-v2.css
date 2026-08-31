@@ -1,0 +1,157 @@
+/* HOME CABINET COMPOSITION v2 — Art Director framing pass
+   Reference judgement: the display should dominate the cabinet while the lower
+   control bay carries enough physical mass to read as a real machine base.
+   Logo typography/line-breaking remains intentionally unresolved. */
+
+/* Let the display occupy almost the full cabinet face. The macro shell still
+   exists, but it is read primarily at the top/service edge and control base. */
+.home-main-stage {
+  left: 4px;
+  right: 4px;
+  bottom: max(154px, calc(env(safe-area-inset-bottom) + 138px));
+  border-width: 6px;
+}
+
+/* The hero gets more visual weight without changing the locked three-line
+   composition. This is intentionally restrained until the logo itself is
+   art-directed separately. */
+.home-hero {
+  top: 14.25svh;
+}
+
+.home-logo {
+  width: 121%;
+  margin-inline: -10.5%;
+  font-size: clamp(82px, 27vw, 140px);
+}
+
+/* -------------------------------------------------------------------------
+   LOWER CONTROL BAY
+   This is a cabinet part, not two buttons floating over the page. Its upper
+   edge meets the display bezel so the machine reads as screen + operator deck.
+   ------------------------------------------------------------------------- */
+.home-mode-controls.home-control-deck {
+  left: 12px;
+  right: 12px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  min-height: 128px;
+  gap: 10px;
+  padding: 14px 12px 17px;
+  border: 1px solid #59604f;
+  background:
+    linear-gradient(180deg, rgba(235,229,213,.07) 0 4px, transparent 4px),
+    linear-gradient(90deg, rgba(211,220,130,.025), transparent 56%, rgba(152,83,67,.022)),
+    linear-gradient(180deg, #30362b 0 11px, #1a1e17 11px calc(100% - 11px), #090b08 calc(100% - 11px));
+  clip-path: polygon(6px 0, calc(100% - 5px) 0, 100% 5px, 100% calc(100% - 7px), calc(100% - 7px) 100%, 5px 100%, 0 calc(100% - 5px), 0 6px);
+  box-shadow:
+    inset 2px 2px 0 rgba(235,229,213,.05),
+    inset -3px -4px 0 rgba(0,0,0,.38),
+    0 5px 0 #040504,
+    0 -4px 0 #0a0c09;
+}
+
+/* A recessed mounting plate behind the keys gives the bay one continuous body. */
+.home-mode-controls.home-control-deck::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 9px 9px 12px;
+  border: 1px solid #353b31;
+  background: #0d100c;
+  box-shadow:
+    inset 3px 3px 0 #070806,
+    inset -1px -1px 0 rgba(235,229,213,.025);
+  pointer-events: none;
+}
+
+.home-mode-controls .mode-button,
+.home-mode-controls .mode-button + .mode-button {
+  z-index: 1;
+  height: 94px;
+  min-height: 94px;
+  border-color: #727a63;
+  box-shadow:
+    inset 3px 3px 0 rgba(237,232,210,.085),
+    inset -4px -5px 0 rgba(0,0,0,.43),
+    inset 0 0 0 1px #7d856b,
+    0 5px 0 #040504;
+}
+
+.home-mode-controls .mode-button::before {
+  inset: 8px 9px 12px;
+}
+
+.home-mode-controls .mode-button::after {
+  left: 18px;
+  right: 18px;
+  bottom: 16px;
+  height: 3px;
+}
+
+.home-mode-controls .mode-title {
+  font-size: clamp(34px, 9.4vw, 46px);
+  transform: translateY(-3px) scaleX(.94);
+  text-shadow:
+    2px 0 0 rgba(152,83,67,.48),
+    -1px 0 0 rgba(211,220,130,.27),
+    0 4px 0 rgba(0,0,0,.62);
+}
+
+/* The old tiny cabinet foot is absorbed into the new control bay. */
+.home-cabinet::after {
+  height: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+@media (max-width: 390px) {
+  .home-main-stage {
+    left: 3px;
+    right: 3px;
+    bottom: max(146px, calc(env(safe-area-inset-bottom) + 132px));
+  }
+
+  .home-hero {
+    top: 13.6svh;
+  }
+
+  .home-logo {
+    width: 120%;
+    margin-inline: -10%;
+    font-size: clamp(78px, 27.2vw, 132px);
+  }
+
+  .home-mode-controls.home-control-deck {
+    left: 8px;
+    right: 8px;
+    min-height: 120px;
+    gap: 8px;
+    padding: 12px 9px 15px;
+  }
+
+  .home-mode-controls .mode-button,
+  .home-mode-controls .mode-button + .mode-button {
+    height: 88px;
+    min-height: 88px;
+  }
+
+  .home-mode-controls .mode-title {
+    font-size: clamp(31px, 9vw, 40px);
+  }
+}
+
+@media (max-width: 350px) {
+  .home-mode-controls.home-control-deck {
+    left: 6px;
+    right: 6px;
+    gap: 6px;
+    padding-inline: 7px;
+  }
+
+  .home-mode-controls .mode-button,
+  .home-mode-controls .mode-button + .mode-button {
+    height: 84px;
+    min-height: 84px;
+  }
+}

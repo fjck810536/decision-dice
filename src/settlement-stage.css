@@ -1,0 +1,284 @@
+/* SETTLEMENT STAGE — Art Director Pass
+   Results do not appear as a modal card on top of the instrument.
+   The active instrument itself enters RESULT / REJECTION state. */
+
+/* The physical/electronic organ recedes when the chassis switches to result. */
+.dice-stage canvas,
+.slot-stage .slot-number,
+.slot-stage > small {
+  transition: opacity 120ms steps(2, end), filter 120ms steps(2, end);
+}
+
+.dice-stage.is-result-state canvas {
+  opacity: .17;
+  filter: grayscale(.38) contrast(.86) brightness(.52);
+}
+
+.slot-stage.is-result-state .slot-number,
+.slot-stage.is-result-state > small {
+  opacity: .08;
+  filter: saturate(.20) brightness(.58);
+}
+
+.dice-stage.is-result-state .stage-badge,
+.slot-stage.is-result-state > .section-code {
+  border-color: rgba(211,220,130,.66);
+  color: var(--acid);
+  background: rgba(7,8,6,.92);
+}
+
+/* Result takeover: the overlay becomes the screen, not a backdrop behind a card. */
+.dice-stage .settlement-overlay,
+.slot-stage .settlement-overlay {
+  inset: 5px;
+  z-index: 40;
+  padding: 0;
+  place-items: stretch;
+  background: transparent;
+  pointer-events: none;
+}
+
+.dice-stage .settlement-overlay.is-active,
+.slot-stage .settlement-overlay.is-active {
+  background:
+    linear-gradient(rgba(235,229,213,.018) 1px, transparent 1px) 0 0 / 100% 4px,
+    linear-gradient(90deg, rgba(211,220,130,.025), transparent 35%, rgba(152,83,67,.022)),
+    rgba(7,8,6,.84);
+}
+
+.dice-stage .settlement-card,
+.slot-stage .settlement-card {
+  position: relative;
+  width: 100%;
+  min-height: 100%;
+  display: grid;
+  align-content: center;
+  gap: 12px;
+  padding: 56px 24px 22px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  pointer-events: auto;
+}
+
+/* Machine registration marks remain visible through result mode. */
+.dice-stage .settlement-card::before,
+.slot-stage .settlement-card::before,
+.dice-stage .settlement-card::after,
+.slot-stage .settlement-card::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.dice-stage .settlement-card::before,
+.slot-stage .settlement-card::before {
+  left: 16px;
+  right: 16px;
+  top: 42px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--acid) 0 26%, #34392f 26% 74%, #985343 74% 100%);
+  opacity: .66;
+}
+
+.dice-stage .settlement-card::after,
+.slot-stage .settlement-card::after {
+  left: 16px;
+  bottom: 16px;
+  width: 20px;
+  height: 20px;
+  border-left: 1px solid rgba(211,220,130,.58);
+  border-bottom: 1px solid rgba(211,220,130,.58);
+}
+
+/* DICE RESULT ------------------------------------------------------------ */
+.settlement-overlay--dice .settlement-phase,
+.settlement-overlay--dice .settlement-total {
+  width: 100%;
+  max-width: 360px;
+  justify-self: center;
+}
+
+.settlement-overlay--dice .settlement-dice-row,
+.settlement-overlay--dice .settlement-math-row {
+  grid-template-columns: 74px minmax(0, 1fr);
+  min-height: 54px;
+  align-items: center;
+  padding: 8px 2px;
+  border-top-color: #30352c;
+}
+
+.settlement-overlay--dice .settlement-dice-row span,
+.settlement-overlay--dice .settlement-math-row span {
+  color: #7b8170;
+  font: 8px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .18em;
+}
+
+.settlement-overlay--dice .settlement-dice-row strong,
+.settlement-overlay--dice .settlement-math-row strong {
+  color: #eee8d8;
+  font-size: clamp(30px, 9vw, 44px);
+  text-shadow: 2px 0 0 rgba(152,83,67,.24);
+}
+
+.settlement-overlay--dice .settlement-phase--math.is-compact {
+  transform: translateY(-8px) scale(.78);
+  opacity: .54;
+}
+
+.settlement-overlay--dice .settlement-card.has-total {
+  align-content: center;
+  gap: 8px;
+}
+
+.settlement-overlay--dice .settlement-total {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: end;
+  gap: 12px;
+  margin-top: 0;
+  padding: 16px 0 8px;
+  border-top: 2px solid var(--acid);
+}
+
+.settlement-overlay--dice .settlement-total span {
+  align-self: center;
+  color: var(--acid);
+  font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .26em;
+}
+
+.settlement-overlay--dice .settlement-total strong {
+  justify-self: end;
+  color: #f2ecd9;
+  font-size: clamp(76px, 23vw, 126px);
+  line-height: .76;
+  letter-spacing: -.07em;
+  text-shadow:
+    4px 0 0 rgba(152,83,67,.40),
+    -1px 0 0 rgba(211,220,130,.20),
+    0 5px 0 rgba(0,0,0,.38);
+}
+
+/* CHOICE RESULT ---------------------------------------------------------- */
+.slot-stage .settlement-card--choice {
+  min-height: 100%;
+  align-content: center;
+  text-align: center;
+}
+
+.slot-stage .choice-settlement-index {
+  color: #f2ecd9;
+  font-size: clamp(118px, 36vw, 196px);
+  line-height: .72;
+  text-shadow:
+    5px 0 0 rgba(152,83,67,.38),
+    -2px 0 0 rgba(211,220,130,.18),
+    0 6px 0 rgba(0,0,0,.35);
+}
+
+.slot-stage .choice-settlement-index.is-compact {
+  transform: translateY(-20px) scale(.40);
+  transform-origin: center center;
+  opacity: .48;
+}
+
+.slot-stage .choice-settlement-label {
+  width: min(100%, 390px);
+  justify-self: center;
+  margin-top: -34px;
+  padding: 13px 10px 15px;
+  border-top: 2px solid var(--acid);
+  border-bottom: 1px solid #373d33;
+  color: #f0ead8;
+  font-size: clamp(34px, 10.5vw, 58px);
+  line-height: 1.02;
+  text-shadow: 2px 0 0 rgba(152,83,67,.26);
+}
+
+/* Details is chassis hardware at the bottom edge, not a CTA inside a card. */
+.dice-stage .settlement-details,
+.slot-stage .settlement-details {
+  width: min(100%, 190px);
+  min-height: 42px;
+  justify-self: end;
+  align-self: end;
+  margin: 6px 0 0;
+  padding: 0 12px;
+  border: 1px solid #515848;
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 4px);
+  background:
+    linear-gradient(180deg, #30352a 0 4px, #1d211a 4px calc(100% - 5px), #0e100c calc(100% - 5px));
+  color: #c9c6b8;
+  box-shadow: 0 3px 0 #050605, inset 1px 1px 0 rgba(235,229,213,.04);
+}
+
+.dice-stage .settlement-details:active,
+.slot-stage .settlement-details:active {
+  transform: translate(1px, 2px);
+  color: var(--acid);
+  box-shadow: 0 1px 0 #050605, inset 2px 2px 0 rgba(0,0,0,.28);
+}
+
+/* REJECTION: same instrument, temporary red fault state. */
+.dice-stage.is-rejection-state canvas {
+  opacity: .14;
+  filter: grayscale(.45) brightness(.42);
+}
+
+.dice-stage .settlement-overlay--rejection.is-active {
+  background:
+    repeating-linear-gradient(-45deg, rgba(152,83,67,.04) 0 4px, transparent 4px 9px),
+    rgba(12,7,6,.90);
+}
+
+.dice-stage .settlement-card--rejection {
+  min-height: 100%;
+  border: 0;
+  align-content: center;
+}
+
+.dice-stage .rejection-raw span {
+  color: #8d8179;
+}
+
+.dice-stage .rejection-raw strong {
+  font-size: clamp(62px, 18vw, 96px);
+}
+
+.dice-stage .rejection-word {
+  color: #d17a65;
+  font-size: clamp(28px, 9vw, 44px);
+  letter-spacing: .18em;
+}
+
+.dice-stage .rejection-next {
+  color: var(--acid);
+  font-size: 10px;
+  letter-spacing: .28em;
+}
+
+@media (max-width: 390px) {
+  .dice-stage .settlement-card,
+  .slot-stage .settlement-card {
+    padding: 52px 17px 16px;
+  }
+
+  .settlement-overlay--dice .settlement-dice-row,
+  .settlement-overlay--dice .settlement-math-row {
+    grid-template-columns: 62px minmax(0, 1fr);
+  }
+
+  .slot-stage .choice-settlement-label {
+    font-size: clamp(31px, 10vw, 48px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dice-stage canvas,
+  .slot-stage .slot-number,
+  .slot-stage > small {
+    transition: none;
+  }
+}

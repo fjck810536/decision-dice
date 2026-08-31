@@ -1,0 +1,57 @@
+.dice-stage {
+  aspect-ratio: 1 / 1;
+  min-height: 0;
+  max-height: none;
+}
+
+.slot-stage {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  min-height: 0;
+}
+
+/*
+  P0 projection decision: fixed 90-degree overhead perspective.
+  The orthographic renderer path can remain available internally for diagnostics,
+  but it is no longer a product-facing control.
+*/
+.projection-ab {
+  display: none !important;
+}
+
+.stage-hopper {
+  display: none;
+}
+
+/*
+  M6.2A product renderer now performs ordered dithering inside the 3D shader.
+  Keep the legacy CSS screen off or the product would double-dither compared
+  with the approved renderer lab.
+*/
+.dither-layer {
+  display: none !important;
+}
+
+.stage-badge {
+  max-width: 52%;
+}
+
+.roll-control-row .primary-action:disabled,
+.choice-roll-control-row .primary-action:disabled {
+  opacity: .28;
+  filter: saturate(.35);
+  box-shadow: none;
+}
+
+.roll-control-row .primary-action:not(:disabled),
+.choice-roll-control-row .primary-action:not(:disabled) {
+  opacity: 1;
+}
+
+@media (max-width: 390px) {
+  .roll-control-row,
+  .choice-roll-control-row {
+    grid-template-columns: minmax(0, 1.55fr) minmax(102px, .8fr);
+    gap: 6px;
+  }
+}

@@ -1,6 +1,7 @@
 import { CANNON } from './physics-world.js';
 
 const WORLD_UP = new CANNON.Vec3(0, 1, 0);
+const WORLD_DOWN = new CANNON.Vec3(0, -1, 0);
 
 export class SettlingController {
   constructor({ physicsWorld, faceResolver }) {
@@ -20,8 +21,14 @@ export class SettlingController {
     return record.entry.faces.find((face) => face.id === faceId) ?? null;
   }
 
+  #targetDirection(record) {
+    // A tetrahedral d4 is stable with its result-carrying face on the floor;
+    // all other dice keep the historical top-face settling target.
+    return record.entry.key === 'd4' ? WORLD_DOWN : WORLD_UP;
+  }
+
   #lockTarget(record) {
-    const { face } = this.faceResolver.getTopFace(record);
+    const { face } = this.faceResolver.getResultFace(record);
     if (face) record.targetFaceId = face.id;
     return face;
   }
@@ -32,7 +39,8 @@ export class SettlingController {
     const local = new CANNON.Vec3(face.normal[0], face.normal[1], face.normal[2]);
     const world = new CANNON.Vec3();
     record.body.quaternion.vmult(local, world);
-    return { face, normal: world, dot: world.dot(WORLD_UP) };
+    const targetDirection = this.#targetDirection(record);
+    return { face, normal: world, targetDirection, dot: world.dot(targetDirection) };
   }
 
   update(records, afterFeedSeconds) {
@@ -58,13 +66,13 @@ export class SettlingController {
 
       const speed = body.velocity.length();
       const spin = body.angularVelocity.length();
-      const top = this.#targetInfo(record);
+      const target = this.#targetInfo(record);
 
-      if (top && speed < 2.0 && spin < 4.8) {
-        const axis = top.normal.cross(WORLD_UP);
+      if (target && speed < 2.0 && spin < 4.8) {
+        const axis = target.normal.cross(target.targetDirection);
         if (axis.lengthSquared() > 1e-8) {
           axis.normalize();
-          const angle = Math.acos(Math.max(-1, Math.min(1, top.dot)));
+          const angle = Math.acos(Math.max(-1, Math.min(1, target.dot)));
           const k = 3.0 * assist * angle;
           body.torque.x += axis.x * k;
           body.torque.y += axis.y * k;
@@ -75,11 +83,11 @@ export class SettlingController {
         body.torque.z -= body.angularVelocity.z * (0.88 * assist);
       }
 
-      if (top && t > 0.30 && top.dot > 0.965 && speed < 0.32 && spin < 0.48) {
+      if (target && t > 0.30 && target.dot > 0.965 && speed < 0.32 && spin < 0.48) {
         this.physicsWorld.freezeRecord(record, 'stable');
         continue;
       }
-      if (top && t > 0.95 && top.dot > 0.93 && speed < 0.50 && spin < 0.75) {
+      if (target && t > 0.95 && target.dot > 0.93 && speed < 0.50 && spin < 0.75) {
         this.physicsWorld.freezeRecord(record, 'relaxed');
         continue;
       }
